@@ -5,11 +5,13 @@ import bowlImage from '../assets/bowl-image.png';
 const markedDice = require('../assets/marked-dice.png');
 const unmarkedDice = require('../assets/unmarked-dice.png');
 
-export default function WaltesBoard({ playerTurn }) {
+export default function WaltesBoard({ playerTurn, onDiceRolled }) {
   const [dice, setDice] = React.useState([0, 0, 0, 0, 0, 0]);
 
   const rollDice = () => {
-    setDice(dice.map(() => (Math.random() > 0.5 ? 1 : 0)));
+    const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
+    setDice(newDice);
+    onDiceRolled(newDice);
   };
 
   React.useEffect(() => {

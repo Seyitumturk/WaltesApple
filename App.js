@@ -1,23 +1,32 @@
 import React from 'react';
-import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import WaltesBoard from './components/WaltesBoard';
-import { ShakeEventExpo } from './components/ShakeEventExpo';
 
 export default function App() {
   const [playerTurn, setPlayerTurn] = React.useState(0);
-
-  React.useEffect(() => {
-    ShakeEventExpo.addListener(() => {
-      handlePlayerClick(playerTurn);
-    });
-
-    return () => {
-      ShakeEventExpo.removeListener();
-    };
-  }, [playerTurn]);
+  const [scores, setScores] = React.useState([0, 0]);
 
   const handlePlayerClick = (player) => {
     setPlayerTurn((player + 1) % 2);
+  };
+
+  const onDiceRolled = (dice) => {
+    const newScores = [...scores];
+    newScores[playerTurn] += calculateScore(dice);
+    setScores(newScores);
+  };
+
+  const calculateScore = (dice) => {
+    const marked = dice.filter((die) => die === 1).length;
+    const unmarked = 6 - marked;
+
+    if (marked === 6 || unmarked === 6) {
+      return 5;
+    } else if (marked === 5 || unmarked === 5) {
+      return 1;
+    } else {
+      return 0;
+    }
   };
 
   return (
@@ -30,8 +39,10 @@ export default function App() {
         ]}
         activeOpacity={1}
         onPress={() => handlePlayerClick(0)}
-      />
-      <WaltesBoard playerTurn={playerTurn} />
+      >
+        <Text style={styles.scoreText}>Player 1: {scores[0]}</Text>
+      </TouchableOpacity>
+      <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} />
       <TouchableOpacity
         style={[
           styles.background,
@@ -39,7 +50,9 @@ export default function App() {
         ]}
         activeOpacity={1}
         onPress={() => handlePlayerClick(1)}
-      />
+      >
+        <Text style={styles.scoreText}>Player 2: {scores[1]}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -51,8 +64,14 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
+    justifyContent: 'center',
   },
   activePlayerBackground: {
     backgroundColor: 'rgba(0, 255, 0, 0.3)',
+  },
+  scoreText: {
+    fontSize: 24,
+    textAlign: 'center',
+    color: 'black',
   },
 });
