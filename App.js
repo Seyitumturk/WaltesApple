@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 
 export default function App() {
@@ -31,29 +32,30 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <BackgroundVideo />
       <StatusBar hidden />
       <TouchableOpacity
-        style={[
-          styles.background,
-          playerTurn === 0 ? styles.activePlayerBackground : {},
-        ]}
+        style={styles.background}
         activeOpacity={1}
         onPress={() => handlePlayerClick(0)}
       >
         <Text style={[styles.scoreText, { transform: [{ rotate: '180deg' }] }]}>
           Player 1: {scores[0]}
         </Text>
+        {playerTurn === 0 && (
+          <Text style={styles.hitText}>Hit!</Text>
+        )}
       </TouchableOpacity>
       <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} />
       <TouchableOpacity
-        style={[
-          styles.background,
-          playerTurn === 1 ? styles.activePlayerBackground : {},
-        ]}
+        style={styles.background}
         activeOpacity={1}
         onPress={() => handlePlayerClick(1)}
       >
         <Text style={styles.scoreText}>Player 2: {scores[1]}</Text>
+        {playerTurn === 1 && (
+          <Text style={styles.hitText}>Hit!</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -68,12 +70,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  activePlayerBackground: {
-    backgroundColor: 'rgba(0, 255, 0, 0.3)',
-  },
   scoreText: {
     fontSize: 24,
     textAlign: 'center',
     color: 'black',
+  },
+  hitText: {
+    fontSize: 36,
+    textAlign: 'center',
+    fontFamily: 'Chalkduster', // Choose a font according to your preference
+    color: 'red',
   },
 });
