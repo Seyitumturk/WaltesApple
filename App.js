@@ -40,7 +40,9 @@ export default function App() {
         activeOpacity={1}
         onPress={() => handlePlayerClick(0)}
       >
-        <Text style={styles.scoreText}>Player 1: {scores[0]}</Text>
+        <Text style={[styles.scoreText, { transform: [{ rotate: '180deg' }] }]}>
+          Player 1: {scores[0]}
+        </Text>
       </TouchableOpacity>
       <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} />
       <TouchableOpacity
