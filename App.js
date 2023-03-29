@@ -2,10 +2,17 @@ import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
+import HomePage from './components/HomePage'; // Import the HomePage component
 
 export default function App() {
   const [playerTurn, setPlayerTurn] = React.useState(0);
   const [scores, setScores] = React.useState([0, 0]);
+  const [currentPage, setCurrentPage] = React.useState('home'); // Add a state to manage the current page
+
+  const startGame = () => {
+    setCurrentPage('game');
+  };
+
 
   const handlePlayerClick = (player) => {
     setPlayerTurn((player + 1) % 2);
@@ -40,7 +47,7 @@ export default function App() {
         onPress={() => handlePlayerClick(0)}
       >
         <Text style={[styles.scoreText, { transform: [{ rotate: '180deg' }] }]}>
-          Player 1: {scores[0]}
+           {scores[1]}
         </Text>
         {playerTurn === 0 && (
           <Text style={styles.hitText}>Hit!</Text>
@@ -52,7 +59,7 @@ export default function App() {
         activeOpacity={1}
         onPress={() => handlePlayerClick(1)}
       >
-        <Text style={styles.scoreText}>Player 2: {scores[1]}</Text>
+        <Text style={styles.scoreText}> {scores[0]}</Text>
         {playerTurn === 1 && (
           <Text style={styles.hitText}>Hit!</Text>
         )}
@@ -71,14 +78,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scoreText: {
-    fontSize: 24,
+    fontSize: 54,
     textAlign: 'center',
-    color: 'black',
+    color: 'white',
+    fontFamily: 'Chalkduster', // Choose a font according to your preference
+
   },
   hitText: {
     fontSize: 36,
     textAlign: 'center',
     fontFamily: 'Chalkduster', // Choose a font according to your preference
-    color: 'red',
+    color: 'orange',
   },
 });

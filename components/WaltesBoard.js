@@ -62,8 +62,8 @@ export default function WaltesBoard({ playerTurn, onDiceRolled }) {
   }, [playerTurn]);
 
   const randomPosition = () => {
-    const x = Math.random() * 60 - 30;
-    const y = Math.random() * 60 - 30;
+    const x = Math.random() * 120 - 60;
+    const y = Math.random() * 120 - 60;
     return { x, y };
   };
 
