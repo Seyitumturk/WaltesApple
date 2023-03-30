@@ -1,4 +1,4 @@
- import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Animated,
   Easing,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
   Vibration,
+  Text,
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -15,35 +16,36 @@ import unmarkedDice from '../assets/unmarked-dice.png';
 
 export default function WaltesBoard({ playerTurn, onDiceRolled }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
-  const [waltesText, setWaltesText] = useState('');
+  const [waltesText, setWaltesText] = useState(''); // Add this line
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
-  const rollDice = () => {
-    const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
-    setDice(newDice);
-    const score = onDiceRolled(newDice);
+const rollDice = () => {
+  const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
+  setDice(newDice);
+  const score = onDiceRolled(newDice);
 
-    if (score > 0) {
-      Vibration.vibrate(500);
-      setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => {
-        setTimeout(() => {
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 500,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }).start();
-        }, 1000);
-      });
-    }
-  };
+  if (score > 0) {
+    Vibration.vibrate(500);
+    setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }).start();
+      }, 1000);
+    });
+  }
+};
+
 
   useEffect(() => {
     Animated.timing(shakeAnim, {
@@ -73,8 +75,6 @@ export default function WaltesBoard({ playerTurn, onDiceRolled }) {
 
   return (
     <View style={styles.container}>
-
-
       <Animated.View
         style={[
           styles.bowlImage,
@@ -86,23 +86,23 @@ export default function WaltesBoard({ playerTurn, onDiceRolled }) {
                   outputRange: ['0deg', '40deg'],
                 }),
               },
-            ],      
+            ],
           },
-    ]}
-  >
-    <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-      <View style={styles.diceContainer}>
-        {dice.map((die, index) => {
-          const position = randomPosition();
-          const rotation = diceRotation();
-          return (
-            <View key={index}>
-              <Animated.Image
-                source={die === 1 ? markedDice : unmarkedDice}
-                style={[
-                  styles.dice,
-                  {
-                    position: 'absolute',
+        ]}
+      >
+        <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
+          <View style={styles.diceContainer}>
+            {dice.map((die, index) => {
+              const position = randomPosition();
+              const rotation = diceRotation();
+              return (
+                <View key={index}>
+                  <Animated.Image
+                    source={die === 1 ? markedDice : unmarkedDice}
+                    style={[
+                      styles.dice,
+                      {
+                        position: 'absolute',
                     top: '50%',
                     left: '50%',
                     transform: [
@@ -120,59 +120,71 @@ export default function WaltesBoard({ playerTurn, onDiceRolled }) {
         })}
       </View>
     </ImageBackground>
-  </Animated.View>
-  <Animated.Text
+    </Animated.View>
+  <Animated.View
     style={[
-      styles.waltesText,
+      styles.waltesTextContainer,
       {
         opacity: fadeAnim,
+        transform: [
+          { translateY: playerTurn === 0 ? 0 : -200 },
+          { rotate: playerTurn === 0 ? '0deg' : '180deg' },
+        ],
       },
     ]}
   >
-    {waltesText}
-  </Animated.Text>
-</View>);
+    <Text style={styles.waltesText}>{waltesText}</Text>
+  </Animated.View>
+</View>
+);
 }
+
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative', 
-    },
-    bowlImage: {
-      width: '100%',
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    diceContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      width: diceContainerSize,
-      height: diceContainerSize,
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: [
-        { translateX: -(diceContainerSize / 2) - 30}, // Edit "30" for moving the dice cluster right left. 
-        { translateY: -(diceContainerSize / 2) - 30},
-    ],
-  },
-    dice: {
-      width: 50,
-      height: 50,
-      margin: 5,
-    },
-    waltesText: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      textAlign: 'center',
-      color: 'black',
-      position: 'absolute',
-    },
-  });
+container: {
+flex: 1,
+justifyContent: 'center',
+alignItems: 'center',
+position: 'relative',
+},
+bowlImage: {
+width: '100%',
+height: '100%',
+justifyContent: 'center',
+alignItems: 'center',
+},
+diceContainer: {
+flexDirection: 'row',
+flexWrap: 'wrap',
+width: diceContainerSize,
+height: diceContainerSize,
+position: 'absolute',
+top: '50%',
+left: '50%',
+alignItems: 'center',
+justifyContent: 'center',
+transform: [
+{ translateX: -(diceContainerSize / 2) - 30 },
+{ translateY: -(diceContainerSize / 2) - 30 },
+],
+},
+dice: {
+width: 50,
+height: 50,
+margin: 5,
+},
+waltesText: {
+fontSize: 32,
+fontWeight: 'bold',
+textAlign: 'center',
+color: 'black',
+position: 'absolute',
+zIndex: 99999,
+},
+waltesTextContainer: {
+position: 'absolute',
+zIndex: 99999,
+
+},
+});
