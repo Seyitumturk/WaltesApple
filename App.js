@@ -76,10 +76,15 @@ const calculateScore = (dice) => {
     // Update the player's sticks
     const currentPlayer = `player${playerTurn + 1}`;
     newSticks[currentPlayer].plain += 3 * score;
-    if (score === 5 && sticks.general.kingPin > 0) {
-      newSticks[currentPlayer].kingPin++;
-    } else if (score === 1 && sticks.general.notched > 0) {
-      newSticks[currentPlayer].notched++;
+
+    // Check if the player has reached 5 points (15 sticks) and give them a notched or kingpin stick
+    if (newSticks[currentPlayer].plain >= 15) {
+      if (newSticks[currentPlayer].notched < 1) {
+        newSticks[currentPlayer].notched++;
+      } else if (newSticks.general.notched === 0 && newSticks[currentPlayer].kingPin < 1) {
+        newSticks[currentPlayer].kingPin++;
+      }
+      newSticks[currentPlayer].plain -= 15;
     }
 
     // Update the scores
@@ -91,7 +96,6 @@ const calculateScore = (dice) => {
   setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
   return score;
 };
-
 
 
   useEffect(() => {
