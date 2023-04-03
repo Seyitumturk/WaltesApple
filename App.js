@@ -10,6 +10,11 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [waltesText, setWaltesText] = useState('');
   const [waltesTimeout, setWaltesTimeout] = useState(null);
+  const [sticks, setSticks] = useState({
+    plain: 51,
+    notched: 3,
+    kingPin: 1,
+  });
 
   const startGame = () => {
     setCurrentPage('game');
@@ -29,18 +34,28 @@ export default function App() {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
 
+    const newSticks = { ...sticks };
+    let score = 0;
+
     if (marked === 6 || unmarked === 6) {
       setWaltesText('Super Waltes!');
-      setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-      return 5;
+      score = 5;
+      newSticks.kingPin--;
     } else if (marked === 5 || unmarked === 5) {
       setWaltesText('Waltes!');
-      setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-      return 1;
+      score = 1;
+      newSticks.notched--;
     } else {
       setWaltesText('');
-      return 0;
     }
+
+    if (score > 0) {
+      newSticks.plain -= score * 3;
+      setSticks(newSticks);
+    }
+
+    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+    return score;
   };
 
   useEffect(() => {
@@ -65,7 +80,7 @@ export default function App() {
               {scores[1]}
             </Text>
           </TouchableOpacity>
-          <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} />
+          <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} sticks={sticks} />
           <TouchableOpacity
             style={styles.background}
             activeOpacity={1}
@@ -89,36 +104,28 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    justifyContent: 'center',
   },
   scoreText: {
-    fontSize: 54,
-    textAlign: 'center',
+    fontSize: 64,
+    fontWeight: 'bold',
     color: 'white',
-    fontFamily: 'Chalkduster',
+    textAlign: 'center',
+    marginTop: 40,
   },
   scoreTextPlayer1: {
+    alignSelf: 'center',
+  },
+  scoreTextPlayer2: {
+    alignSelf: 'center',
+  },
+  waltesText: {
     position: 'absolute',
-bottom: 20,
-left: 20,
-},
-scoreTextPlayer2: {
-position: 'absolute',
-bottom: 20,
-right: 20,
-},
-waltesText: {
-fontSize: 32,
-fontWeight: 'bold',
-textAlign: 'center',
-color: 'white',
-position: 'absolute',
-zIndex: 99999,
-top: '50%',
-left: '50%',
-transform: [
-{ translateX: -50 },
-{ translateY: -16 },
-],
-},
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+  },
 });
