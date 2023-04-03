@@ -136,11 +136,25 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
         <Text style={styles.waltesText}>{waltesText}</Text>
       </Animated.View>
       <View style={styles.sticksContainer}>
-        <Text style={styles.stickText}>Plain: {sticks.plain}</Text>
-        <Text style={styles.stickText}>Notched: {sticks.notched}</Text>
-        <Text style={styles.stickText}>King Pin: {sticks.kingPin}</Text>
+        <View>
+          <Text style={styles.stickTextHeader}>General Pile</Text>
+          <Text style={styles.stickText}>Plain: {sticks.general.plain}</Text>
+          <Text style={styles.stickText}>Notched: {sticks.general.notched}</Text>
+          <Text style={styles.stickText}>King Pin: {sticks.general.kingPin}</Text>
+        </View>
+        <View>
+          <Text style={styles.stickTextHeader}>Player 1</Text>
+          <Text style={styles.stickText}>Plain: {sticks.player1.plain}</Text>
+          <Text style={styles.stickText}>Notched: {sticks.player1.notched}</Text>
+          <Text style={styles.stickText}>King Pin: {sticks.player1.kingPin}</Text>
+        </View>
+        <View>
+          <Text style={styles.stickTextHeader}>Player 2</Text>
+          <Text style={styles.stickText}>Plain: {sticks.player2.plain}</Text>
+          <Text style={styles.stickText}>Notched: {sticks.player2.notched}</Text>
+          <Text style={styles.stickText}>King Pin: {sticks.player2.kingPin}</Text>
+        </View>
       </View>
-
     </View>
   );
 }
@@ -210,5 +224,13 @@ const styles = StyleSheet.create({
   color: 'white',
   marginHorizontal: 10,
 },
+
+stickTextHeader: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  color: '#333',
+  marginBottom: 5,
+},
+
 
 });

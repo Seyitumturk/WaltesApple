@@ -11,10 +11,22 @@ export default function App() {
   const [waltesText, setWaltesText] = useState('');
   const [waltesTimeout, setWaltesTimeout] = useState(null);
   const [sticks, setSticks] = useState({
-    plain: 51,
-    notched: 3,
-    kingPin: 1,
-  });
+        general: {
+          plain: 51,
+          notched: 3,
+          kingPin: 1,
+        },
+        player1: {
+          plain: 0,
+          notched: 0,
+          kingPin: 0,
+        },
+        player2: {
+          plain: 0,
+          notched: 0,
+          kingPin: 0,
+        },
+});
 
   const startGame = () => {
     setCurrentPage('game');
@@ -30,33 +42,57 @@ export default function App() {
     setScores(newScores);
   };
 
-  const calculateScore = (dice) => {
-    const marked = dice.filter((die) => die === 1).length;
-    const unmarked = 6 - marked;
+const calculateScore = (dice) => {
+  const marked = dice.filter((die) => die === 1).length;
+  const unmarked = 6 - marked;
 
-    const newSticks = { ...sticks };
-    let score = 0;
+  const newSticks = { ...sticks };
+  let score = 0;
 
-    if (marked === 6 || unmarked === 6) {
-      setWaltesText('Super Waltes!');
-      score = 5;
-      newSticks.kingPin--;
-    } else if (marked === 5 || unmarked === 5) {
-      setWaltesText('Waltes!');
-      score = 1;
-      newSticks.notched--;
+  if (marked === 6 || unmarked === 6) {
+    setWaltesText('Super Waltes!');
+    score = 5;
+    if (newSticks.general.kingPin > 0) {
+      newSticks.general.kingPin--;
     } else {
-      setWaltesText('');
+      newSticks.general.plain -= 5 * 3;
+    }
+  } else if (marked === 5 || unmarked === 5) {
+    setWaltesText('Waltes!');
+    score = 1;
+    if (newSticks.general.notched > 0) {
+      newSticks.general.notched--;
+    } else {
+      newSticks.general.plain -= 3;
+    }
+  } else {
+    setWaltesText('');
+  }
+
+  if (score > 0) {
+    newSticks.general.plain = Math.max(newSticks.general.plain, 0);
+    setSticks(newSticks);
+
+    // Update the player's sticks
+    const currentPlayer = `player${playerTurn + 1}`;
+    newSticks[currentPlayer].plain += 3 * score;
+    if (score === 5 && sticks.general.kingPin > 0) {
+      newSticks[currentPlayer].kingPin++;
+    } else if (score === 1 && sticks.general.notched > 0) {
+      newSticks[currentPlayer].notched++;
     }
 
-    if (score > 0) {
-      newSticks.plain -= score * 3;
-      setSticks(newSticks);
-    }
+    // Update the scores
+    const newScores = [...scores];
+    newScores[playerTurn] += score;
+    setScores(newScores);
+  }
 
-    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-    return score;
-  };
+  setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+  return score;
+};
+
+
 
   useEffect(() => {
     return () => {
