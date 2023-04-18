@@ -52,39 +52,37 @@ const calculateScore = (dice) => {
   if (marked === 6 || unmarked === 6) {
     setWaltesText('Super Waltes!');
     score = 5;
-    if (newSticks.general.kingPin > 0) {
-      newSticks.general.kingPin--;
-    } else {
-      newSticks.general.plain -= 5 * 3;
-    }
   } else if (marked === 5 || unmarked === 5) {
     setWaltesText('Waltes!');
     score = 1;
-    if (newSticks.general.notched > 0) {
-      newSticks.general.notched--;
-    } else {
-      newSticks.general.plain -= 3;
-    }
   } else {
     setWaltesText('');
   }
 
   if (score > 0) {
-    newSticks.general.plain = Math.max(newSticks.general.plain, 0);
-    setSticks(newSticks);
-
     // Update the player's sticks
     const currentPlayer = `player${playerTurn + 1}`;
     newSticks[currentPlayer].plain += 3 * score;
+    newSticks.general.plain -= 3 * score; // Decrement plain sticks count in the general pile
 
-    // Check if the player has reached 5 points (15 sticks) and give them a notched or kingpin stick
-    if (newSticks[currentPlayer].plain >= 15) {
-      if (newSticks[currentPlayer].notched < 1) {
-        newSticks[currentPlayer].notched++;
-      } else if (newSticks.general.notched === 0 && newSticks[currentPlayer].kingPin < 1) {
-        newSticks[currentPlayer].kingPin++;
-      }
+    // Exchange 15 plain sticks for a notched stick, if available and if the player has enough sticks
+    if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+      newSticks.general.notched--;
+      newSticks[currentPlayer].notched++;
       newSticks[currentPlayer].plain -= 15;
+
+      // Decrement total sticks count
+      newSticks.general.totalSticks -= 15;
+    }
+
+    // Exchange 3 notched sticks for the kingpin, if available and if the player has enough notched sticks
+    if (newSticks[currentPlayer].notched >= 3 && newSticks.general.kingPin > 0) {
+      newSticks.general.kingPin--;
+      newSticks[currentPlayer].kingPin++;
+      newSticks[currentPlayer].notched -= 3;
+
+      // Decrement total sticks count
+      newSticks.general.totalSticks -= 9;
     }
 
     // Update the scores
@@ -97,7 +95,6 @@ const calculateScore = (dice) => {
   return score;
 };
 
-
   useEffect(() => {
     return () => {
       if (waltesTimeout) clearTimeout(waltesTimeout);
@@ -107,29 +104,20 @@ const calculateScore = (dice) => {
   return (
     <View style={styles.container}>
       <BackgroundVideo />
-      <StatusBar hidden />
       {currentPage === 'home' && <HomePage onStartGame={startGame} />}
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
-            style={styles.background}
-            activeOpacity={1}
-            onPress={() => handlePlayerClick(0)}
-          >
-            <Text style={[styles.scoreText, styles.scoreTextPlayer1, { transform: [{ rotate: '180deg' }] }]}>
-              {scores[1]}
-            </Text>
-          </TouchableOpacity>
-          <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} sticks={sticks} />
-          <TouchableOpacity
-            style={styles.background}
-            activeOpacity={1}
-            onPress={() => handlePlayerClick(1)}
-          >
-            <Text style={[styles.scoreText, styles.scoreTextPlayer2]}>
-              {scores[0]}
-            </Text>
-          </TouchableOpacity>
+      style={styles.topClickableArea}
+      activeOpacity={1}
+      onPress={() => handlePlayerClick(0)}
+    />
+    <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} sticks={sticks} />
+    <TouchableOpacity
+      style={styles.bottomClickableArea}
+      activeOpacity={1}
+      onPress={() => handlePlayerClick(1)}
+    />
           <Text style={styles.waltesText}>{waltesText}</Text>
         </>
       )}
@@ -168,4 +156,20 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }, { translateY: -50 }],
   },
+
+container: {
+  flex: 1,
+  flexDirection: 'column',
+},
+topClickableArea: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Adjust the opacity as needed
+   zIndex: 10
+},
+bottomClickableArea: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Adjust the opacity as needed
+   zIndex: 10, 
+},
+
 });

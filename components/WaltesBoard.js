@@ -8,17 +8,64 @@ import {
   View,
   Vibration,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
 
+import plainStickIcon from '../assets/plain-stick-icon.png';
+import notchedStickIcon from '../assets/notched-stick-icon.png';
+import kingPinIcon from '../assets/king-pin-icon.png';
+
+
+const CircularButton = ({ type, backgroundColor, count  }) => {
+  const icons = {
+    plain: plainStickIcon,
+    notched: notchedStickIcon,
+    kingPin: kingPinIcon,
+  };
+
+
+  const styles = StyleSheet.create({
+    button: {
+      width: 60,
+      height: 60,
+      flexDirection: 'row',
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: backgroundColor || '#333',
+      marginBottom: 10,
+      paddingRight: 20,
+    },
+    icon: {
+      width: '100%',
+      height: '100%',
+    },
+  });
+
+  return (
+    <TouchableOpacity style={styles.button}>
+      <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
+      <Text style={styles.countText}>{count}</Text>
+
+    </TouchableOpacity>
+  );
+};
+
+
 export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
+
+
+  const generalPlainCount = sticks.general.plain;
+  const generalNotchedCount = sticks.general.notched;
+  const generalKingPinCount = sticks.general.kingPin;
 
 
   const rollDice = () => {
@@ -133,28 +180,48 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
           },
         ]}
       >
-        <Text style={styles.waltesText}>{waltesText}</Text>
       </Animated.View>
-      <View style={styles.sticksContainer}>
-        <View>
-          <Text style={styles.stickTextHeader}>General Pile</Text>
-          <Text style={styles.stickText}>Plain: {sticks.general.plain}</Text>
-          <Text style={styles.stickText}>Notched: {sticks.general.notched}</Text>
-          <Text style={styles.stickText}>King Pin: {sticks.general.kingPin}</Text>
-        </View>
-        <View>
-          <Text style={styles.stickTextHeader}>Player 1</Text>
-          <Text style={styles.stickText}>Plain: {sticks.player1.plain}</Text>
-          <Text style={styles.stickText}>Notched: {sticks.player1.notched}</Text>
-          <Text style={styles.stickText}>King Pin: {sticks.player1.kingPin}</Text>
-        </View>
-        <View>
-          <Text style={styles.stickTextHeader}>Player 2</Text>
-          <Text style={styles.stickText}>Plain: {sticks.player2.plain}</Text>
-          <Text style={styles.stickText}>Notched: {sticks.player2.notched}</Text>
-          <Text style={styles.stickText}>King Pin: {sticks.player2.kingPin}</Text>
-        </View>
+
+
+    {/* Player 1's half */}
+
+      
+   <View style={styles.player1Container}>
+      <View style={styles.generalPile}>
+        <CircularButton type="plain" backgroundColor="wheat" count={generalPlainCount} />
+        <CircularButton type="notched" backgroundColor="wheat" count={generalNotchedCount}/>
+        <CircularButton type="kingPin" backgroundColor="wheat" count={generalKingPinCount}/>
       </View>
+      <View style={styles.playerPile}>
+        <CircularButton type="plain" count={sticks.player1.plain}/>
+        <CircularButton type="notched" count={sticks.player1.notched} />
+        <CircularButton type="kingPin" count={sticks.player1.kingPin}/>
+      </View> 
+    </View>
+
+    {/* Player 2's half */}
+
+
+    <View>
+      <View style={[styles.player2Container, { transform: [{ rotate: '180deg' }] }]}>
+        <View style={styles.generalPile}>
+          <CircularButton type="plain" backgroundColor="wheat" count={generalPlainCount} />
+        <CircularButton type="notched" backgroundColor="wheat" count={generalNotchedCount}/>
+        <CircularButton type="kingPin" backgroundColor="wheat" count={generalKingPinCount}/>
+        </View>
+        <View style={styles.playerPile}>
+          <CircularButton type="plain" count={sticks.player2.plain}/>
+        <CircularButton type="notched" count={sticks.player2.notched} />
+        <CircularButton type="kingPin" count={sticks.player2.kingPin}/>
+      </View>
+
+
+  </View>
+
+
+
+</View>
+
     </View>
   );
 }
@@ -162,7 +229,7 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -173,6 +240,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'absolute',
   },
   diceContainer: {
     flexDirection: 'row',
@@ -232,5 +300,40 @@ stickTextHeader: {
   marginBottom: 5,
 },
 
+player1Container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    width: '100%',
+    position: 'absolute',
+    top: 290,
+  },
+  player2Container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+    position: 'absolute',
+    right: -200,
+    bottom: 180,
 
+  },
+  generalPile: {
+    alignItems: 'center',
+    marginLeft: 20,
+  },
+  playerPile: {
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  countText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    right: 5,
+    bottom: 5,
+  },
+ content: {
+    position: 'absolute',
+  },
 });

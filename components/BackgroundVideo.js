@@ -1,25 +1,21 @@
-// BackgroundVideo.js
 import React from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
-import { Video } from 'expo-av';
-import waterVideo from '../assets/water-video.mp4';
+import Svg from '../assets/background-image.svg';
 
 const { width, height } = Dimensions.get('window');
 
-export default function BackgroundVideo() {
+export default function BackgroundSVG() {
   return (
-    <Video
-      source={waterVideo}
-      style={styles.backgroundVideo}
-      resizeMode={Video.RESIZE_MODE_COVER}
-      shouldPlay
-      isLooping
+    <Svg
+      style={styles.backgroundSVG}
+      width={width}
+      height={height}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundVideo: {
+  backgroundSVG: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -28,6 +24,5 @@ const styles = StyleSheet.create({
     width,
     height,
     zIndex: -1,
-    transform: [{ rotate: '90deg' }, { scale: Math.max(width / height, height / width) }],
   },
 });
