@@ -10,6 +10,10 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [waltesText, setWaltesText] = useState('');
   const [waltesTimeout, setWaltesTimeout] = useState(null);
+  const [shouldRoll, setShouldRoll] = useState(false);
+  const [isDiceRolling, setIsDiceRolling] = useState(false);
+
+
   const [sticks, setSticks] = useState({
         general: {
           plain: 51,
@@ -33,13 +37,26 @@ export default function App() {
   };
 
   const handlePlayerClick = (player) => {
-    setPlayerTurn((player + 1) % 2);
+    if (player === playerTurn && !isDiceRolling) {
+      setShouldRoll(true);
+    }
   };
-
+  
   const onDiceRolled = (dice) => {
+    setIsDiceRolling(false);
     const newScores = [...scores];
-    newScores[playerTurn] += calculateScore(dice);
-    setScores(newScores);
+    const score = calculateScore(dice);
+    newScores[playerTurn] += score;
+    setScores(prevScores => {
+      const newScores = [...prevScores];
+      newScores[playerTurn] += score;
+      return newScores;
+    });
+
+    // Don't switch turns if the player scores
+    if (score === 0) {
+      setPlayerTurn((playerTurn + 1) % 2);
+    }
   };
 
 const calculateScore = (dice) => {
@@ -108,16 +125,26 @@ const calculateScore = (dice) => {
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
-      style={styles.topClickableArea}
-      activeOpacity={1}
-      onPress={() => handlePlayerClick(0)}
-    />
-    <WaltesBoard playerTurn={playerTurn} onDiceRolled={onDiceRolled} sticks={sticks} />
-    <TouchableOpacity
-      style={styles.bottomClickableArea}
-      activeOpacity={1}
-      onPress={() => handlePlayerClick(1)}
-    />
+            style={styles.topClickableArea}
+            activeOpacity={1}
+            onPress={() => handlePlayerClick(0)}
+            disabled={playerTurn !== 0 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
+          />
+          <WaltesBoard 
+            playerTurn={playerTurn} 
+            onDiceRolled={onDiceRolled} 
+            sticks={sticks} 
+            shouldRoll={shouldRoll} 
+            setShouldRoll={setShouldRoll} 
+            setIsDiceRolling={setIsDiceRolling} 
+            isDiceRolling={isDiceRolling} // Pass isDiceRolling as a prop to the WaltesBoard component
+          />
+          <TouchableOpacity
+            style={styles.bottomClickableArea}
+            activeOpacity={1}
+            onPress={() => handlePlayerClick(1)}
+            disabled={playerTurn !== 1 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
+          />
           <Text style={styles.waltesText}>{waltesText}</Text>
         </>
       )}

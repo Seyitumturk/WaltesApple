@@ -56,7 +56,7 @@ const CircularButton = ({ type, backgroundColor, count  }) => {
 };
 
 
-export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
+export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -68,33 +68,46 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
   const generalKingPinCount = sticks.general.kingPin;
 
 
-  const rollDice = () => {
-    const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
-    setDice(newDice);
-    const score = onDiceRolled(newDice);
+ // ...
 
-    if (score > 0) {
-      Vibration.vibrate(500);
-      setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => {
-        setTimeout(() => {
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 500,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }).start();
-        }, 1000);
-      });
-    }
-  };
+const rollDice = () => {
+  
+  setIsDiceRolling(true); // The dice have started rolling
+  const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
+  setDice(newDice);
+  const score = onDiceRolled(newDice);
 
-  useEffect(() => {
+
+  if (score > 0) {
+    Vibration.vibrate(500);
+    setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }).start();
+      }, 1000);
+    });
+  }
+};
+
+
+// ...
+setTimeout(() => {
+  setIsDiceRolling(false); // The dice have finished rolling
+}, 2000); 
+
+useEffect(() => {
+  if (shouldRoll) {
+    setShouldRoll(false); // Reset shouldRoll
     Animated.timing(shakeAnim, {
       toValue: 1,
       duration: 100,
@@ -108,7 +121,8 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks }) {
         useNativeDriver: true,
       }).start(rollDice);
     });
-  }, [playerTurn]);
+  }
+}, [playerTurn, shouldRoll]);
 
   const randomPosition = () => {
     const x = Math.random() * 120 - 60;
