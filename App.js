@@ -186,7 +186,7 @@ export default function App() {
               },
             ]}
           >
-            Toss
+            TOSS!
           </Animated.Text>
 
 
@@ -267,13 +267,15 @@ bottomClickableArea: {
 tossText: {
   fontSize: 32,
   fontWeight: 'bold',
-  color: 'white',
+  color: 'orange', // This is a hex code for brown
   position: 'absolute',
   top: '50%',
   left: '50%',
   zIndex: 999,
   width: '100%',
   textAlign: 'center',
+  fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+
 },
 
 
