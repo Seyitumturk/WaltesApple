@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect,useRef } from 'react';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
@@ -12,6 +12,9 @@ export default function App() {
   const [waltesTimeout, setWaltesTimeout] = useState(null);
   const [shouldRoll, setShouldRoll] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
+  const [pulseAnim, setPulseAnim] = useState(new Animated.Value(0));
+  const translateYAnim = useRef(new Animated.Value(0)).current;
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
   const [sticks, setSticks] = useState({
@@ -115,18 +118,78 @@ export default function App() {
   };
   
 
+  const startPulseAnimation = () => {
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }),
+      Animated.timing(pulseAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+  
   useEffect(() => {
-    return () => {
-      if (waltesTimeout) clearTimeout(waltesTimeout);
-    };
-  }, [waltesTimeout]);
+    Animated.timing(translateYAnim, {
+      toValue: playerTurn === 0 ? 1 : -1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [playerTurn]);
 
+  const tossTextPosition = translateYAnim.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [screenHeight / 4, -screenHeight / 4],
+  });
+  
+  const tossTextRotation = translateYAnim.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  
+  
+
+  let transforms = [
+    {
+      scale: pulseAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 1.2],
+      }),
+    },
+  ];
+  
+  if (playerTurn === 1) {
+    transforms.push({ rotate: '180deg' });
+  }
   return (
     <View style={styles.container}>
       <BackgroundVideo />
       {currentPage === 'home' && <HomePage onStartGame={startGame} />}
       {currentPage === 'game' && (
         <>
+
+        
+            <Animated.Text
+            // Toss Text
+            style={[
+              styles.tossText,
+              {
+                transform: [
+                  { translateX: -screenWidth / 2 },
+                  { translateY: tossTextPosition },
+                  { rotate: tossTextRotation },
+                ],
+              },
+            ]}
+          >
+            Toss
+          </Animated.Text>
+
+
           <TouchableOpacity
             style={styles.topClickableArea}
             activeOpacity={1}
@@ -201,5 +264,18 @@ bottomClickableArea: {
   backgroundColor: 'rgba(0, 0, 0, 0.3)', // Adjust the opacity as needed
    zIndex: 10, 
 },
+tossText: {
+  fontSize: 32,
+  fontWeight: 'bold',
+  color: 'white',
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  zIndex: 999,
+  width: '100%',
+  textAlign: 'center',
+},
+
+
 
 });

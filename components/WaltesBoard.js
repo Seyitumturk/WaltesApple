@@ -100,7 +100,7 @@ const rollDice = () => {
 };
 
 
-// ...
+// ....
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
 }, 2000); 
