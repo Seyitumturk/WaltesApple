@@ -8,7 +8,7 @@ import {
   View,
   Vibration,
   Text,
-  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -19,39 +19,58 @@ import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
 
+const { height: screenHeight } = Dimensions.get('window');
 
-const CircularButton = ({ type, backgroundColor, count  }) => {
+const CircularButton = ({ type, count }) => {
   const icons = {
     plain: plainStickIcon,
     notched: notchedStickIcon,
     kingPin: kingPinIcon,
   };
-
-
+ 
   const styles = StyleSheet.create({
-    button: {
-      width: 60,
-      height: 60,
-      flexDirection: 'row',
-      borderRadius: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: backgroundColor || '#333',
-      marginBottom: 10,
-      paddingRight: 20,
-    },
     icon: {
-      width: '100%',
-      height: '100%',
+      width: 60,    // adjust the size as needed
+      height: 75,   // adjust the size as needed
+    },
+    button: {
+      marginHorizontal: 10,  // Added margin
+    },
+    countText: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: 'white',
     },
   });
-
+ 
   return (
-    <TouchableOpacity style={styles.button}>
+    <View style={styles.button}>
       <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
       <Text style={styles.countText}>{count}</Text>
+    </View>
+  );
+ };
 
-    </TouchableOpacity>
+
+ const PlayerArea = ({ player, sticks }) => {
+  const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
+  return (
+    <View style={[styles.playerArea, playerStyle]}>
+      <View style={styles.stickPileContainer}>
+        <View style={styles.stickContainer}>
+          <View style={styles.generalPile}>
+            <CircularButton type="plain" backgroundColor="wheat" count={sticks.general.plain} />
+            <CircularButton type="notched" backgroundColor="wheat" count={sticks.general.notched} />
+            <CircularButton type="kingPin" backgroundColor="wheat" count={sticks.general.kingPin} />
+          </View>
+          <View style={styles.personalPile}>
+            <CircularButton type="plain" count={sticks[player].plain} />
+            <CircularButton type="notched" count={sticks[player].notched} />
+            <CircularButton type="kingPin" count={sticks[player].kingPin} />
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
 
@@ -197,58 +216,16 @@ useEffect(() => {
       </Animated.View>
 
 
-    {/* Player 1's half */}
+      <PlayerArea player="player1" sticks={sticks} />
+      <PlayerArea player="player2" sticks={sticks} />
 
       
-   <View style={styles.player1Container}>
-      <View style={styles.generalPile}>
-        <CircularButton type="plain" backgroundColor="wheat" count={generalPlainCount} />
-        <CircularButton type="notched" backgroundColor="wheat" count={generalNotchedCount}/>
-        <CircularButton type="kingPin" backgroundColor="wheat" count={generalKingPinCount}/>
-      </View>
-      <View style={styles.playerPile}>
-        <CircularButton type="plain" count={sticks.player1.plain}/>
-        <CircularButton type="notched" count={sticks.player1.notched} />
-        <CircularButton type="kingPin" count={sticks.player1.kingPin}/>
-      </View> 
-    </View>
-
-    {/* Player 2's half */}
-
-
-    <View>
-      <View style={[styles.player2Container, { transform: [{ rotate: '180deg' }] }]}>
-        <View style={styles.generalPile}>
-          <CircularButton type="plain" backgroundColor="wheat" count={generalPlainCount} />
-        <CircularButton type="notched" backgroundColor="wheat" count={generalNotchedCount}/>
-        <CircularButton type="kingPin" backgroundColor="wheat" count={generalKingPinCount}/>
-        </View>
-        <View style={styles.playerPile}>
-          <CircularButton type="plain" count={sticks.player2.plain}/>
-        <CircularButton type="notched" count={sticks.player2.notched} />
-        <CircularButton type="kingPin" count={sticks.player2.kingPin}/>
-      </View>
-
-
-  </View>
-
-
-
 </View>
-
-    </View>
   );
 }
-
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
   bowlImage: {
     width: '100%',
     height: '100%',
@@ -288,66 +265,79 @@ container: {
     position: 'absolute',
     zIndex: 99999,
   },
-  sticksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  stick: {
-    width: 20,
-    height: 80,
-    marginHorizontal: 5,
-    borderRadius: 5,
-  },
   stickText: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: 'white',
-  marginHorizontal: 10,
-},
-
-stickTextHeader: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  color: '#333',
-  marginBottom: 5,
-},
-
-player1Container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    width: '100%',
-    position: 'absolute',
-    top: 290,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    marginHorizontal: 10,
   },
-  player2Container: {
+  stickTextHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  boardContainer: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  playerArea: {
+    position: 'absolute',
+    width: '100%',
+    height: '50%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 10,
+  },
+  player1Area: {
+    bottom: 0,
+  },
+  player2Area: {
+    top: 0,
+    transform: [{ scaleY: -1 }],
+  },
+  stickPileContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     width: '100%',
-    position: 'absolute',
-    right: -200,
-    bottom: 180,
-
+  },
+  stickContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   generalPile: {
-    alignItems: 'center',
-    marginLeft: 20,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    width: '45%',
   },
-  playerPile: {
-    alignItems: 'center',
-    marginRight: 20,
+  personalPile: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    width: '45%',
+  },
+
+
+  generalPile: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start', // Aligned to the start
+    width: '45%',
+  },
+  personalPile: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start', // Aligned to the start
+    width: '45%',
   },
   countText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    right: 5,
-    bottom: 5,
   },
- content: {
+  content: {
     position: 'absolute',
   },
 });

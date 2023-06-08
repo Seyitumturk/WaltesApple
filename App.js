@@ -118,21 +118,6 @@ export default function App() {
   };
   
 
-  const startPulseAnimation = () => {
-    Animated.sequence([
-      Animated.timing(pulseAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true
-      }),
-      Animated.timing(pulseAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true
-      })
-    ]).start();
-  };
-  
   useEffect(() => {
     Animated.timing(translateYAnim, {
       toValue: playerTurn === 0 ? 1 : -1,
@@ -256,12 +241,10 @@ container: {
 },
 topClickableArea: {
   flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Adjust the opacity as needed
    zIndex: 10
 },
 bottomClickableArea: {
   flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Adjust the opacity as needed
    zIndex: 10, 
 },
 tossText: {
