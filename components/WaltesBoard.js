@@ -51,23 +51,21 @@ const CircularButton = ({ type, count }) => {
   );
  };
 
-
  const PlayerArea = ({ player, sticks }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
+
   return (
     <View style={[styles.playerArea, playerStyle]}>
-      <View style={styles.stickPileContainer}>
-        <View style={styles.stickContainer}>
-          <View style={styles.generalPile}>
-            <CircularButton type="plain" backgroundColor="wheat" count={sticks.general.plain} />
-            <CircularButton type="notched" backgroundColor="wheat" count={sticks.general.notched} />
-            <CircularButton type="kingPin" backgroundColor="wheat" count={sticks.general.kingPin} />
-          </View>
-          <View style={styles.personalPile}>
-            <CircularButton type="plain" count={sticks[player].plain} />
-            <CircularButton type="notched" count={sticks[player].notched} />
-            <CircularButton type="kingPin" count={sticks[player].kingPin} />
-          </View>
+      <View style={styles.stickContainer}>
+        <View style={styles.generalPile}>
+          <CircularButton type="plain" count={sticks.general.plain} />
+          <CircularButton type="notched" count={sticks.general.notched} />
+          <CircularButton type="kingPin" count={sticks.general.kingPin} />
+        </View>
+        <View style={styles.personalPile}>
+          <CircularButton type="plain" count={sticks[player].plain} />
+          <CircularButton type="notched" count={sticks[player].notched} />
+          <CircularButton type="kingPin" count={sticks[player].kingPin} />
         </View>
       </View>
     </View>
@@ -277,60 +275,67 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 5,
   },
-  container: {
-    flex: 1,
+ 
+  stickPileContainer: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
+    paddingTop: 50, // Add padding at the top
+    paddingBottom: 50, // Add padding at the bottom
   },
   boardContainer: {
     flex: 1,
     flexDirection: 'column',
   },
+  container: {
+    flex: 1,
+    position: 'relative',
+  },
   playerArea: {
     position: 'absolute',
     width: '100%',
     height: '50%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: 10,
+    justifyContent: 'flex-end',  // Align the items towards the end of the flex direction
+  },
+  
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   player1Area: {
-    bottom: 0,
+    top: 0,
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Content aligns at the top
   },
   player2Area: {
-    top: 0,
-    transform: [{ scaleY: -1 }],
-  },
-  stickPileContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'flex-end', // Content aligns at the bottom
   },
   stickContainer: {
     flexDirection: 'column',
+    justifyContent: 'center', // Center the piles vertically in their container
+    // other properties...
+  },
+ 
+  stickContainer: {
+    width: '100%',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end', // Add this line
+    paddingBottom: 30, // You can adjust this padding as needed
   },
+  
   generalPile: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    width: '45%',
+    justifyContent: 'center',
+    width: '100%',
   },
   personalPile: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    width: '45%',
-  },
-
-
-  generalPile: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start', // Aligned to the start
-    width: '45%',
-  },
-  personalPile: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start', // Aligned to the start
-    width: '45%',
+    justifyContent: 'center',
+    width: '100%',
   },
   countText: {
     fontSize: 16,

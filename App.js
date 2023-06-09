@@ -240,12 +240,18 @@ container: {
   flexDirection: 'column',
 },
 topClickableArea: {
-  flex: 1,
-   zIndex: 10
+  position: 'absolute',
+  top: 0,
+  width: '100%',
+  height: '50%',
+  zIndex: 10,
 },
 bottomClickableArea: {
-  flex: 1,
-   zIndex: 10, 
+  position: 'absolute',
+  bottom: 0,
+  width: '100%',
+  height: '50%',
+  zIndex: 10, 
 },
 tossText: {
   fontSize: 32,
