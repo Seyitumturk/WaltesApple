@@ -12,10 +12,11 @@ export default function App() {
   const [waltesTimeout, setWaltesTimeout] = useState(null);
   const [shouldRoll, setShouldRoll] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
-  const [pulseAnim, setPulseAnim] = useState(new Animated.Value(0));
   const translateYAnim = useRef(new Animated.Value(0)).current;
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+  const [pulseAnim, setPulseAnim] = useState(new Animated.Value(0));
+  const [pulsePosition, setPulsePosition] = useState({ x: '50%', y: '75%' });
 
   const [sticks, setSticks] = useState({
         general: {
@@ -120,6 +121,27 @@ export default function App() {
     }).start();
   }, [playerTurn]);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]),
+      {
+        iterations: -1, // Run the animation indefinitely
+      }
+    ).start();
+  }, [playerTurn]);
+  
+
   const tossTextPosition = translateYAnim.interpolate({
     inputRange: [-1, 1],
     outputRange: [screenHeight / 4, -screenHeight / 4],
@@ -152,22 +174,24 @@ export default function App() {
         <>
 
         
-            <Animated.Text
-            // Toss Text
-            style={[
-              styles.tossText,
-              {
-                transform: [
-                  { translateX: -screenWidth / 2 },
-                  { translateY: tossTextPosition },
-                  { rotate: tossTextRotation },
-                ],
-              },
-            ]}
-          >
-            TOSS!
-          </Animated.Text>
-
+<Animated.View
+  style={[
+    styles.pulse,
+    {
+      transform: [
+        {
+          scale: pulseAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 1.2],
+          }),
+        },
+      ],
+      top: playerTurn === 0 ? 0 : '50%', // If it's player 1's turn, show on top half, else on bottom half
+      height: '50%', // Cover half of the screen
+      width: '100%', // Cover the full width
+    },
+  ]}
+/>
 
           <TouchableOpacity
             style={styles.topClickableArea}
@@ -201,6 +225,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   background: {
     flex: 1,
@@ -261,6 +287,10 @@ tossText: {
 
 },
 
+pulse: {
+  position: 'absolute',
+  backgroundColor: 'rgba(255,165,0,0.5)', // Change this color to match your design
+},
 
 
 });
