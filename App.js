@@ -47,14 +47,8 @@ export default function App() {
 
   const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
-    const newScores = [...scores];
     const score = calculateScore(dice);
-    newScores[playerTurn] += score;
-    setScores(prevScores => {
-      const newScores = [...prevScores];
-      newScores[playerTurn] += score;
-      return newScores;
-    });
+  
 
     // Don't switch turns if the player scores
     if (score === 0) {
@@ -81,7 +75,7 @@ export default function App() {
   
     if (score > 0) {
       // Update the player's sticks
-      const currentPlayer = `player${2 - playerTurn}`;
+      const currentPlayer = `player${playerTurn + 1}`;
       newSticks[currentPlayer].plain += 3 * score;
       newSticks.general.plain -= 3 * score; // Decrement plain sticks count in the general pile
   

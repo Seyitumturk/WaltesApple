@@ -54,9 +54,12 @@ const CircularButton = ({ type, count }) => {
  const PlayerArea = ({ player, sticks }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
+  // Rotate both piles for the top player
+  const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
+
   return (
     <View style={[styles.playerArea, playerStyle]}>
-      <View style={styles.stickContainer}>
+      <View style={[styles.stickContainer, stickContainerStyle]}>
         <View style={styles.generalPile}>
           <CircularButton type="plain" count={sticks.general.plain} />
           <CircularButton type="notched" count={sticks.general.notched} />
@@ -71,6 +74,7 @@ const CircularButton = ({ type, count }) => {
     </View>
   );
 };
+
 
 
 export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
@@ -213,9 +217,8 @@ useEffect(() => {
       >
       </Animated.View>
 
-
-      <PlayerArea player="player1" sticks={sticks} />
       <PlayerArea player="player2" sticks={sticks} />
+      <PlayerArea player="player1" sticks={sticks} />
 
       
 </View>
@@ -313,18 +316,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end', // Content aligns at the bottom
   },
-  stickContainer: {
-    flexDirection: 'column',
-    justifyContent: 'center', // Center the piles vertically in their container
-    // other properties...
-  },
- 
+
   stickContainer: {
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'flex-end', // Add this line
     paddingBottom: 30, // You can adjust this padding as needed
+    paddingTop: 30, // You can adjust this padding as needed
+
   },
   
   generalPile: {
