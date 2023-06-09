@@ -227,12 +227,19 @@ useEffect(() => {
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: 'relative',
+    padding: 50,
+  },
   bowlImage: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
+    transform: [{ scale: 0.9}],  // You can adjust this scale as needed
+
   },
   diceContainer: {
     flexDirection: 'row',
@@ -290,10 +297,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
+ 
   playerArea: {
     position: 'absolute',
     width: '100%',
