@@ -76,7 +76,6 @@ const CircularButton = ({ type, count }) => {
 };
 
 
-
 export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');

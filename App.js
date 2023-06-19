@@ -18,6 +18,18 @@ export default function App() {
   const [pulseAnim, setPulseAnim] = useState(new Animated.Value(0));
   const [pulsePosition, setPulsePosition] = useState({ x: '50%', y: '75%' });
 
+  const [score, setScore] = useState(0); // add this line
+
+
+  const stickImage = require('./assets/plain-stick-icon.png'); 
+  const [stickVisible, setStickVisible] = useState(false);
+
+  const stickAnimY = useRef(new Animated.Value(screenHeight / 2)).current;
+  const stickAnimX = useRef(new Animated.Value(0)).current; 
+
+  const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
+  const playerTurnRef = useRef(playerTurn);
+
   const [sticks, setSticks] = useState({
         general: {
           plain: 51,
@@ -36,12 +48,14 @@ export default function App() {
         },
 });
 
-  const startGame = () => {
+
+const startGame = () => {
     setCurrentPage('game');
   };
 
   const handlePlayerClick = (player) => {
     if (player === playerTurn && !isDiceRolling) {
+      setPrevPlayerTurn(playerTurn);
       setShouldRoll(true);
     }
   };
@@ -50,12 +64,14 @@ export default function App() {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
   
-
     // Don't switch turns if the player scores
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
+    } else {
+      playerTurnRef.current = prevPlayerTurn;
     }
   };
+  
 
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
@@ -73,8 +89,14 @@ export default function App() {
     } else {
       setWaltesText('');
     }
-  
+    
+    // If player scores 
+
     if (score > 0) {
+
+      setScore(score);
+
+ 
       // Update the player's sticks
       const currentPlayer = `player${playerTurn + 1}`;
       newSticks[currentPlayer].plain += 3 * score;
@@ -111,7 +133,32 @@ export default function App() {
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
   };
-  
+  useEffect(() => {
+    if (score > 0) {
+        setStickVisible(true); 
+        stickAnimY.setValue(screenHeight / 2); // Reset the animation's starting position
+        Animated.sequence([
+            Animated.timing(stickAnimY, {
+                toValue: playerTurnRef.current === 0 ? 0 : screenHeight / 2,
+                duration: 1000,
+                useNativeDriver: false,
+            }),
+            Animated.timing(stickAnimY, {
+                toValue: screenHeight / 2,
+                duration: 1000,
+                useNativeDriver: false,
+            }),
+        ]).start(() => {
+            setStickVisible(false); // Hide stick after animation
+            setScore(0); // Reset the score to 0 when there's no waltes
+        });
+    } else if (score === 0) {
+        setScore(0); // Reset the score to 0 when there's no waltes
+    }
+}, [score]);
+
+
+
 
   useEffect(() => {
     Animated.timing(translateYAnim, {
@@ -140,19 +187,6 @@ export default function App() {
       }
     ).start();
   }, [playerTurn]);
-  
-
-  const tossTextPosition = translateYAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: [screenHeight / 4, -screenHeight / 4],
-  });
-  
-  const tossTextRotation = translateYAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  
-  
 
   let transforms = [
     {
@@ -166,6 +200,8 @@ export default function App() {
   if (playerTurn === 1) {
     transforms.push({ rotate: '180deg' });
   }
+
+
   return (
     <View style={styles.container}>
       <BackgroundVideo />
@@ -192,6 +228,23 @@ export default function App() {
     },
   ]}
 />
+
+
+<Animated.Image
+  source={stickImage}
+  style={{
+    position: 'absolute',
+    bottom: '50%',
+    transform: [
+      { translateX: stickAnimX },
+      { translateY: stickAnimY },
+    ],
+    width: 50,
+    height: 100,
+  }}
+/>
+
+
 
           <TouchableOpacity
             style={styles.topClickableArea}
