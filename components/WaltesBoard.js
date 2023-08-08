@@ -9,6 +9,7 @@ import {
   Vibration,
   Text,
   Dimensions,
+  StatusBar
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -79,8 +80,10 @@ const CircularButton = ({ type, count }) => {
 export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+
 
 
   const generalPlainCount = sticks.general.plain;
@@ -88,39 +91,58 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRo
   const generalKingPinCount = sticks.general.kingPin;
 
 
- // ...
+const scaleAndMoveStick = () => {
+  console.log('THE FUNCTION IS CALLED')
+  // Start stick at the center with a scale of 0.
+  stickAnimPosition.setValue({ x: 0, y: 0 });
+  fadeAnim.setValue(0);
 
-const rollDice = () => {
-  
-  setIsDiceRolling(true); // The dice have started rolling
-  const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
-  setDice(newDice);
-  const score = onDiceRolled(newDice);
-
-
-  if (score > 0) {
-    Vibration.vibrate(500);
-    setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
+  // Enlarge the stick.
+  Animated.sequence([
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
       easing: Easing.linear,
+      useNativeDriver: true
+    }),
+    // Move the stick towards the scoring player's pile.
+    Animated.timing(stickAnimPosition, {
+      toValue: { x: 0, y: playerTurn === 0 ? screenHeight * 0.25 : -screenHeight * 0.25 },
+      duration: 500,
+      easing: Easing.linear,
       useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 500,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }).start();
-      }, 1000);
-    });
-  }
+    }),
+    // Dissolve the stick.
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 500,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }),
+  ]).start();
+}
+
+
+
+const rollDice = () => {
+  console.log("Roll Dice is Called");
+  Vibration.vibrate(500);
+
+  setIsDiceRolling(true); // The dice have started rolling
+  const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
+  setDice(newDice);
+  const score = onDiceRolled(newDice);
+  console.log(score)
+
+  console.log('THE IF is  IS CALLED')
+  scaleAndMoveStick();
+
 };
 
 
-// ....
+
+
+
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
 }, 2000); 
@@ -156,6 +178,7 @@ useEffect(() => {
 
   return (
     <View style={styles.container}>
+            <StatusBar hidden={true} /> 
       <Animated.View
         style={[
           styles.bowlImage,
@@ -202,6 +225,9 @@ useEffect(() => {
           </View>
         </ImageBackground>
       </Animated.View>
+
+
+
       <Animated.View
         style={[
           styles.waltesTextContainer,
@@ -216,6 +242,18 @@ useEffect(() => {
       >
       </Animated.View>
 
+      <Animated.Image
+      source={require('../assets/plain-stick-icon.png')}
+      style={[styles.animatedStick, {
+        transform: [
+          ...stickAnimPosition.getTranslateTransform(),
+          { scale: fadeAnim }
+        ],
+        opacity: fadeAnim
+      }]}
+    />
+
+
       <PlayerArea player="player2" sticks={sticks} />
       <PlayerArea player="player1" sticks={sticks} />
 
@@ -226,11 +264,8 @@ useEffect(() => {
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-    padding: 50,
-  },
+
+
   bowlImage: {
     width: '100%',
     height: '100%',
@@ -238,6 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     transform: [{ scale: 0.9}],  // You can adjust this scale as needed
+    zIndex: 9999,
 
   },
   diceContainer: {
@@ -260,31 +296,7 @@ const styles = StyleSheet.create({
     height: 50,
     margin: 5,
   },
-  waltesText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: 'black',
-    position: 'absolute',
-    zIndex: 99999,
-  },
-  waltesTextContainer: {
-    position: 'absolute',
-    zIndex: 99999,
-  },
-  stickText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginHorizontal: 10,
-  },
-  stickTextHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
- 
+
   stickPileContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -308,14 +320,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
+    backgroundColor: 'orange',  // Add this line
+    zIndex: -1,
+
   },
   player1Area: {
-    top: 0,
+    top: 15,
     alignItems: 'center',
-    justifyContent: 'flex-start', // Content aligns at the top
+    justifyContent: 'flex-start', 
+    
   },
   player2Area: {
-    bottom: 0,
+    bottom: 15,
     alignItems: 'center',
     justifyContent: 'flex-end', // Content aligns at the bottom
   },
@@ -334,18 +350,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
+    backgroundColor: '#D68402', // Added background color
+
+
+    
   },
   personalPile: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
+    backgroundColor: '#FDA10E', 
+
+
   },
   countText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
   },
-  content: {
+  animatedStick: {
     position: 'absolute',
-  },
+    width: 60,  // Adjust size as needed.
+    height: 75, // Adjust size as needed.
+    left: '50%',
+    top: '50%',
+    transform: [{ translateX: -30 }, { translateY: -37.5 }], // To center it.
+    zIndex: 999999,
+  }
+  
 });

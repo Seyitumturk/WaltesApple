@@ -20,15 +20,11 @@ export default function App() {
 
   const [score, setScore] = useState(0); // add this line
 
-
-  const stickImage = require('./assets/plain-stick-icon.png'); 
-  const [stickVisible, setStickVisible] = useState(false);
-
-  const stickAnimY = useRef(new Animated.Value(screenHeight / 2)).current;
-  const stickAnimX = useRef(new Animated.Value(0)).current; 
-
   const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
   const playerTurnRef = useRef(playerTurn);
+
+
+  
 
   const [sticks, setSticks] = useState({
         general: {
@@ -47,7 +43,6 @@ export default function App() {
           kingPin: 0,
         },
 });
-
 
 const startGame = () => {
     setCurrentPage('game');
@@ -68,7 +63,10 @@ const startGame = () => {
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
     } else {
-      playerTurnRef.current = prevPlayerTurn;
+      if (score > 0) {
+        setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
+      }
+      playerTurnRef.current = prevPlayerTurn; // This line might not be necessary since the player doesn't switch turns.
     }
   };
   
@@ -132,31 +130,8 @@ const startGame = () => {
   
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
-  };
-  useEffect(() => {
-    if (score > 0) {
-        setStickVisible(true); 
-        stickAnimY.setValue(screenHeight / 2); // Reset the animation's starting position
-        Animated.sequence([
-            Animated.timing(stickAnimY, {
-                toValue: playerTurnRef.current === 0 ? 0 : screenHeight / 2,
-                duration: 1000,
-                useNativeDriver: false,
-            }),
-            Animated.timing(stickAnimY, {
-                toValue: screenHeight / 2,
-                duration: 1000,
-                useNativeDriver: false,
-            }),
-        ]).start(() => {
-            setStickVisible(false); // Hide stick after animation
-            setScore(0); // Reset the score to 0 when there's no waltes
-        });
-    } else if (score === 0) {
-        setScore(0); // Reset the score to 0 when there's no waltes
-    }
-}, [score]);
 
+  };
 
 
 
@@ -228,22 +203,6 @@ const startGame = () => {
     },
   ]}
 />
-
-
-<Animated.Image
-  source={stickImage}
-  style={{
-    position: 'absolute',
-    bottom: '50%',
-    transform: [
-      { translateX: stickAnimX },
-      { translateY: stickAnimY },
-    ],
-    width: 50,
-    height: 100,
-  }}
-/>
-
 
 
           <TouchableOpacity
@@ -342,7 +301,8 @@ tossText: {
 
 pulse: {
   position: 'absolute',
-  backgroundColor: 'rgba(255,165,0,0.5)', // Change this color to match your design
+  backgroundColor: 'black', // Change this color to match your design
+  opacity: 0.2, 
 },
 
 
