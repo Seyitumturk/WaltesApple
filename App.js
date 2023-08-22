@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useRef } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
@@ -13,17 +13,15 @@ export default function App() {
   const [shouldRoll, setShouldRoll] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
   const translateYAnim = useRef(new Animated.Value(0)).current;
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-  const [pulseAnim, setPulseAnim] = useState(new Animated.Value(0));
-  const [pulsePosition, setPulsePosition] = useState({ x: '50%', y: '75%' });
+  
 
   const [score, setScore] = useState(0); // add this line
 
   const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
-  const playerTurnRef = useRef(playerTurn);
+  const playerTurnRef = useRef(playerTurn)
 
-
+  const [isWaltesVisible, setIsWaltesVisible] = useState(false);
+  
   
 
   const [sticks, setSticks] = useState({
@@ -44,6 +42,9 @@ export default function App() {
         },
 });
 
+
+
+
 const startGame = () => {
     setCurrentPage('game');
   };
@@ -55,10 +56,11 @@ const startGame = () => {
     }
   };
 
+
   const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
-  
+
     // Don't switch turns if the player scores
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
@@ -68,9 +70,11 @@ const startGame = () => {
       }
       playerTurnRef.current = prevPlayerTurn; // This line might not be necessary since the player doesn't switch turns.
     }
+    return score
   };
-  
 
+  // Call this function wherever you update the score, passing the player and score as parameters.
+  
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
@@ -134,77 +138,12 @@ const startGame = () => {
   };
 
 
-
-  useEffect(() => {
-    Animated.timing(translateYAnim, {
-      toValue: playerTurn === 0 ? 1 : -1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, [playerTurn]);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]),
-      {
-        iterations: -1, // Run the animation indefinitely
-      }
-    ).start();
-  }, [playerTurn]);
-
-  let transforms = [
-    {
-      scale: pulseAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1.2],
-      }),
-    },
-  ];
-  
-  if (playerTurn === 1) {
-    transforms.push({ rotate: '180deg' });
-  }
-
-
   return (
     <View style={styles.container}>
       <BackgroundVideo />
       {currentPage === 'home' && <HomePage onStartGame={startGame} />}
       {currentPage === 'game' && (
         <>
-
-        
-<Animated.View
-  style={[
-    styles.pulse,
-    {
-      transform: [
-        {
-          scale: pulseAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 1.2],
-          }),
-        },
-      ],
-      top: playerTurn === 0 ? 0 : '50%', // If it's player 1's turn, show on top half, else on bottom half
-      height: '50%', // Cover half of the screen
-      width: '100%', // Cover the full width
-    },
-  ]}
-/>
-
-
           <TouchableOpacity
             style={styles.topClickableArea}
             activeOpacity={1}
@@ -226,7 +165,20 @@ const startGame = () => {
             onPress={() => handlePlayerClick(1)}
             disabled={playerTurn !== 1 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
           />
-          <Text style={styles.waltesText}>{waltesText}</Text>
+
+          {isWaltesVisible && (
+            <Animated.Text
+              style={[
+                styles.waltesText,
+                {
+                  opacity: fadeAnim,
+                },
+              ]}
+            >
+              {waltesText}
+            </Animated.Text>
+          )}
+          
         </>
       )}
     </View>

@@ -20,6 +20,10 @@ import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
 
+
+
+
+
 const { height: screenHeight } = Dimensions.get('window');
 
 const CircularButton = ({ type, count }) => {
@@ -80,48 +84,46 @@ const CircularButton = ({ type, count }) => {
 export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
 
 
-  const generalPlainCount = sticks.general.plain;
-  const generalNotchedCount = sticks.general.notched;
-  const generalKingPinCount = sticks.general.kingPin;
 
-
-const scaleAndMoveStick = () => {
-  console.log('THE FUNCTION IS CALLED')
-  // Start stick at the center with a scale of 0.
-  stickAnimPosition.setValue({ x: 0, y: 0 });
-  fadeAnim.setValue(0);
-
-  // Enlarge the stick.
-  Animated.sequence([
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      easing: Easing.linear,
-      useNativeDriver: true
-    }),
-    // Move the stick towards the scoring player's pile.
-    Animated.timing(stickAnimPosition, {
-      toValue: { x: 0, y: playerTurn === 0 ? screenHeight * 0.25 : -screenHeight * 0.25 },
-      duration: 500,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }),
-    // Dissolve the stick.
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 500,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }),
-  ]).start();
-}
-
+  const scaleAndMoveStick = () => {
+    console.log('THE FUNCTION IS CALLED');
+    // Start stick at the center with a scale of 0.
+    stickAnimPosition.setValue({ x: 0, y: 0 });
+    fadeAnim.setValue(0);
+  
+    // Determine the correct direction based on the player who scored.
+    const direction = playerTurn === 0 ? -screenHeight * 0.25 : screenHeight * 0.25;
+  
+    // Enlarge the stick.
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      // Move the stick towards the scoring player's pile.
+      Animated.timing(stickAnimPosition, {
+        toValue: { x: 0, y: direction },
+        duration: 500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      // Dissolve the stick.
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
 
 const rollDice = () => {
@@ -131,17 +133,15 @@ const rollDice = () => {
   setIsDiceRolling(true); // The dice have started rolling
   const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
   setDice(newDice);
-  const score = onDiceRolled(newDice);
+  let score = onDiceRolled(newDice);
   console.log(score)
 
-  console.log('THE IF is  IS CALLED')
-  scaleAndMoveStick();
+
+  if (score > 0) { // If a score was obtained, animate the stick
+    scaleAndMoveStick();
+  }
 
 };
-
-
-
-
 
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
@@ -242,11 +242,14 @@ useEffect(() => {
       >
       </Animated.View>
 
+      
+
       <Animated.Image
-      source={require('../assets/plain-stick-icon.png')}
+      source={require('../assets/animated-plain-stick-icon.png')}
       style={[styles.animatedStick, {
         transform: [
           ...stickAnimPosition.getTranslateTransform(),
+          { rotate: playerTurn === 1 ? '0deg' : '180deg' },// adjust the rotation
           { scale: fadeAnim }
         ],
         opacity: fadeAnim
@@ -374,8 +377,17 @@ const styles = StyleSheet.create({
     height: 75, // Adjust size as needed.
     left: '50%',
     top: '50%',
-    transform: [{ translateX: -30 }, { translateY: -37.5 }], // To center it.
+    transform: [{ translateX: 60/2 }, { translateY: -75/2 }], // Adjusting for image dimensions
     zIndex: 999999,
-  }
+  },
+  waltesTextImage: {
+    position: 'absolute',
+    width: 100, // Adjust width as needed
+    height: 50, // Adjust height as needed
+    resizeMode: 'contain', // Adjust resizing mode as needed
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+  },
   
 });
