@@ -20,10 +20,6 @@ import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
 
-
-
-
-
 const { height: screenHeight } = Dimensions.get('window');
 
 const CircularButton = ({ type, count }) => {
@@ -56,7 +52,7 @@ const CircularButton = ({ type, count }) => {
   );
  };
 
- const PlayerArea = ({ player, sticks, playerTurn }) => {
+ const PlayerArea = ({ player, sticks, playerTurn, player1TotalScore = 0, player2TotalScore =0 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
   // Rotate both piles for the top player
@@ -67,14 +63,33 @@ const CircularButton = ({ type, count }) => {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#016CFE' : '#FDA10E',
   };
 
+  const totalScore = player1TotalScore + player2TotalScore;
+  const player1Percentage = (player1TotalScore / totalScore) * 100 || 0;
+  const player2Percentage = 100 - player1Percentage;
+
+
+  useEffect(() => {
+    console.log("PlayerArea re-rendered with scores:", player1TotalScore, player2TotalScore);
+  }, [player1TotalScore, player2TotalScore]);
+  
+
   return (
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
+        
         <View style={styles.generalPile}>
+          {/* Add this View to represent the colored background based on scores */}
+          <View style={{ position: 'absolute', flexDirection: 'row', width: '100%', height: '100%' }}>
+            <View style={{ backgroundColor: 'red', flex: player1Percentage }} />
+            <View style={{ backgroundColor: 'green', flex: player2Percentage }} />
+          </View>
+
+          {/* Existing generalPile content */}
           <CircularButton type="plain" count={sticks.general.plain} />
           <CircularButton type="notched" count={sticks.general.notched} />
           <CircularButton type="kingPin" count={sticks.general.kingPin} />
         </View>
+        
         <View style={[styles.personalPile, personalPileStyle]}>
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton type="notched" count={sticks[player].notched} />
@@ -82,17 +97,19 @@ const CircularButton = ({ type, count }) => {
         </View>
       </View>
     </View>
-  );
+);
+
 };
 
 
-export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
+export default function WaltesBoard({ player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
+  
 
 
   const scaleAndMoveStick = () => {
@@ -262,10 +279,20 @@ useEffect(() => {
         ]}
       />
 
-    <PlayerArea player="player2" sticks={sticks} playerTurn={playerTurn} />
-    <PlayerArea player="player1" sticks={sticks} playerTurn={playerTurn} />
-
-          
+    <PlayerArea 
+      player="player2" 
+      sticks={sticks} 
+      playerTurn={playerTurn} 
+      player1TotalScore={player1TotalScore} 
+      player2TotalScore={player2TotalScore} 
+    />
+    <PlayerArea 
+      player="player1" 
+      sticks={sticks} 
+      playerTurn={playerTurn} 
+      player1TotalScore={player1TotalScore} 
+      player2TotalScore={player2TotalScore} 
+    />
 </View>
   );
 }
@@ -351,7 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end', // Add this line
     paddingBottom: 30, // You can adjust this padding as needed
     paddingTop: 30, // You can adjust this padding as needed
-
   },
   
   generalPile: {
@@ -359,9 +385,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#D68402', // Added background color
-
-
-    
   },
   personalPile: {
     flexDirection: 'row',

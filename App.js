@@ -31,8 +31,6 @@ export default function App() {
 
   const [isWaltesVisible, setIsWaltesVisible] = useState(false);
   
-  
-
   const [sticks, setSticks] = useState({
         general: {
           plain: 51,
@@ -170,6 +168,8 @@ const startGame = () => {
         </TouchableOpacity>
 
           <WaltesBoard 
+            player1TotalScore={scores[0]}
+            player2TotalScore={scores[1]}
             playerTurn={playerTurn} 
             onDiceRolled={onDiceRolled} 
             sticks={sticks} 
