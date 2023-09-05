@@ -13,8 +13,17 @@ export default function App() {
   const [shouldRoll, setShouldRoll] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
   const translateYAnim = useRef(new Animated.Value(0)).current;
-  
+  const [showExhaustedAlert, setShowExhaustedAlert] = useState(false);
+  const hasClickedRef = useRef(false);
 
+
+  
+  //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
+  const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
+  //State to keep track of switching to "DEBT" System.  
+  const [isGeneralPileExhausted, setIsGeneralPileExhausted] = useState(false);
+
+  const [hasShownAlert, setHasShownAlert] = useState(false);
   const [score, setScore] = useState(0); // add this line
 
   const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
@@ -34,29 +43,42 @@ export default function App() {
           plain: 0,
           notched: 0,
           kingPin: 0,
+          tokenPile: 0,
+          debts: 0,
+
         },
         player2: {
           plain: 0,
           notched: 0,
           kingPin: 0,
+          tokenPile: 0,
+          debts: 0,
+
         },
 });
-
-
-
 
 const startGame = () => {
     setCurrentPage('game');
   };
 
   const handlePlayerClick = (player) => {
-    if (player === playerTurn && !isDiceRolling) {
+    if (player === playerTurn && !isDiceRolling && !hasClickedRef.current) {
+      hasClickedRef.current = true;
       setPrevPlayerTurn(playerTurn);
       setShouldRoll(true);
     }
   };
-
-
+  
+  useEffect(() => {
+    if (isGeneralPileExhausted) {
+      setShowExhaustedAlert(true);
+      const timer = setTimeout(() => {
+        setShowExhaustedAlert(false);
+      }, 3000);
+      return () => clearTimeout(timer);  // Clear the timeout if the component unmounts
+    }
+  }, [isGeneralPileExhausted]);
+  
   const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
@@ -70,6 +92,7 @@ const startGame = () => {
       }
       playerTurnRef.current = prevPlayerTurn; // This line might not be necessary since the player doesn't switch turns.
     }
+    hasClickedRef.current = false;  // Resetting hasClicked here
     return score
   };
 
@@ -78,9 +101,11 @@ const startGame = () => {
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
-  
     const newSticks = { ...sticks };
     let score = 0;
+  
+    const currentPlayer = `player${playerTurn + 1}`;
+    const otherPlayer = `player${3 - (playerTurn + 1)}`; // Opponent
   
     if (marked === 6 || unmarked === 6) {
       setWaltesText('Super Waltes!');
@@ -91,52 +116,39 @@ const startGame = () => {
     } else {
       setWaltesText('');
     }
-    
-    // If player scores 
-
+  
     if (score > 0) {
-
-      setScore(score);
-
- 
-      // Update the player's sticks
-      const currentPlayer = `player${playerTurn + 1}`;
-      newSticks[currentPlayer].plain += 3 * score;
-      newSticks.general.plain -= 3 * score; // Decrement plain sticks count in the general pile
+      if (newSticks.general.plain >= 3 * score) {
+        newSticks[currentPlayer].plain += 3 * score;
+        newSticks.general.plain -= 3 * score;
+        setIsGeneralPileExhausted(false);
+      } else {
+        setIsGeneralPileExhausted(true);
   
-      // Exchange 15 plain sticks for a notched stick, if available and if the player has enough sticks
-      if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-        newSticks.general.notched--;
-        newSticks[currentPlayer].notched++;
-        newSticks[currentPlayer].plain -= 15;
-  
-        // Decrement total sticks count
-        newSticks.general.totalSticks -= 15;
+        if (newSticks[otherPlayer].plain >= 3 * score) {
+          newSticks[currentPlayer].plain += 3 * score;
+          newSticks[otherPlayer].plain -= 3 * score;
+        } else {
+          newSticks[currentPlayer].plain += newSticks[otherPlayer].plain;
+          newSticks[otherPlayer].plain = 0;
+          // Additional logic if opponent's pile is emptied
+        }
       }
   
-      // Exchange 3 notched sticks for the kingpin, if available and if the player has enough notched sticks
-      if (newSticks[currentPlayer].notched >= 3 && newSticks.general.kingPin > 0) {
-        newSticks.general.kingPin--;
-        newSticks[currentPlayer].kingPin++;
-        newSticks[currentPlayer].notched -= 3;
-  
-        // Decrement total sticks count
-        newSticks.general.totalSticks -= 9;
-      }
-  
-      // Update the scores
-      setScores(prevScores => {
+      setScores((prevScores) => {
         const newScores = [...prevScores];
         newScores[playerTurn] += score;
         return newScores;
       });
     }
   
+    setSticks(newSticks);
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+  
     return score;
-
   };
-
+  
+  
 
   return (
     <View style={styles.container}>
@@ -145,11 +157,18 @@ const startGame = () => {
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
-            style={styles.topClickableArea}
-            activeOpacity={1}
-            onPress={() => handlePlayerClick(0)}
-            disabled={playerTurn !== 0 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
-          />
+          style={styles.topClickableArea}
+          activeOpacity={1}
+          onPress={() => handlePlayerClick(0)}
+          disabled={playerTurn !== 0 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
+        >
+          {showExhaustedAlert && (
+            <View style={styles.alertBox}>
+              <Text style={[styles.alertText, {transform: [{rotate: '180deg'}]}]}>General Pile is Exhausted, Debt Mode</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
           <WaltesBoard 
             playerTurn={playerTurn} 
             onDiceRolled={onDiceRolled} 
@@ -159,12 +178,18 @@ const startGame = () => {
             setIsDiceRolling={setIsDiceRolling} 
             isDiceRolling={isDiceRolling} // Pass isDiceRolling as a prop to the WaltesBoard component
           />
-          <TouchableOpacity
+           <TouchableOpacity
             style={styles.bottomClickableArea}
             activeOpacity={1}
             onPress={() => handlePlayerClick(1)}
-            disabled={playerTurn !== 1 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
-          />
+            disabled={playerTurn !== 1 || isDiceRolling}
+          >
+            {showExhaustedAlert && (
+              <View style={styles.alertBox}>
+                <Text style={[styles.alertText, {transform: [{rotate: '180deg'}]}]}>General Pile is Exhausted, Debt Mode</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           {isWaltesVisible && (
             <Animated.Text
@@ -218,7 +243,22 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }, { translateY: -50 }],
   },
-
+  alertBox: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center', // Center children vertically
+    alignItems: 'center', // Center children horizontally
+    backgroundColor: 'rgba(0,0,0,0.5)' // Example background color
+  },
+  alertText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff' // Example text color
+  },
+  
 container: {
   flex: 1,
   flexDirection: 'column',

@@ -56,11 +56,16 @@ const CircularButton = ({ type, count }) => {
   );
  };
 
- const PlayerArea = ({ player, sticks }) => {
+ const PlayerArea = ({ player, sticks, playerTurn }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
   // Rotate both piles for the top player
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
+
+  // Determine background color based on the player's turn
+  const personalPileStyle = {
+    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#016CFE' : '#FDA10E',
+  };
 
   return (
     <View style={[styles.playerArea, playerStyle]}>
@@ -70,7 +75,7 @@ const CircularButton = ({ type, count }) => {
           <CircularButton type="notched" count={sticks.general.notched} />
           <CircularButton type="kingPin" count={sticks.general.kingPin} />
         </View>
-        <View style={styles.personalPile}>
+        <View style={[styles.personalPile, personalPileStyle]}>
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton type="notched" count={sticks[player].notched} />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
@@ -87,7 +92,6 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRo
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-
 
 
 
@@ -108,13 +112,29 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRo
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-      // Move the stick towards the scoring player's pile.
-      Animated.timing(stickAnimPosition, {
-        toValue: { x: 0, y: direction },
-        duration: 500,
+      // Scale the stick up.
+      Animated.timing(fadeAnim, {
+        toValue: 1.5, // Adjust this value to make it grow larger
+        duration: 1000, // Increase duration to make the scaling effect last longer
         easing: Easing.linear,
         useNativeDriver: true,
       }),
+      // Move the stick towards the scoring player's pile while shrinking it.
+      Animated.parallel([
+        Animated.timing(stickAnimPosition, {
+          toValue: { x: 0, y: direction },
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        // Shrink the stick back to its original size.
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ]),
       // Dissolve the stick.
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -124,7 +144,7 @@ export default function WaltesBoard({ playerTurn, onDiceRolled, sticks, shouldRo
       }),
     ]).start();
   };
-
+  
 
 const rollDice = () => {
   console.log("Roll Dice is Called");
@@ -227,40 +247,25 @@ useEffect(() => {
       </Animated.View>
 
 
-
-      <Animated.View
-        style={[
-          styles.waltesTextContainer,
-          {
-            opacity: fadeAnim,
-            transform: [
-              { translateY: playerTurn === 0 ? 0 : -200 },
-              { rotate: playerTurn === 0 ? '0deg' : '180deg' },
-            ],
-          },
-        ]}
-      >
-      </Animated.View>
-
-      
-
       <Animated.Image
-      source={require('../assets/animated-plain-stick-icon.png')}
-      style={[styles.animatedStick, {
-        transform: [
-          ...stickAnimPosition.getTranslateTransform(),
-          { rotate: playerTurn === 1 ? '0deg' : '180deg' },// adjust the rotation
-          { scale: fadeAnim }
-        ],
-        opacity: fadeAnim
-      }]}
-    />
+        source={require('../assets/animated-plain-stick-icon.png')}
+        style={[
+          styles.animatedStick,
+          {
+            transform: [
+              ...stickAnimPosition.getTranslateTransform(),
+              { rotate: playerTurn === 1 ? '0deg' : '180deg' },
+              { scale: fadeAnim }
+            ],
+            opacity: fadeAnim
+          }
+        ]}
+      />
 
+    <PlayerArea player="player2" sticks={sticks} playerTurn={playerTurn} />
+    <PlayerArea player="player1" sticks={sticks} playerTurn={playerTurn} />
 
-      <PlayerArea player="player2" sticks={sticks} />
-      <PlayerArea player="player1" sticks={sticks} />
-
-      
+          
 </View>
   );
 }
@@ -290,8 +295,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     transform: [
-      { translateX: -(diceContainerSize / 2) - 30 },
-      { translateY: -(diceContainerSize / 2) - 30 },
+      { translateX: -(diceContainerSize / 2) },
+      { translateY: -(diceContainerSize / 2) },
     ],
   },
   dice: {
@@ -363,8 +368,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#FDA10E', 
-
-
   },
   countText: {
     fontSize: 16,
@@ -377,9 +380,8 @@ const styles = StyleSheet.create({
     height: 75, // Adjust size as needed.
     left: '50%',
     top: '50%',
-    transform: [{ translateX: 60/2 }, { translateY: -75/2 }], // Adjusting for image dimensions
     zIndex: 999999,
-  },
+      },
   waltesTextImage: {
     position: 'absolute',
     width: 100, // Adjust width as needed
