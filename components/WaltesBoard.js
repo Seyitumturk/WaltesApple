@@ -64,8 +64,16 @@ const CircularButton = ({ type, count }) => {
   };
 
   const totalScore = player1TotalScore + player2TotalScore;
-  const player1Percentage = (player1TotalScore / totalScore) * 100 || 0;
-  const player2Percentage = 100 - player1Percentage;
+
+  let player1Percentage = 0;
+  let player2Percentage = 0;
+  let neutralPercentage = 100; // full size to start
+
+  if (totalScore !== 0) {
+    player1Percentage = (player1TotalScore / totalScore) * 100;
+    player2Percentage = (player2TotalScore / totalScore) * 100;
+    neutralPercentage = 100 - (player1Percentage + player2Percentage); // remaining size
+  }
 
 
   useEffect(() => {
@@ -82,6 +90,7 @@ const CircularButton = ({ type, count }) => {
           <View style={{ position: 'absolute', flexDirection: 'row', width: '100%', height: '100%' }}>
             <View style={{ backgroundColor: 'red', flex: player1Percentage }} />
             <View style={{ backgroundColor: 'green', flex: player2Percentage }} />
+            <View style={{ backgroundColor: '#D68402', flex: neutralPercentage }} />
           </View>
 
           {/* Existing generalPile content */}
@@ -109,8 +118,6 @@ export default function WaltesBoard({ player1TotalScore, player2TotalScore, play
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
-  
-
 
   const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
@@ -119,7 +126,7 @@ export default function WaltesBoard({ player1TotalScore, player2TotalScore, play
     fadeAnim.setValue(0);
   
     // Determine the correct direction based on the player who scored.
-    const direction = playerTurn === 0 ? -screenHeight * 0.25 : screenHeight * 0.25;
+    const direction = playerTurn === 0 ? -screenHeight * 0.35 : screenHeight * 0.35;
   
     // Enlarge the stick.
     Animated.sequence([
@@ -239,6 +246,7 @@ useEffect(() => {
               return (
                 <View key={index}>
                   <Animated.Image
+                    resizeMode="contain"
                     source={die === 1 ? markedDice : unmarkedDice}
                     style={[
                       styles.dice,

@@ -114,7 +114,6 @@ const startGame = () => {
     } else {
       setWaltesText('');
     }
-  
     if (score > 0) {
       if (newSticks.general.plain >= 3 * score) {
         newSticks[currentPlayer].plain += 3 * score;
@@ -138,15 +137,27 @@ const startGame = () => {
         newScores[playerTurn] += score;
         return newScores;
       });
+
+      // Exchange nothced sticks with normal stikcs 
+      if (newSticks[currentPlayer].plain >= 15) {
+        if (newSticks.general.notched > 0) {  // Check if there are any notched sticks left in the general pile
+          // Exchange 15 plain sticks for 1 notched stick
+          newSticks[currentPlayer].plain -= 15;
+          newSticks[currentPlayer].notched += 1;
+          newSticks.general.notched -= 1;  // Reduce the number of notched sticks in the general pile
+
+          newSticks.general.plain += 15;   // Add 15 plain sticks back to the general pile
+
+
+        }
+      }
+      
     }
-  
     setSticks(newSticks);
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
   
     return score;
   };
-  
-  
 
   return (
     <View style={styles.container}>
@@ -176,7 +187,7 @@ const startGame = () => {
             shouldRoll={shouldRoll} 
             setShouldRoll={setShouldRoll} 
             setIsDiceRolling={setIsDiceRolling} 
-            isDiceRolling={isDiceRolling} // Pass isDiceRolling as a prop to the WaltesBoard component
+            isDiceRolling={isDiceRolling} 
           />
            <TouchableOpacity
             style={styles.bottomClickableArea}
