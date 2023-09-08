@@ -60,7 +60,7 @@ const CircularButton = ({ type, count }) => {
 
   // Determine background color based on the player's turn
   const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#016CFE' : '#FDA10E',
+    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#f07e2e' : '#FDA10E',
   };
 
   const totalScore = player1TotalScore + player2TotalScore;
@@ -88,8 +88,8 @@ const CircularButton = ({ type, count }) => {
         <View style={styles.generalPile}>
           {/* Add this View to represent the colored background based on scores */}
           <View style={{ position: 'absolute', flexDirection: 'row', width: '100%', height: '100%' }}>
-            <View style={{ backgroundColor: 'red', flex: player1Percentage }} />
-            <View style={{ backgroundColor: 'green', flex: player2Percentage }} />
+            <View style={{ backgroundColor: '#cc343e', flex: player1Percentage }} />
+            <View style={{ backgroundColor: '#44a4a0', flex: player2Percentage }} />
             <View style={{ backgroundColor: '#D68402', flex: neutralPercentage }} />
           </View>
 
@@ -126,7 +126,7 @@ export default function WaltesBoard({ player1TotalScore, player2TotalScore, play
     fadeAnim.setValue(0);
   
     // Determine the correct direction based on the player who scored.
-    const direction = playerTurn === 0 ? -screenHeight * 0.35 : screenHeight * 0.35;
+    const direction = playerTurn === 0 ? -screenHeight * 0.45 : screenHeight * 0.25;
   
     // Enlarge the stick.
     Animated.sequence([
@@ -273,20 +273,21 @@ useEffect(() => {
 
 
       <Animated.Image
-        source={require('../assets/animated-plain-stick-icon.png')}
-        style={[
+      source={require('../assets/animated-plain-stick-icon.png')}
+      style={[
           styles.animatedStick,
           {
-            transform: [
-              ...stickAnimPosition.getTranslateTransform(),
-              { rotate: playerTurn === 1 ? '0deg' : '180deg' },
-              { scale: fadeAnim }
-            ],
-            opacity: fadeAnim
+              transform: [
+                  ...stickAnimPosition.getTranslateTransform(),
+                  { rotate: playerTurn === 1 ? '0deg' : '180deg' },
+                  { scale: fadeAnim },
+                  { translateX: Animated.add(stickAnimPosition.x, -30) },
+                  { translateY: Animated.add(stickAnimPosition.y, -30) }
+              ],
+              opacity: fadeAnim
           }
-        ]}
-      />
-
+      ]}
+/>
     <PlayerArea 
       player="player2" 
       sticks={sticks} 
@@ -407,20 +408,13 @@ const styles = StyleSheet.create({
   },
   animatedStick: {
     position: 'absolute',
-    width: 60,  // Adjust size as needed.
-    height: 75, // Adjust size as needed.
+    width: 60,  
+    height: 60,
     left: '50%',
     top: '50%',
     zIndex: 999999,
-      },
-  waltesTextImage: {
-    position: 'absolute',
-    width: 100, // Adjust width as needed
-    height: 50, // Adjust height as needed
-    resizeMode: 'contain', // Adjust resizing mode as needed
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -50 }],
+    
   },
+  
   
 });

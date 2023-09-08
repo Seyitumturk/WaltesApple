@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useRef } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
@@ -94,7 +94,80 @@ const startGame = () => {
     return score
   };
 
-  // Call this function wherever you update the score, passing the player and score as parameters.
+  const triggerAlertForExchange = (currentPlayer) => {
+    Alert.alert(
+      'Exchange Sticks',
+      'Do you want to replace 15 normal sticks with a notched stick?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            // Implement the exchange logic here
+            const newSticks = { ...sticks };
+            newSticks[currentPlayer].plain -= 15;
+            newSticks[currentPlayer].notched += 1;
+            newSticks.general.notched -= 1;
+            newSticks.general.plain += 15;
+            setSticks(newSticks);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+  
+  const handleNotchedReplacement = () => {
+    let newSticks = { ...sticks };
+    let notchedSticksRemaining = sticks.general.notched;
+  
+    while (notchedSticksRemaining > 0) {
+      const eligiblePlayers = ["player1", "player2"].filter((player) => {
+        return newSticks[player].plain >= 15;
+      });
+  
+      if (eligiblePlayers.length === 0) {
+        // No player is eligible for a notched stick
+        break;
+      }
+  
+      let selectedPlayer = null;
+  
+      if (eligiblePlayers.length === 1) {
+        // Only one player is eligible
+        selectedPlayer = eligiblePlayers[0];
+      } else {
+        // Both players are eligible, randomly select one
+        selectedPlayer = eligiblePlayers[Math.floor(Math.random() * 2)];
+      }
+  
+      // Exchange 15 plain sticks for 1 notched stick
+      newSticks[selectedPlayer].plain -= 15;
+      newSticks[selectedPlayer].notched += 1;
+      notchedSticksRemaining -= 1;
+      newSticks.general.notched -= 1;
+      newSticks.general.plain += 15;
+    }
+  
+    setSticks(newSticks);
+  };
+  
+useEffect(() => {
+  if (isGeneralPileExhausted) {
+    setShowExhaustedAlert(true);
+    if (sticks.general.notched > 0) {
+      handleNotchedReplacement();
+    }
+    const timer = setTimeout(() => {
+      setShowExhaustedAlert(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }
+}, [isGeneralPileExhausted]);
   
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
@@ -114,7 +187,7 @@ const startGame = () => {
     } else {
       setWaltesText('');
     }
-    if (score > 0) {
+    if (score > 0) {  
       if (newSticks.general.plain >= 3 * score) {
         newSticks[currentPlayer].plain += 3 * score;
         newSticks.general.plain -= 3 * score;
@@ -142,12 +215,7 @@ const startGame = () => {
       if (newSticks[currentPlayer].plain >= 15) {
         if (newSticks.general.notched > 0) {  // Check if there are any notched sticks left in the general pile
           // Exchange 15 plain sticks for 1 notched stick
-          newSticks[currentPlayer].plain -= 15;
-          newSticks[currentPlayer].notched += 1;
-          newSticks.general.notched -= 1;  // Reduce the number of notched sticks in the general pile
-
-          newSticks.general.plain += 15;   // Add 15 plain sticks back to the general pile
-
+          triggerAlertForExchange(currentPlayer);
 
         }
       }
@@ -182,7 +250,7 @@ const startGame = () => {
             player1TotalScore={scores[0]}
             player2TotalScore={scores[1]}
             playerTurn={playerTurn} 
-            onDiceRolled={onDiceRolled} 
+            onDiceRolled={onDiceRolled}
             sticks={sticks} 
             shouldRoll={shouldRoll} 
             setShouldRoll={setShouldRoll} 
