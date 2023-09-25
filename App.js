@@ -15,9 +15,9 @@ export default function App() {
   const translateYAnim = useRef(new Animated.Value(0)).current;
   const [showExhaustedAlert, setShowExhaustedAlert] = useState(false);
   const hasClickedRef = useRef(false);
+  const [showKingPinAlert, setShowKingPinAlert] = useState(false);
+  const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
 
-
-  
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
   //State to keep track of switching to "DEBT" System.  
@@ -51,9 +51,20 @@ export default function App() {
           kingPin: 0,
           tokenPile: 0,
           debts: 0,
-
         },
 });
+
+const checkKingPinCondition = () => {
+  if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
+    Alert.alert("Alert", "Only King Pin left. First one to score in the next roll gets it.");
+    setNextRollForKingPin(true);  // Set next roll for King Pin
+    
+    const timer = setTimeout(() => {
+      setShowKingPinAlert(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }
+};
 
 const startGame = () => {
     setCurrentPage('game');
@@ -67,16 +78,7 @@ const startGame = () => {
     }
   };
   
-  useEffect(() => {
-    if (isGeneralPileExhausted) {
-      setShowExhaustedAlert(true);
-      const timer = setTimeout(() => {
-        setShowExhaustedAlert(false);
-      }, 3000);
-      return () => clearTimeout(timer);  // Clear the timeout if the component unmounts
-    }
-  }, [isGeneralPileExhausted]);
-  
+
   const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
@@ -157,7 +159,8 @@ const startGame = () => {
   };
   
 useEffect(() => {
-  if (isGeneralPileExhausted) {
+  if (isGeneralPileExhausted || (sticks.general.kingPin === 0 && sticks.general.plain === 0 && sticks.general.notched === 0)) {
+    Alert.alert("Alert", "General pile is exhausted");
     setShowExhaustedAlert(true);
     if (sticks.general.notched > 0) {
       handleNotchedReplacement();
@@ -169,63 +172,80 @@ useEffect(() => {
   }
 }, [isGeneralPileExhausted]);
   
-  const calculateScore = (dice) => {
-    const marked = dice.filter((die) => die === 1).length;
-    const unmarked = 6 - marked;
-    const newSticks = { ...sticks };
-    let score = 0;
+const calculateScore = (dice) => {
+  const marked = dice.filter((die) => die === 1).length;
+  const unmarked = 6 - marked;
+  const newSticks = { ...sticks };
+  let score = 0;
+
+  const currentPlayer = `player${playerTurn + 1}`;
+  const otherPlayer = `player${3 - (playerTurn + 1)}`; // Opponent
+
+  if (marked === 6 || unmarked === 6) {
+    setWaltesText('Super Waltes!');
+    score = 5;
+  } else if (marked === 5 || unmarked === 5) {
+    setWaltesText('Waltes!');
+    score = 1;
+  } else {
+    setWaltesText('');
+  }
   
-    const currentPlayer = `player${playerTurn + 1}`;
-    const otherPlayer = `player${3 - (playerTurn + 1)}`; // Opponent
-  
-    if (marked === 6 || unmarked === 6) {
-      setWaltesText('Super Waltes!');
-      score = 5;
-    } else if (marked === 5 || unmarked === 5) {
-      setWaltesText('Waltes!');
-      score = 1;
+  if (score > 0) {  
+    if (newSticks.general.plain >= 3 * score) {
+      newSticks[currentPlayer].plain += 3 * score;
+      newSticks.general.plain -= 3 * score;
+      setIsGeneralPileExhausted(false);
     } else {
-      setWaltesText('');
-    }
-    if (score > 0) {  
-      if (newSticks.general.plain >= 3 * score) {
-        newSticks[currentPlayer].plain += 3 * score;
-        newSticks.general.plain -= 3 * score;
-        setIsGeneralPileExhausted(false);
-      } else {
-        setIsGeneralPileExhausted(true);
-  
-        if (newSticks[otherPlayer].plain >= 3 * score) {
-          newSticks[currentPlayer].plain += 3 * score;
-          newSticks[otherPlayer].plain -= 3 * score;
-        } else {
-          newSticks[currentPlayer].plain += newSticks[otherPlayer].plain;
-          newSticks[otherPlayer].plain = 0;
-          // Additional logic if opponent's pile is emptied
-        }
-      }
-  
-      setScores((prevScores) => {
-        const newScores = [...prevScores];
-        newScores[playerTurn] += score;
-        return newScores;
-      });
-
-      // Exchange nothced sticks with normal stikcs 
-      if (newSticks[currentPlayer].plain >= 15) {
-        if (newSticks.general.notched > 0) {  // Check if there are any notched sticks left in the general pile
-          // Exchange 15 plain sticks for 1 notched stick
-          triggerAlertForExchange(currentPlayer);
-
-        }
-      }
+      // This block is modified
+      setIsGeneralPileExhausted(true);
+    
+      // Add the remaining sticks from the general pile to the current player
+      newSticks[currentPlayer].plain += newSticks.general.plain;
       
+      // Calculate the sticks still needed for the score
+      const debtSticks = 3 * score - newSticks.general.plain;
+    
+      // Set general pile to 0 since we've taken all remaining sticks
+      newSticks.general.plain = 0;
+    
+      // Proceed to deduct the remaining required sticks from the opponent
+      if (newSticks[otherPlayer].plain >= debtSticks) {
+        newSticks[currentPlayer].plain += debtSticks;
+        newSticks[otherPlayer].plain -= debtSticks;
+      } else {
+        newSticks[currentPlayer].plain += newSticks[otherPlayer].plain;
+        newSticks[otherPlayer].plain = 0;
+      }
+    
+      if (nextRollForKingPin) {
+        // This means this roll was the 'next' roll that could win the King Pin
+        // so we perform the assignment
+        newSticks[currentPlayer].kingPin += 1;
+        newSticks.general.kingPin -= 1;
+        setNextRollForKingPin(false);  // Reset the state
+        Alert.alert("Congrats", `${currentPlayer} got the King Pin!`);
+      }
     }
-    setSticks(newSticks);
-    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+    
+    setScores((prevScores) => {
+      const newScores = [...prevScores];
+      newScores[playerTurn] += score;
+      return newScores;
+    });
   
-    return score;
-  };
+    if (newSticks[currentPlayer].plain >= 15) {
+      if (newSticks.general.notched > 0) {
+        triggerAlertForExchange(currentPlayer);
+      }
+    }
+  }
+  setSticks(newSticks);  // set the new stick state
+  checkKingPinCondition(); // check for King Pin condition here
+  setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+  
+  return score;
+};
 
   return (
     <View style={styles.container}>
