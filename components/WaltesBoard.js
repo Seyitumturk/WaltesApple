@@ -60,7 +60,7 @@ const CircularButton = ({ type, count }) => {
 
   // Determine background color based on the player's turn
   const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#f07e2e' : '#FDA10E',
+    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
   const totalScore = player1TotalScore + player2TotalScore;
@@ -88,8 +88,8 @@ const CircularButton = ({ type, count }) => {
         <View style={styles.generalPile}>
           {/* Add this View to represent the colored background based on scores */}
           <View style={{ position: 'absolute', flexDirection: 'row', width: '100%', height: '100%' }}>
-            <View style={{ backgroundColor: '#cc343e', flex: player1Percentage }} />
-            <View style={{ backgroundColor: '#44a4a0', flex: player2Percentage }} />
+            <View style={{ backgroundColor: '#BF8A1F', flex: player1Percentage }} />
+            <View style={{ backgroundColor: '#805C15', flex: player2Percentage }} />
             <View style={{ backgroundColor: '#D68402', flex: neutralPercentage }} />
           </View>
 
