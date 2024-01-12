@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
-import Svg from '../assets/background-image.svg';
+import Svg from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 

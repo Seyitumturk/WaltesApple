@@ -3,6 +3,7 @@ import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing,
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
+import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
 
 export default function App() {
   const [playerTurn, setPlayerTurn] = useState(0);
@@ -17,6 +18,7 @@ export default function App() {
   const hasClickedRef = useRef(false);
   const [showKingPinAlert, setShowKingPinAlert] = useState(false);
   const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
+
 
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
@@ -54,6 +56,8 @@ export default function App() {
         },
 });
 
+
+
 const checkKingPinCondition = () => {
   if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
     Alert.alert("Alert", "Only King Pin left. First one to score in the next roll gets it.");
@@ -66,8 +70,12 @@ const checkKingPinCondition = () => {
   }
 };
 
-const startGame = () => {
-    setCurrentPage('game');
+ const startGame = () => {
+    setCurrentPage('tutorial'); // Start with the tutorial
+  };
+
+ const onTutorialFinished = () => {
+    setCurrentPage('game'); // Change to the game page
   };
 
   const handlePlayerClick = (player) => {
@@ -249,15 +257,19 @@ const calculateScore = (dice) => {
 
   return (
     <View style={styles.container}>
-      <BackgroundVideo />
-      {currentPage === 'home' && <HomePage onStartGame={startGame} />}
-      {currentPage === 'game' && (
+     <BackgroundVideo />
+    
+    {currentPage === 'home' && <HomePage onStartGame={startGame} />}
+
+    {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
+
+    {currentPage === 'game' && (
         <>
           <TouchableOpacity
           style={styles.topClickableArea}
           activeOpacity={1}
           onPress={() => handlePlayerClick(0)}
-          disabled={playerTurn !== 0 || isDiceRolling} // Disable the button when it's not the player's turn or when the dice are rolling
+          disabled={playerTurn !== 0 || isDiceRolling}
         >
           {showExhaustedAlert && (
             <View style={styles.alertBox}>
@@ -276,6 +288,7 @@ const calculateScore = (dice) => {
             setShouldRoll={setShouldRoll} 
             setIsDiceRolling={setIsDiceRolling} 
             isDiceRolling={isDiceRolling} 
+         
           />
            <TouchableOpacity
             style={styles.bottomClickableArea}
@@ -389,12 +402,4 @@ tossText: {
   fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
 
 },
-
-pulse: {
-  position: 'absolute',
-  backgroundColor: 'black', // Change this color to match your design
-  opacity: 0.2, 
-},
-
-
 });

@@ -9,7 +9,8 @@ import {
   Vibration,
   Text,
   Dimensions,
-  StatusBar
+  StatusBar,
+  
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -20,7 +21,9 @@ import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
 
+const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
+
 
 const CircularButton = ({ type, count }) => {
   const icons = {
@@ -111,15 +114,16 @@ const CircularButton = ({ type, count }) => {
 };
 
 
-export default function WaltesBoard({ player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling }) {
-  const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
+export default function WaltesBoard({ 
+  player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling, 
+}) {  const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
 
-  const scaleAndMoveStick = () => {
+const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
     // Start stick at the center with a scale of 0.
     stickAnimPosition.setValue({ x: 0, y: 0 });
@@ -167,8 +171,10 @@ export default function WaltesBoard({ player1TotalScore, player2TotalScore, play
         useNativeDriver: true,
       }),
     ]).start();
-  };
-  
+};
+
+
+
 
 const rollDice = () => {
   console.log("Roll Dice is Called");
@@ -222,7 +228,7 @@ useEffect(() => {
 
   return (
     <View style={styles.container}>
-            <StatusBar hidden={true} /> 
+      <StatusBar hidden={true} /> 
       <Animated.View
         style={[
           styles.bowlImage,
@@ -238,6 +244,7 @@ useEffect(() => {
           },
         ]}
       >
+
         <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
           <View style={styles.diceContainer}>
             {dice.map((die, index) => {
@@ -288,6 +295,8 @@ useEffect(() => {
           }
       ]}
 />
+
+
     <PlayerArea 
       player="player2" 
       sticks={sticks} 
@@ -295,6 +304,8 @@ useEffect(() => {
       player1TotalScore={player1TotalScore} 
       player2TotalScore={player2TotalScore} 
     />
+
+  
     <PlayerArea 
       player="player1" 
       sticks={sticks} 
@@ -302,7 +313,16 @@ useEffect(() => {
       player1TotalScore={player1TotalScore} 
       player2TotalScore={player2TotalScore} 
     />
+
+
+    
+
+
 </View>
+
+
+
+
   );
 }
 const diceContainerSize = 150;
@@ -340,7 +360,6 @@ const styles = StyleSheet.create({
     height: 50,
     margin: 5,
   },
-
   stickPileContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -359,13 +378,12 @@ const styles = StyleSheet.create({
     height: '50%',
     justifyContent: 'flex-end',  // Align the items towards the end of the flex direction
   },
-  
+
   container: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
     backgroundColor: 'orange',  // Add this line
-    zIndex: -1,
 
   },
   player1Area: {
@@ -413,7 +431,7 @@ const styles = StyleSheet.create({
     left: '50%',
     top: '50%',
     zIndex: 999999,
-    
+  
   },
   
   
