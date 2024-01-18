@@ -54,8 +54,7 @@ const CircularButton = ({ type, count }) => {
     </View>
   );
  };
-
- const PlayerArea = ({ player, sticks, playerTurn, player1TotalScore = 0, player2TotalScore =0 }) => {
+const PlayerArea = ({ player, sticks, playerTurn, player1Style, player2Style }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
   // Rotate both piles for the top player
@@ -66,49 +65,30 @@ const CircularButton = ({ type, count }) => {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
-  const totalScore = player1TotalScore + player2TotalScore;
-
-  let player1Percentage = 0;
-  let player2Percentage = 0;
-  let neutralPercentage = 100; // full size to start
-
-  if (totalScore !== 0) {
-    player1Percentage = (player1TotalScore / totalScore) * 100;
-    player2Percentage = (player2TotalScore / totalScore) * 100;
-    neutralPercentage = 100 - (player1Percentage + player2Percentage); // remaining size
-  }
+return (
+  <View style={[styles.playerArea, playerStyle]}>
+    {/* Score Indicator container with two sections */}
 
 
-  useEffect(() => {
-    console.log("PlayerArea re-rendered with scores:", player1TotalScore, player2TotalScore);
-  }, [player1TotalScore, player2TotalScore]);
-  
+    <View style={[styles.stickContainer, stickContainerStyle]}>
+      <View style={styles.generalPile}>
+        <CircularButton type="plain" count={sticks.general.plain} />
+        <CircularButton type="notched" count={sticks.general.notched} />
+        <CircularButton type="kingPin" count={sticks.general.kingPin} />
+      </View>
+      
+      <View style={[styles.personalPile, personalPileStyle]}>
+        <CircularButton type="plain" count={sticks[player].plain} />
+        <CircularButton type="notched" count={sticks[player].notched} />
+        <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
-  return (
-    <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer, stickContainerStyle]}>
-        
-        <View style={styles.generalPile}>
-          {/* Add this View to represent the colored background based on scores */}
-          <View style={{ position: 'absolute', flexDirection: 'row', width: '100%', height: '100%' }}>
-            <View style={{ backgroundColor: '#BF8A1F', flex: player1Percentage }} />
-            <View style={{ backgroundColor: '#805C15', flex: player2Percentage }} />
-            <View style={{ backgroundColor: '#D68402', flex: neutralPercentage }} />
-          </View>
-
-          {/* Existing generalPile content */}
-          <CircularButton type="plain" count={sticks.general.plain} />
-          <CircularButton type="notched" count={sticks.general.notched} />
-          <CircularButton type="kingPin" count={sticks.general.kingPin} />
-        </View>
-        
-        <View style={[styles.personalPile, personalPileStyle]}>
-          <CircularButton type="plain" count={sticks[player].plain} />
-          <CircularButton type="notched" count={sticks[player].notched} />
-          <CircularButton type="kingPin" count={sticks[player].kingPin} />
+        <View style={styles.scoreIndicatorContainer}>
+          <View style={player1Style} />
+          <View style={player2Style} />
         </View>
       </View>
     </View>
+  </View>
 );
 
 };
@@ -121,6 +101,27 @@ export default function WaltesBoard({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const totalScore = player1TotalScore + player2TotalScore;
+
+const getScoreIndicatorStyles = () => {
+    const totalScore = player1TotalScore + player2TotalScore;
+    let player1Width = totalScore === 0 ? 50 : (player1TotalScore / totalScore) * 100;
+    let player2Width = 100 - player1Width;
+
+    return {
+      player1Style: {
+        backgroundColor: '#0EFDA1', // Player 1 color
+        width: `${player1Width}%`,
+        height: 20, // Adjust as needed
+      },
+      player2Style: {
+        backgroundColor: '#A10EFD', // Player 2 color
+        width: `${player2Width}%`,
+        height: 20, // Adjust as needed
+      }
+    };
+  };
+const { player1Style, player2Style } = getScoreIndicatorStyles();
 
 
 const scaleAndMoveStick = () => {
@@ -172,9 +173,6 @@ const scaleAndMoveStick = () => {
       }),
     ]).start();
 };
-
-
-
 
 const rollDice = () => {
   console.log("Roll Dice is Called");
@@ -301,17 +299,19 @@ useEffect(() => {
       player="player2" 
       sticks={sticks} 
       playerTurn={playerTurn} 
-      player1TotalScore={player1TotalScore} 
-      player2TotalScore={player2TotalScore} 
+      player1Style={player1Style}
+      player2Style={player2Style}
+
     />
 
-  
+
     <PlayerArea 
       player="player1" 
       sticks={sticks} 
       playerTurn={playerTurn} 
-      player1TotalScore={player1TotalScore} 
-      player2TotalScore={player2TotalScore} 
+     player1Style={player1Style}
+        player2Style={player2Style}
+
     />
 
 
@@ -372,6 +372,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
  
+scoreIndicatorContainer: {
+    position: 'absolute',
+    bottom: 0, // Placing it at the bottom of the personal pile
+    width: '100%',
+    flexDirection: 'row',
+    // Other styling as needed
+  },
   playerArea: {
     position: 'absolute',
     width: '100%',
@@ -414,6 +421,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D68402', // Added background color
   },
   personalPile: {
+    marginBottom: 20,
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',

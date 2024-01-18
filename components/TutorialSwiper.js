@@ -93,7 +93,12 @@ const slides = images.map((imgSrc, index) => {
        <View style={styles.slide}>
           <Image source={require('../assets/1.png')} style={styles.fullImage} />
           <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
+          <TouchableOpacity style={styles.skipButton} onPress={handlePress}>
+  <Text style={styles.buttonText}>Skip Tutorial →</Text>
+</TouchableOpacity>
+
         </View>
+      
          <View style={styles.slide}>
           <Image source={require('../assets/2.png')} style={styles.fullImage} />
           <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
@@ -195,10 +200,22 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(247,179,41, 0.3)',
+    backgroundColor: 'rgba(73, 53, 13, 0.5)',
     bottom: 85, // Position it behind the button
     alignSelf: 'center', // Center the wave
     zIndex: -1, // Ensure it's behind the button
+  },
+
+   skipButton: {
+    backgroundColor: '#F7B329', // Same styling as 'Start' button
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    alignSelf: 'center',
+    top: 20, // Adjust as needed to position at the top
   },
 });
 
