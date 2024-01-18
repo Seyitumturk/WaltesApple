@@ -98,14 +98,15 @@ export default function WaltesBoard({
 }) {  
   
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
-  const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const totalScore = player1TotalScore + player2TotalScore;
   const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
 
-
+  const [scoreText, setScoreText] = useState('');
+  const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
+const [textWidth, setTextWidth] = useState(0);
 
 useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0 
@@ -135,6 +136,41 @@ const player2Style = {
     outputRange: ['100%', '0%'], // Inverse of player1's width
   }),
   height: 20,
+};
+// Waltes text on win 
+
+const animateScoreText = (text) => {
+  setScoreText(text);
+  const rotation = playerTurn === 1 ? '180deg' : '0deg';
+
+  // Reset position before animation
+  scoreTextAnim.setValue({ x: -screenWidth, y: 0 });
+
+  Animated.sequence([
+    // Slide in from the left
+    Animated.timing(scoreTextAnim, {
+      toValue: { x: 0, y: 0 },
+      duration: 500,
+      useNativeDriver: true
+    }),
+    // Stay in place for a moment
+    Animated.delay(1000),
+    // Slide out to the right
+    Animated.timing(scoreTextAnim, {
+      toValue: { x: screenWidth, y: 0 },
+      duration: 500,
+      useNativeDriver: true
+    })
+  ]).start(() => {
+    setScoreText(''); // Reset text after animation
+  });
+
+  // Update the transform with the rotation
+styles.scoreText.transform = [
+    { translateX: -(200 / 2) }, // Adjust based on your text's estimated width
+    { translateY: -15 },
+    { rotate: rotation },
+  ];
 };
 
 
@@ -189,6 +225,7 @@ const scaleAndMoveStick = () => {
     ]).start();
 };
 
+const superWaltesScore = 10; // Define this according to your game's logic
 const rollDice = () => {
   console.log("Roll Dice is Called");
   Vibration.vibrate(500);
@@ -196,15 +233,20 @@ const rollDice = () => {
   setIsDiceRolling(true); // The dice have started rolling
   const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
   setDice(newDice);
-  let score = onDiceRolled(newDice);
-  console.log(score)
+  let score = onDiceRolled(newDice); // Ensure this function returns the score
+  console.log(score);
 
-
-  if (score > 0) { // If a score was obtained, animate the stick
+  // Check for score and trigger animations
+  if (score > 0) {
     scaleAndMoveStick();
+    let text = score === superWaltesScore ? "Super Waltes" : "Waltes"; // Define superWaltesScore accordingly
+    animateScoreText(text);
   }
-
 };
+
+// Remove the 'if (score > 0)' block from outside any function
+
+// Ensure other usages of `score` are inside a function where it's defined or passed as an argument
 
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
@@ -309,6 +351,17 @@ useEffect(() => {
           }
       ]}
 />
+      <Animated.Text
+        style={[
+          styles.scoreText, 
+          {
+            transform: scoreTextAnim.getTranslateTransform(),
+            opacity: scoreText ? 1 : 0
+          }
+        ]}
+      >
+        {scoreText}
+      </Animated.Text>
 
 
     <PlayerArea 
@@ -456,6 +509,19 @@ scoreIndicatorContainer: {
     zIndex: 999999,
   
   },
-  
+scoreText: {
+    position: 'absolute',
+    fontSize: 30, // Increased font size
+    fontWeight: 'bold', // Bold font weight
+    color: '#FFD700', // Gold color, you can choose any vibrant color
+    textAlign: 'center',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -screenWidth / 2 }, { translateY: -15 }], // Adjusted for new font size
+    zIndex: 10000000,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)', // Shadow for depth
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 3,
+  },
   
 });

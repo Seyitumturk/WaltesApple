@@ -19,7 +19,6 @@ export default function App() {
   const [showKingPinAlert, setShowKingPinAlert] = useState(false);
   const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
 
-
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
   //State to keep track of switching to "DEBT" System.  
