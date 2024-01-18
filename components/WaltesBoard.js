@@ -67,7 +67,6 @@ const PlayerArea = ({ player, sticks, playerTurn, player1Style, player2Style }) 
 
 return (
   <View style={[styles.playerArea, playerStyle]}>
-    {/* Score Indicator container with two sections */}
 
 
     <View style={[styles.stickContainer, stickContainerStyle]}>
@@ -83,8 +82,8 @@ return (
         <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
         <View style={styles.scoreIndicatorContainer}>
-          <View style={player1Style} />
-          <View style={player2Style} />
+          <Animated.View style={player1Style} />
+          <Animated.View style={player2Style} />
         </View>
       </View>
     </View>
@@ -96,32 +95,48 @@ return (
 
 export default function WaltesBoard({ 
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling, 
-}) {  const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
+}) {  
+  
+  const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const [waltesText, setWaltesText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const totalScore = player1TotalScore + player2TotalScore;
+  const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
 
-const getScoreIndicatorStyles = () => {
-    const totalScore = player1TotalScore + player2TotalScore;
-    let player1Width = totalScore === 0 ? 50 : (player1TotalScore / totalScore) * 100;
-    let player2Width = 100 - player1Width;
 
-    return {
-      player1Style: {
-        backgroundColor: '#0EFDA1', // Player 1 color
-        width: `${player1Width}%`,
-        height: 20, // Adjust as needed
-      },
-      player2Style: {
-        backgroundColor: '#A10EFD', // Player 2 color
-        width: `${player2Width}%`,
-        height: 20, // Adjust as needed
-      }
-    };
-  };
-const { player1Style, player2Style } = getScoreIndicatorStyles();
+
+useEffect(() => {
+    let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0 
+      ? 50 
+      : (player1TotalScore / (player1TotalScore + player2TotalScore)) * 100;
+
+    Animated.timing(player1ScoreWidth, {
+      toValue: player1WidthPercentage,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  }, [player1TotalScore, player2TotalScore]);
+
+const player1Style = {
+  backgroundColor: '#0EFDA1',
+  width: player1ScoreWidth.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'], // Ensure it starts at 0% and goes up to 100%
+  }),
+  height: 20,
+};
+
+const player2Style = {
+  backgroundColor: '#A10EFD',
+  width: player1ScoreWidth.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['100%', '0%'], // Inverse of player1's width
+  }),
+  height: 20,
+};
+
 
 
 const scaleAndMoveStick = () => {
@@ -195,6 +210,16 @@ setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
 }, 2000); 
 
+  const randomPosition = () => {
+    const x = Math.random() * 120 - 60;
+    const y = Math.random() * 120 - 60;
+    return { x, y };
+  };
+
+  const diceRotation = () => {
+    return Math.floor(Math.random() * 180);
+  };
+  
 useEffect(() => {
   if (shouldRoll) {
     setShouldRoll(false); // Reset shouldRoll
@@ -214,15 +239,6 @@ useEffect(() => {
   }
 }, [playerTurn, shouldRoll]);
 
-  const randomPosition = () => {
-    const x = Math.random() * 120 - 60;
-    const y = Math.random() * 120 - 60;
-    return { x, y };
-  };
-
-  const diceRotation = () => {
-    return Math.floor(Math.random() * 180);
-  };
 
   return (
     <View style={styles.container}>
@@ -301,7 +317,6 @@ useEffect(() => {
       playerTurn={playerTurn} 
       player1Style={player1Style}
       player2Style={player2Style}
-
     />
 
 
@@ -309,9 +324,8 @@ useEffect(() => {
       player="player1" 
       sticks={sticks} 
       playerTurn={playerTurn} 
-     player1Style={player1Style}
-        player2Style={player2Style}
-
+      player1Style={player1Style}
+      player2Style={player2Style}
     />
 
 
@@ -364,8 +378,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    paddingTop: 50, // Add padding at the top
-    paddingBottom: 50, // Add padding at the bottom
+    paddingTop: 50, 
+    paddingBottom: 50, 
   },
   boardContainer: {
     flex: 1,
@@ -374,16 +388,17 @@ const styles = StyleSheet.create({
  
 scoreIndicatorContainer: {
     position: 'absolute',
-    bottom: 0, // Placing it at the bottom of the personal pile
-    width: '100%',
+    bottom: -20,
+    left: 0,
+    right: 0, // Ensure full width utilization
     flexDirection: 'row',
-    // Other styling as needed
+    height: 20, // Match the height of the score indicators
   },
   playerArea: {
     position: 'absolute',
     width: '100%',
     height: '50%',
-    justifyContent: 'flex-end',  // Align the items towards the end of the flex direction
+    justifyContent: 'flex-end',  
   },
 
   container: {
