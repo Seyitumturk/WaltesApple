@@ -106,7 +106,13 @@ export default function WaltesBoard({
 
   const [scoreText, setScoreText] = useState('');
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
-const [textWidth, setTextWidth] = useState(0);
+  const [textLayout, setTextLayout] = useState({ width: 0, height: 0 });
+  const [rotationAngle, setRotationAngle] = useState('0deg');
+
+const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling opacity
+const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
+
+
 
 useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0 
@@ -138,40 +144,56 @@ const player2Style = {
   height: 20,
 };
 // Waltes text on win 
+const onTextLayout = (event) => {
+  const { width, height } = event.nativeEvent.layout;
+  setTextLayout({ width, height });
+};
+
+
+
 
 const animateScoreText = (text) => {
   setScoreText(text);
-  const rotation = playerTurn === 1 ? '180deg' : '0deg';
+  setRotationAngle(playerTurn === 1 ? '0deg' : '180deg'); // Reverse the rotation condition
 
-  // Reset position before animation
+  // Start with text being invisible and small
+  opacityAnim.setValue(0);
   scoreTextAnim.setValue({ x: -screenWidth, y: 0 });
 
-  Animated.sequence([
-    // Slide in from the left
-    Animated.timing(scoreTextAnim, {
-      toValue: { x: 0, y: 0 },
-      duration: 500,
-      useNativeDriver: true
-    }),
+Animated.sequence([
+    // Slide in from the left to the center
+    Animated.parallel([
+      Animated.timing(scoreTextAnim, {
+        toValue: { x: 0, y: 0 }, // Move to center
+        duration: 500,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1, // Fade in
+        duration: 500,
+        useNativeDriver: true
+      })
+    ]),
     // Stay in place for a moment
     Animated.delay(1000),
     // Slide out to the right
-    Animated.timing(scoreTextAnim, {
-      toValue: { x: screenWidth, y: 0 },
-      duration: 500,
-      useNativeDriver: true
-    })
+    Animated.parallel([
+      Animated.timing(scoreTextAnim, {
+        toValue: { x: screenWidth, y: 0 }, // Move off-screen to the right
+        duration: 500,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0, // Fade out
+        duration: 500,
+        useNativeDriver: true
+      })
+    ])
   ]).start(() => {
     setScoreText(''); // Reset text after animation
   });
-
-  // Update the transform with the rotation
-styles.scoreText.transform = [
-    { translateX: -(200 / 2) }, // Adjust based on your text's estimated width
-    { translateY: -15 },
-    { rotate: rotation },
-  ];
 };
+
 
 
 
@@ -244,9 +266,6 @@ const rollDice = () => {
   }
 };
 
-// Remove the 'if (score > 0)' block from outside any function
-
-// Ensure other usages of `score` are inside a function where it's defined or passed as an argument
 
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
@@ -351,17 +370,25 @@ useEffect(() => {
           }
       ]}
 />
-      <Animated.Text
-        style={[
-          styles.scoreText, 
-          {
-            transform: scoreTextAnim.getTranslateTransform(),
-            opacity: scoreText ? 1 : 0
-          }
-        ]}
-      >
-        {scoreText}
-      </Animated.Text>
+    
+  <View style={styles.textContainer}>
+    <Animated.Text
+      style={[
+        styles.scoreText,
+        {
+          opacity: opacityAnim,
+          transform: [
+            { translateX: scoreTextAnim.x }, // Use the x value for horizontal position
+            { translateY: scoreTextAnim.y }, // Use the y value for vertical position
+            { rotate: rotationAngle }        // Apply rotation here
+          ]
+        }
+      ]}
+    >
+      {scoreText}
+    </Animated.Text>
+</View>
+
 
 
     <PlayerArea 
@@ -380,11 +407,6 @@ useEffect(() => {
       player1Style={player1Style}
       player2Style={player2Style}
     />
-
-
-    
-
-
 </View>
 
 
@@ -509,17 +531,23 @@ scoreIndicatorContainer: {
     zIndex: 999999,
   
   },
-scoreText: {
+
+textContainer: {
     position: 'absolute',
-    fontSize: 30, // Increased font size
-    fontWeight: 'bold', // Bold font weight
-    color: '#FFD700', // Gold color, you can choose any vibrant color
-    textAlign: 'center',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -screenWidth / 2 }, { translateY: -15 }], // Adjusted for new font size
-    zIndex: 10000000,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)', // Shadow for depth
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10000000, // Ensure it's on top
+  },
+scoreText: {
+  fontSize: 30,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    textAlign: 'center', // Ensure text is centered horizontally
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 3,
   },
