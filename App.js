@@ -1,9 +1,33 @@
 import React, { useState, useEffect,useRef } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert } from 'react-native';
+import {Modal, Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
 import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
+
+
+const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
+  if (!visible) return null;
+
+  return (
+    <Modal transparent={true} visible={visible} animationType="fade">
+      <View style={styles.centeredView}>
+        <View style={[styles.modalView, shouldRotate ? styles.rotated : null]}>
+          <Text style={styles.modalText}>{message}</Text>
+          <View style={styles.buttonContainer}>
+            {buttons.map((button, index) => (
+              <TouchableOpacity key={index} style={[styles.button, styles.darkerButton]} onPress={button.onPress}>
+                <Text style={styles.textStyle}>{button.text}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+
 
 export default function App() {
   const [playerTurn, setPlayerTurn] = useState(0);
@@ -18,6 +42,16 @@ export default function App() {
   const hasClickedRef = useRef(false);
   const [showKingPinAlert, setShowKingPinAlert] = useState(false);
   const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
+  const currentPlayer = `player${playerTurn + 1}`; // Assuming playerTurn is 0 or 1
+
+
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const [alertButtons, setAlertButtons] = useState([]);
+
+
 
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
@@ -54,30 +88,68 @@ export default function App() {
           debts: 0,
         },
 });
+const triggerAlertForExchange = (currentPlayer) => {
+  const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
+  setTimeout(() => {
+    showCustomAlert(
+      'Do you want to replace 15 normal sticks with a notched stick?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => { 
+            setAlertVisible(false); // Close the modal
+            // Handle Cancel action
+          }
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            // Implement the exchange logic here
+            const newSticks = { ...sticks };
+            newSticks[currentPlayer].plain -= 15;
+            newSticks[currentPlayer].notched += 1;
+            newSticks.general.notched -= 1;
+            newSticks.general.plain += 15;
+            setSticks(newSticks);
+
+            setAlertVisible(false); // Close the modal
+          },
+        },
+      ],
+      shouldRotate
+    );
+  }, 2000); // 2000 milliseconds delay
+};
 
 
+const showCustomAlert = (message, buttons = []) => {
+    setAlertMessage(message);
+    setAlertButtons(buttons);
+    setAlertVisible(true);
+
+};
 
 const checkKingPinCondition = () => {
-  if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
-    Alert.alert("Alert", "Only King Pin left. First one to score in the next roll gets it.");
+  if (!hasShownAlert && sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
+    showCustomAlert("Only King Pin left. First one to score in the next roll gets it.");
     setNextRollForKingPin(true);  // Set next roll for King Pin
-    
-    const timer = setTimeout(() => {
+    setHasShownAlert(true); // Mark that the alert has been shown
+
+const timer = setTimeout(() => {
       setShowKingPinAlert(false);
     }, 3000);
     return () => clearTimeout(timer);
   }
 };
 
- const startGame = () => {
+const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
   };
 
- const onTutorialFinished = () => {
+const onTutorialFinished = () => {
     setCurrentPage('game'); // Change to the game page
   };
-
-  const handlePlayerClick = (player) => {
+const handlePlayerClick = (player) => {
     if (player === playerTurn && !isDiceRolling && !hasClickedRef.current) {
       hasClickedRef.current = true;
       setPrevPlayerTurn(playerTurn);
@@ -85,8 +157,7 @@ const checkKingPinCondition = () => {
     }
   };
   
-
-  const onDiceRolled = (dice) => {
+const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
 
@@ -103,33 +174,7 @@ const checkKingPinCondition = () => {
     return score
   };
 
-  const triggerAlertForExchange = (currentPlayer) => {
-    Alert.alert(
-      'Exchange Sticks',
-      'Do you want to replace 15 normal sticks with a notched stick?',
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {
-          text: 'Yes',
-          onPress: () => {
-            // Implement the exchange logic here
-            const newSticks = { ...sticks };
-            newSticks[currentPlayer].plain -= 15;
-            newSticks[currentPlayer].notched += 1;
-            newSticks.general.notched -= 1;
-            newSticks.general.plain += 15;
-            setSticks(newSticks);
-          },
-        },
-      ],
-      { cancelable: false }
-    );
-  };
-  
+
   const handleNotchedReplacement = () => {
     let newSticks = { ...sticks };
     let notchedSticksRemaining = sticks.general.notched;
@@ -165,6 +210,7 @@ const checkKingPinCondition = () => {
     setSticks(newSticks);
   };
   
+ 
 useEffect(() => {
   if (isGeneralPileExhausted || (sticks.general.kingPin === 0 && sticks.general.plain === 0 && sticks.general.notched === 0)) {
     Alert.alert("Alert", "General pile is exhausted");
@@ -256,6 +302,15 @@ const calculateScore = (dice) => {
 
   return (
     <View style={styles.container}>
+
+
+     <CustomAlert 
+        visible={alertVisible} 
+        message={alertMessage} 
+        shouldRotate={currentPlayer === 'player1'} // Rotate for player1
+        buttons={alertButtons}
+
+      />
      <BackgroundVideo />
     
     {currentPage === 'home' && <HomePage onStartGame={startGame} />}
@@ -401,4 +456,56 @@ tossText: {
   fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
 
 },
+
+
+
+centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // semi-transparent background
+  },
+  modalView: {
+    backgroundColor: 'orange',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    color: 'white',
+  },
+  button: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    elevation: 2,
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  rotated: {
+    transform: [{ rotate: '180deg' }]
+  },
+  buttonContainer: {
+    flexDirection: 'row', // Place buttons next to each other
+    justifyContent: 'center'
+  },
+  darkerButton: {
+    backgroundColor: 'darkorange', // Darker orange color
+    borderRadius: 10, // Rounded borders
+    marginLeft: 5, // Add some space between buttons
+    marginRight: 5
+  },
 });

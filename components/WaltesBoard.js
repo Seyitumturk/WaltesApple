@@ -111,6 +111,7 @@ export default function WaltesBoard({
 
 const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling opacity
 const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
+const superWaltesScore = 5; // Define this according to your game's logic
 
 
 
@@ -154,7 +155,7 @@ const onTextLayout = (event) => {
 
 const animateScoreText = (text) => {
   setScoreText(text);
-  setRotationAngle(playerTurn === 1 ? '0deg' : '180deg'); // Reverse the rotation condition
+    setRotationAngle(playerTurn === 1 ? '0deg':'180deg' ); // Rotate 180 degrees for player 1
 
   // Start with text being invisible and small
   opacityAnim.setValue(0);
@@ -247,7 +248,6 @@ const scaleAndMoveStick = () => {
     ]).start();
 };
 
-const superWaltesScore = 10; // Define this according to your game's logic
 const rollDice = () => {
   console.log("Roll Dice is Called");
   Vibration.vibrate(500);
@@ -387,6 +387,7 @@ useEffect(() => {
     >
       {scoreText}
     </Animated.Text>
+
 </View>
 
 
