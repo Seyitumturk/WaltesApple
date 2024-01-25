@@ -44,6 +44,7 @@ export default function App() {
   const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
   const currentPlayer = `player${playerTurn + 1}`; // Assuming playerTurn is 0 or 1
 
+  const [kingPinWon, setKingPinWon] = useState(false);
 
 
   const [alertVisible, setAlertVisible] = useState(false);
@@ -118,7 +119,7 @@ const triggerAlertForExchange = (currentPlayer) => {
       ],
       shouldRotate
     );
-  }, 2000); // 2000 milliseconds delay
+  }, 1000); // 2000 milliseconds delay
 };
 
 
@@ -130,17 +131,34 @@ const showCustomAlert = (message, buttons = []) => {
 };
 
 const checkKingPinCondition = () => {
+  // Check if only the King Pin is left and alert has not been shown
   if (!hasShownAlert && sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
     showCustomAlert("Only King Pin left. First one to score in the next roll gets it.");
-    setNextRollForKingPin(true);  // Set next roll for King Pin
+    setNextRollForKingPin(true); // Corrected this line
     setHasShownAlert(true); // Mark that the alert has been shown
 
-const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setShowKingPinAlert(false);
     }, 3000);
     return () => clearTimeout(timer);
   }
+
+  // Check if King Pin has been won and general pile is exhausted
+  if (sticks.general.kingPin === 0 && sticks.general.plain === 0 && sticks.general.notched === 0) {
+    showCustomAlert("General pile is exhausted", [
+      {
+        text: 'OK',
+        onPress: () => setAlertVisible(false),
+      },
+    ]);
+
+    // Optionally handle notched stick replacement here
+    if (sticks.general.notched > 0) {
+      handleNotchedReplacement();
+    }
+  }
 };
+
 
 const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
@@ -211,20 +229,7 @@ const onDiceRolled = (dice) => {
   };
   
  
-useEffect(() => {
-  if (isGeneralPileExhausted || (sticks.general.kingPin === 0 && sticks.general.plain === 0 && sticks.general.notched === 0)) {
-    Alert.alert("Alert", "General pile is exhausted");
-    setShowExhaustedAlert(true);
-    if (sticks.general.notched > 0) {
-      handleNotchedReplacement();
-    }
-    const timer = setTimeout(() => {
-      setShowExhaustedAlert(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }
-}, [isGeneralPileExhausted]);
-  
+
 const calculateScore = (dice) => {
   const marked = dice.filter((die) => die === 1).length;
   const unmarked = 6 - marked;

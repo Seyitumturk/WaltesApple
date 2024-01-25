@@ -506,6 +506,7 @@ scoreIndicatorContainer: {
   },
   
   generalPile: {
+    paddingTop:-40,
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
