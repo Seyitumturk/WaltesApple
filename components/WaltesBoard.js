@@ -54,7 +54,17 @@ const CircularButton = ({ type, count }) => {
     </View>
   );
  };
-const PlayerArea = ({ player, sticks, playerTurn, player1Style, player2Style }) => {
+ const PlayerArea = ({
+  player,
+  sticks,
+  playerTurn,
+  player1Style,
+  player2Style,
+  scoreText, // Add these
+  scoreTextAnim,
+  opacityAnim,
+  rotationAngle
+}) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
   // Rotate both piles for the top player
@@ -80,6 +90,22 @@ return (
         <CircularButton type="plain" count={sticks[player].plain} />
         <CircularButton type="notched" count={sticks[player].notched} />
         <CircularButton type="kingPin" count={sticks[player].kingPin} />
+
+        {player === scoringPlayer && (
+    <Animated.Text
+      style={[
+        styles.scoreTextInPile,
+        {
+          opacity: opacityAnim,
+          transform: scoreTextAnim.getTranslateTransform().concat([
+            { rotate: rotationAngle },
+          ]),
+        },
+      ]}
+    >
+      {scoreText}
+    </Animated.Text>
+  )}
 
         <View style={styles.scoreIndicatorContainer}>
           <Animated.View style={player1Style} />
@@ -113,6 +139,7 @@ const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling o
 const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
 const superWaltesScore = 5; // Define this according to your game's logic
 
+const [scoringPlayer, setScoringPlayer] = useState(null);
 
 
 useEffect(() => {
@@ -155,6 +182,9 @@ const onTextLayout = (event) => {
 
 const animateScoreText = (text) => {
   setScoreText(text);
+  setScoringPlayer(scoringPlayer); 
+  scoreTextAnim.setValue({ x: 0, y: -50 }); // Adjust these values
+
     setRotationAngle(playerTurn === 1 ? '0deg':'180deg' ); // Rotate 180 degrees for player 1
 
   // Start with text being invisible and small
@@ -191,7 +221,8 @@ Animated.sequence([
       })
     ])
   ]).start(() => {
-    setScoreText(''); // Reset text after animation
+    setScoreText('');
+    setScoringPlayer(null); // Reset text after animation
   });
 };
 
@@ -262,7 +293,7 @@ const rollDice = () => {
   if (score > 0) {
     scaleAndMoveStick();
     let text = score === superWaltesScore ? "Super Waltes" : "Waltes"; // Define superWaltesScore accordingly
-    animateScoreText(text);
+    animateScoreText(text, playerTurn === 0 ? 'player1' : 'player2');
   }
 };
 
@@ -392,22 +423,34 @@ useEffect(() => {
 
 
 
-    <PlayerArea 
-      player="player2" 
-      sticks={sticks} 
-      playerTurn={playerTurn} 
-      player1Style={player1Style}
-      player2Style={player2Style}
-    />
+<PlayerArea 
+  player="player2" 
+  sticks={sticks} 
+  playerTurn={playerTurn} 
+  player1Style={player1Style}
+  player2Style={player2Style}
+  scoreText={scoreText} // pass this prop
+  scoreTextAnim={scoreTextAnim} // pass this prop
+  opacityAnim={opacityAnim} // pass this prop
+  rotationAngle={rotationAngle} // pass this prop
+  scoringPlayer={scoringPlayer} // pass this prop
+
+/>
 
 
-    <PlayerArea 
-      player="player1" 
-      sticks={sticks} 
-      playerTurn={playerTurn} 
-      player1Style={player1Style}
-      player2Style={player2Style}
-    />
+<PlayerArea 
+  player="player1" 
+  sticks={sticks} 
+  playerTurn={playerTurn} 
+  player1Style={player1Style}
+  player2Style={player2Style}
+  scoreText={scoreText} // pass this prop
+  scoreTextAnim={scoreTextAnim} // pass this prop
+  opacityAnim={opacityAnim} // pass this prop
+  rotationAngle={rotationAngle} // pass this prop
+  scoringPlayer={scoringPlayer} // pass this prop
+
+/>
 </View>
 
 
