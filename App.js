@@ -52,6 +52,7 @@ export default function App() {
 
   const [alertButtons, setAlertButtons] = useState([]);
 
+  const [scoringPlayer, setScoringPlayer] = useState(null);
 
 
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
@@ -184,8 +185,15 @@ const onDiceRolled = (dice) => {
       setPlayerTurn((playerTurn + 1) % 2);
     } else {
       if (score > 0) {
-        setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes');
-      }
+        // Update the scoring player based on the current playerTurn
+        const scoringPlayerId = `player${playerTurn + 1}`;
+        setScoringPlayer(scoringPlayerId); // Update the scoring player state
+        setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes'); // Update the Waltes text state
+        // Other logic remains the same
+    } else {
+        // Reset scoringPlayer if no score or turn changes
+        setScoringPlayer(null);
+    }
       playerTurnRef.current = prevPlayerTurn; // This line might not be necessary since the player doesn't switch turns.
     }
     hasClickedRef.current = false;  // Resetting hasClicked here
@@ -347,6 +355,8 @@ const calculateScore = (dice) => {
             setShouldRoll={setShouldRoll} 
             setIsDiceRolling={setIsDiceRolling} 
             isDiceRolling={isDiceRolling} 
+            scoringPlayer={scoringPlayer}
+            waltesText={waltesText}
          
           />
            <TouchableOpacity

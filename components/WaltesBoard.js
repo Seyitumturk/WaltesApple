@@ -54,8 +54,11 @@ const CircularButton = ({ type, count }) => {
     </View>
   );
  };
-const PlayerArea = ({ player, sticks, playerTurn, player1Style, player2Style }) => {
+
+
+ const PlayerArea = ({ player, sticks, playerTurn, scoreText, scoringPlayer, player1Style, player2Style }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
+  const isScoring = player === scoringPlayer;
 
   // Rotate both piles for the top player
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
@@ -65,38 +68,39 @@ const PlayerArea = ({ player, sticks, playerTurn, player1Style, player2Style }) 
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
-return (
-  <View style={[styles.playerArea, playerStyle]}>
+  const shouldShowScoreText = player === scoringPlayer;
 
-
-    <View style={[styles.stickContainer, stickContainerStyle]}>
-      <View style={styles.generalPile}>
-        <CircularButton type="plain" count={sticks.general.plain} />
-        <CircularButton type="notched" count={sticks.general.notched} />
-        <CircularButton type="kingPin" count={sticks.general.kingPin} />
-      </View>
-      
-      <View style={[styles.personalPile, personalPileStyle]}>
-        <CircularButton type="plain" count={sticks[player].plain} />
-        <CircularButton type="notched" count={sticks[player].notched} />
-        <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-        <View style={styles.scoreIndicatorContainer}>
-          <Animated.View style={player1Style} />
-          <Animated.View style={player2Style} />
+  return (
+    <View style={[styles.playerArea, playerStyle]}>
+      <View style={[styles.stickContainer, stickContainerStyle]}>
+        <View style={styles.generalPile}>
+          <CircularButton type="plain" count={sticks.general.plain} />
+          <CircularButton type="notched" count={sticks.general.notched} />
+          <CircularButton type="kingPin" count={sticks.general.kingPin} />
+        </View>
+        
+        <View style={[styles.personalPile, personalPileStyle]}>
+          <CircularButton type="plain" count={sticks[player].plain} />
+          <CircularButton type="notched" count={sticks[player].notched} />
+          <CircularButton type="kingPin" count={sticks[player].kingPin} />
+          
+          {isScoring && (
+                    <Text style={styles.scoreTextInPile}>{scoreText}</Text>
+                )}
+          <View style={styles.scoreIndicatorContainer}>
+            <Animated.View style={player1Style} />
+            <Animated.View style={player2Style} />
+          </View>
         </View>
       </View>
     </View>
-  </View>
-);
-
+  );
 };
 
-
-export default function WaltesBoard({ 
-  player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, setShouldRoll, setIsDiceRolling, 
-}) {  
-  
+export default function WaltesBoard({
+  player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, 
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText
+}) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -113,6 +117,9 @@ const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling o
 const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
 const superWaltesScore = 5; // Define this according to your game's logic
 
+const updateScoringPlayer = (player) => {
+  setScoringPlayer(player); // 'player1' or 'player2'
+};
 
 
 useEffect(() => {
@@ -149,9 +156,6 @@ const onTextLayout = (event) => {
   const { width, height } = event.nativeEvent.layout;
   setTextLayout({ width, height });
 };
-
-
-
 
 const animateScoreText = (text) => {
   setScoreText(text);
@@ -194,9 +198,6 @@ Animated.sequence([
     setScoreText(''); // Reset text after animation
   });
 };
-
-
-
 
 const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
@@ -371,43 +372,33 @@ useEffect(() => {
       ]}
 />
     
-  <View style={styles.textContainer}>
-    <Animated.Text
-      style={[
-        styles.scoreText,
-        {
-          opacity: opacityAnim,
-          transform: [
-            { translateX: scoreTextAnim.x }, // Use the x value for horizontal position
-            { translateY: scoreTextAnim.y }, // Use the y value for vertical position
-            { rotate: rotationAngle }        // Apply rotation here
-          ]
-        }
-      ]}
-    >
-      {scoreText}
-    </Animated.Text>
-
-</View>
 
 
 
-    <PlayerArea 
-      player="player2" 
-      sticks={sticks} 
-      playerTurn={playerTurn} 
-      player1Style={player1Style}
-      player2Style={player2Style}
-    />
 
+<PlayerArea 
+  player="player2" 
+  sticks={sticks} 
+  playerTurn={playerTurn} 
+  player1Style={player1Style}
+  player2Style={player2Style}
+  scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
+  opacityAnim={opacityAnim}
+  rotationAngle={rotationAngle}
+  scoringPlayer={scoringPlayer}
+/>
 
-    <PlayerArea 
-      player="player1" 
-      sticks={sticks} 
-      playerTurn={playerTurn} 
-      player1Style={player1Style}
-      player2Style={player2Style}
-    />
+<PlayerArea 
+  player="player1" 
+  sticks={sticks} 
+  playerTurn={playerTurn} 
+  player1Style={player1Style}
+  player2Style={player2Style}
+  scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
+  opacityAnim={opacityAnim}
+  rotationAngle={rotationAngle}
+  scoringPlayer={scoringPlayer}
+/>
 </View>
 
 
@@ -533,7 +524,17 @@ scoreIndicatorContainer: {
     zIndex: 999999,
   
   },
+  scoreTextInPile: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white', // Make sure the color contrasts well with the personal pile background
+    alignSelf: 'center', // Center within the personal pile
+    marginTop: 10, // Adjust as needed
+    zIndex: 9999999999,
 
+  },
+  
+  
 textContainer: {
     position: 'absolute',
     top: 0,
