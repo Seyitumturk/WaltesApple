@@ -57,36 +57,56 @@ const CircularButton = ({ type, count }) => {
 
 
  const PlayerArea = ({ player, sticks, playerTurn, scoreText, scoringPlayer, player1Style, player2Style }) => {
-  const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
-  const isScoring = player === scoringPlayer;
+  const translateXAnim = useRef(new Animated.Value(-screenWidth)).current; // For animating the score text
 
-  // Rotate both piles for the top player
-  const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
-
-  // Determine background color based on the player's turn
-  const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
-  };
-
-  const shouldShowScoreText = player === scoringPlayer;
+  // Trigger animation when scoreText updates and matches the scoring player
+  useEffect(() => {
+    if (player === scoringPlayer && scoreText) {
+      Animated.sequence([
+        // Start the text off-screen to the left
+        Animated.timing(translateXAnim, {
+          toValue: 0, // Bring the text into view
+          duration: 500, // Duration to slide in
+          useNativeDriver: true,
+        }),
+        // Hold the position for a second to allow reading
+        Animated.delay(1000),
+        // Slide out to the right
+        Animated.timing(translateXAnim, {
+          toValue: screenWidth, // Move the text out of view to the right
+          duration: 500, // Duration to slide out
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [scoreText, scoringPlayer, player, translateXAnim]);
 
   return (
-    <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer, stickContainerStyle]}>
+    <View style={[styles.playerArea, player === 'player1' ? styles.player1Area : styles.player2Area]}>
+      <View style={[styles.stickContainer, player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {}]}>
         <View style={styles.generalPile}>
           <CircularButton type="plain" count={sticks.general.plain} />
           <CircularButton type="notched" count={sticks.general.notched} />
           <CircularButton type="kingPin" count={sticks.general.kingPin} />
         </View>
         
-        <View style={[styles.personalPile, personalPileStyle]}>
+        <View style={[styles.personalPile, { backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E', }]}>
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton type="notched" count={sticks[player].notched} />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
-          
-          {isScoring && (
-                    <Text style={styles.scoreTextInPile}>{scoreText}</Text>
-                )}
+          {/* Animated score text */}
+          {player === scoringPlayer && scoreText && (
+            <Animated.Text
+              style={[
+                styles.scoreTextInPile,
+                {
+                  transform: [{ translateX: translateXAnim }],
+                },
+              ]}
+            >
+              {scoreText}
+            </Animated.Text>
+          )}
           <View style={styles.scoreIndicatorContainer}>
             <Animated.View style={player1Style} />
             <Animated.View style={player2Style} />
@@ -113,13 +133,85 @@ export default function WaltesBoard({
   const [textLayout, setTextLayout] = useState({ width: 0, height: 0 });
   const [rotationAngle, setRotationAngle] = useState('0deg');
 
-const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling opacity
 const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
 const superWaltesScore = 5; // Define this according to your game's logic
 
-const updateScoringPlayer = (player) => {
-  setScoringPlayer(player); // 'player1' or 'player2'
+const [showScoreText, setShowScoreText] = useState(false);
+const translateXAnim = useRef(new Animated.Value(-screenWidth)).current;
+const opacityAnim = useRef(new Animated.Value(1)).current; // Start fully visible
+
+useEffect(() => {
+  // Reset translateXAnim to start position off-screen left
+  translateXAnim.setValue(-screenWidth);
+
+  if (showScoreText) {
+    // Animate score text from left to right
+    Animated.sequence([
+      Animated.timing(translateXAnim, {
+        toValue: 0, // Center or starting edge of the screen
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      // Keep the text visible for 1 second
+      Animated.delay(1000),
+      // Move the text out of the screen to the right
+      Animated.timing(translateXAnim, {
+        toValue: screenWidth,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowScoreText(false); // Hide the text after the animation completes
+    });
+  }
+}, [showScoreText, translateXAnim]);
+
+
+
+
+const animateAndHideText = () => {
+  setShowScoreText(true); // Prepare to show the text
+
+  // Animate the text from left to right
+  Animated.timing(translateXAnim, {
+    toValue: 300, // Example target value; adjust based on your layout
+    duration: 1000, // Keep the duration as is or adjust
+    useNativeDriver: true,
+  }).start(() => {
+    setShowScoreText(false); // Hide the text after the animation
+  });
+
+  // Hide the text after a delay, ensuring it stays visible briefly
+  setTimeout(() => {
+    setShowScoreText(false); // Hide the text
+  }, 2000); // 2 seconds total before hiding the text
 };
+
+// In WaltesBoard component, define opacityAnim for the fade-out effect
+
+// Function to animate the score text disappearance
+const animateScoreTextVisibility = () => {
+  // Reset opacity to fully visible
+  opacityAnim.setValue(1);
+
+  // Animate to fully transparent
+  Animated.timing(opacityAnim, {
+    toValue: 0,
+    duration: 1000, // 1 second
+    useNativeDriver: true, // Use native driver for better performance
+  }).start();
+};
+
+// Invoke this function whenever you want to display and then hide the score text
+// For example, after updating the score
+useEffect(() => {
+  if (scoreText) { // Assuming scoreText is updated when there's a new score
+    animateScoreTextVisibility();
+  }
+}, [scoreText]); // Dependency array to trigger the effect when scoreText changes
+
+
+
 
 
 useEffect(() => {
@@ -157,47 +249,6 @@ const onTextLayout = (event) => {
   setTextLayout({ width, height });
 };
 
-const animateScoreText = (text) => {
-  setScoreText(text);
-    setRotationAngle(playerTurn === 1 ? '0deg':'180deg' ); // Rotate 180 degrees for player 1
-
-  // Start with text being invisible and small
-  opacityAnim.setValue(0);
-  scoreTextAnim.setValue({ x: -screenWidth, y: 0 });
-
-Animated.sequence([
-    // Slide in from the left to the center
-    Animated.parallel([
-      Animated.timing(scoreTextAnim, {
-        toValue: { x: 0, y: 0 }, // Move to center
-        duration: 500,
-        useNativeDriver: true
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1, // Fade in
-        duration: 500,
-        useNativeDriver: true
-      })
-    ]),
-    // Stay in place for a moment
-    Animated.delay(1000),
-    // Slide out to the right
-    Animated.parallel([
-      Animated.timing(scoreTextAnim, {
-        toValue: { x: screenWidth, y: 0 }, // Move off-screen to the right
-        duration: 500,
-        useNativeDriver: true
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0, // Fade out
-        duration: 500,
-        useNativeDriver: true
-      })
-    ])
-  ]).start(() => {
-    setScoreText(''); // Reset text after animation
-  });
-};
 
 const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
@@ -253,20 +304,22 @@ const rollDice = () => {
   console.log("Roll Dice is Called");
   Vibration.vibrate(500);
 
-  setIsDiceRolling(true); // The dice have started rolling
+  setIsDiceRolling(true);
   const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
   setDice(newDice);
-  let score = onDiceRolled(newDice); // Ensure this function returns the score
-  console.log(score);
+  let score = onDiceRolled(newDice);
 
-  // Check for score and trigger animations
+  // Assuming `onDiceRolled` correctly calculates and returns the score
   if (score > 0) {
     scaleAndMoveStick();
-    let text = score === superWaltesScore ? "Super Waltes" : "Waltes"; // Define superWaltesScore accordingly
-    animateScoreText(text);
+    setScoreText(score === superWaltesScore ? "Super Waltes" : "Waltes"); // Update the score text
+
+    // Trigger animation only if the current player is the scoring player
+    if (scoringPlayer === 'player1' || scoringPlayer === 'player2') {
+      animateAndHideText();
+    }
   }
 };
-
 
 setTimeout(() => {
   setIsDiceRolling(false); // The dice have finished rolling
@@ -531,6 +584,9 @@ scoreIndicatorContainer: {
     alignSelf: 'center', // Center within the personal pile
     marginTop: 10, // Adjust as needed
     zIndex: 9999999999,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    padding: 8, // Padding for better text visibility
+    borderRadius: 5
 
   },
   
