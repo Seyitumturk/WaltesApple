@@ -59,20 +59,38 @@ const CircularButton = ({ type, count }) => {
  const PlayerArea = ({ player, sticks, playerTurn, scoreText, scoringPlayer, player1Style, player2Style }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
   const isScoring = player === scoringPlayer;
+  
+  // Opacity animation for score text
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
-  // Rotate both piles for the top player
-  const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
+  useEffect(() => {
+    if (isScoring) {
+      // Fade in
+      Animated.sequence([
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        // Hold the text visible
+        Animated.delay(1500),
+        // Fade out
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [isScoring, opacityAnim]);
 
   // Determine background color based on the player's turn
   const personalPileStyle = {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
-
-  const shouldShowScoreText = player === scoringPlayer;
-
   return (
     <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer, stickContainerStyle]}>
+      <View style={[styles.stickContainer]}>
         <View style={styles.generalPile}>
           <CircularButton type="plain" count={sticks.general.plain} />
           <CircularButton type="notched" count={sticks.general.notched} />
@@ -84,9 +102,20 @@ const CircularButton = ({ type, count }) => {
           <CircularButton type="notched" count={sticks[player].notched} />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
           
+         
           {isScoring && (
-                    <Text style={styles.scoreTextInPile}>{scoreText}</Text>
-                )}
+            <Animated.Text style={[styles.scoreTextInPile, {
+              opacity: opacityAnim, // Controlled by state
+              // Make sure the text is centered both horizontally and vertically
+              position: 'absolute',
+              alignSelf: 'center',
+              top: '50%',
+              transform: [{ translateY: -10 }], // Adjust based on text size
+            }]}>
+              {scoreText}
+            </Animated.Text>
+          )}
+
           <View style={styles.scoreIndicatorContainer}>
             <Animated.View style={player1Style} />
             <Animated.View style={player2Style} />
@@ -112,8 +141,8 @@ export default function WaltesBoard({
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
   const [textLayout, setTextLayout] = useState({ width: 0, height: 0 });
   const [rotationAngle, setRotationAngle] = useState('0deg');
-
-const opacityAnim = useRef(new Animated.Value(0)).current;  // For controlling opacity
+  const opacityAnim = useRef(new Animated.Value(0)).current; // Controls opacity
+  const translateYAnim = useRef(new Animated.Value(20)).current; 
 const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
 const superWaltesScore = 5; // Define this according to your game's logic
 
@@ -157,47 +186,41 @@ const onTextLayout = (event) => {
   setTextLayout({ width, height });
 };
 
-const animateScoreText = (text) => {
-  setScoreText(text);
-    setRotationAngle(playerTurn === 1 ? '0deg':'180deg' ); // Rotate 180 degrees for player 1
-
-  // Start with text being invisible and small
-  opacityAnim.setValue(0);
-  scoreTextAnim.setValue({ x: -screenWidth, y: 0 });
-
-Animated.sequence([
-    // Slide in from the left to the center
+const animateScoreText = () => {
+  // First, make the text visible and move it to the center
+  Animated.sequence([
     Animated.parallel([
-      Animated.timing(scoreTextAnim, {
-        toValue: { x: 0, y: 0 }, // Move to center
-        duration: 500,
-        useNativeDriver: true
-      }),
       Animated.timing(opacityAnim, {
-        toValue: 1, // Fade in
+        toValue: 1, // Make the text fully visible
         duration: 500,
-        useNativeDriver: true
-      })
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 0, // Move text to its final position
+        duration: 500,
+        useNativeDriver: true,
+      }),
     ]),
-    // Stay in place for a moment
-    Animated.delay(1000),
-    // Slide out to the right
+    // Keep the text visible for 1500 milliseconds
+    Animated.delay(1500),
+    // Then, fade out the text and move it down slightly
     Animated.parallel([
-      Animated.timing(scoreTextAnim, {
-        toValue: { x: screenWidth, y: 0 }, // Move off-screen to the right
-        duration: 500,
-        useNativeDriver: true
-      }),
       Animated.timing(opacityAnim, {
-        toValue: 0, // Fade out
+        toValue: 0, // Make the text fully invisible
         duration: 500,
-        useNativeDriver: true
-      })
-    ])
-  ]).start(() => {
-    setScoreText(''); // Reset text after animation
-  });
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 20, // Move text back down slightly
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]),
+  ]).start();
 };
+
+
+
 
 const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
@@ -384,6 +407,7 @@ useEffect(() => {
   player2Style={player2Style}
   scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
   opacityAnim={opacityAnim}
+  translateYAnim={translateYAnim}
   rotationAngle={rotationAngle}
   scoringPlayer={scoringPlayer}
 />
@@ -396,6 +420,7 @@ useEffect(() => {
   player2Style={player2Style}
   scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
   opacityAnim={opacityAnim}
+  translateYAnim={translateYAnim}
   rotationAngle={rotationAngle}
   scoringPlayer={scoringPlayer}
 />
