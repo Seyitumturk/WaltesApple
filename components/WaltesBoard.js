@@ -93,7 +93,7 @@ const CircularButton = ({ type, count }) => {
         }),
       ]).start();
     }
-  }, [player, scoringPlayer, opacityAnim]);
+  }, [player, scoringPlayer, opacityAnim, scoreText]); // Added scoreText as a dependency
 
   return (
     <View style={[styles.playerArea, playerStyle]}>
@@ -112,22 +112,35 @@ const CircularButton = ({ type, count }) => {
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
           {player === scoringPlayer && (
-            <Animated.Text
-              style={[
-                styles.scoreTextInPile,
-                {
-                  opacity: opacityAnim, // Use the animated opacity value
-                  // Ensure text is centered within the personal pile
-                  position: 'absolute',
-                  alignSelf: 'center',
-                  top: '50%',
-                  transform: [{ translateY: -10 }],
-                },
-              ]}
-            >
-              {scoreText}
-            </Animated.Text>
-          )}
+  <Animated.View
+    style={{
+      // Smooth, rounded background configuration
+      backgroundColor: 'rgba(0,0,0,0.6)', // Semi-transparent black for contrast
+      borderRadius: 20, // Rounded corners
+      paddingVertical: 5, // Vertical padding
+      paddingHorizontal: 10, // Horizontal padding
+      opacity: opacityAnim, // Use the animated opacity value
+      position: 'absolute',
+      alignSelf: 'center',
+      top: '50%',
+      transform: [{ translateY: -10 }],
+    }}
+  >
+    <Text
+      style={[
+        styles.scoreTextInPile,
+        {
+          // Text-specific styling
+          color: 'white', // Ensuring text color contrasts with background
+          textAlign: 'center', // Center text within the rounded background
+        },
+      ]}
+    >
+      {scoreText}
+    </Text>
+  </Animated.View>
+)}
+
 
           <View style={styles.scoreIndicatorContainer}>
             {/* Animated views for the score indicator */}
@@ -151,6 +164,8 @@ export default function WaltesBoard({
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const totalScore = player1TotalScore + player2TotalScore;
   const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
+  const [currentScoringPlayer, setCurrentScoringPlayer] = useState(null); // Renamed to avoid conflict
+
 
   const [scoreText, setScoreText] = useState('');
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
@@ -233,10 +248,6 @@ const animateScoreText = () => {
     ]),
   ]).start();
 };
-
-
-
-
 const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
     // Start stick at the center with a scale of 0.
@@ -292,17 +303,23 @@ const rollDice = () => {
   Vibration.vibrate(500);
 
   setIsDiceRolling(true); // The dice have started rolling
-  const newDice = dice.map(() => (Math.random() > 0.5 ? 1 : 0));
+  const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
   setDice(newDice);
-  let score = onDiceRolled(newDice); // Ensure this function returns the score
-  console.log(score);
 
-  // Check for score and trigger animations
+  let score = onDiceRolled(newDice); // Assuming `onDiceRolled` calculates and returns the score
+  let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
+  setScoreText(text); // Update score text based on score
+
+  // Determine which player is scoring and update accordingly
+  let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
+  setCurrentScoringPlayer(currentPlayer); // Use the updated state function
+  console.log("Setting scoreText to: ", text);
+
   if (score > 0) {
-    scaleAndMoveStick();
-    let text = score === superWaltesScore ? "Super Waltes" : "Waltes"; // Define superWaltesScore accordingly
-    animateScoreText(text);
+    animateScoreText();
   }
+
+  setIsDiceRolling(false); // Reset dice rolling state
 };
 
 
@@ -420,30 +437,26 @@ useEffect(() => {
   playerTurn={playerTurn} 
   player1Style={player1Style}
   player2Style={player2Style}
-  scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
+  scoreText={waltesText}
   opacityAnim={opacityAnim}
   translateYAnim={translateYAnim}
   rotationAngle={rotationAngle}
   scoringPlayer={scoringPlayer}
 />
 
-<PlayerArea 
+<PlayerArea
   player="player1" 
   sticks={sticks} 
   playerTurn={playerTurn} 
   player1Style={player1Style}
   player2Style={player2Style}
-  scoreText={waltesText === 'Super Waltes' ? 'Super Waltes' : 'Waltes'}
+  scoreText={waltesText}
   opacityAnim={opacityAnim}
   translateYAnim={translateYAnim}
   rotationAngle={rotationAngle}
   scoringPlayer={scoringPlayer}
 />
 </View>
-
-
-
-
   );
 }
 const diceContainerSize = 150;

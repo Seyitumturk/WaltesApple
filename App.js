@@ -183,6 +183,8 @@ const onDiceRolled = (dice) => {
     // Don't switch turns if the player scores
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
+      setScoringPlayer(null);
+
     } else {
       if (score > 0) {
         // Update the scoring player based on the current playerTurn
@@ -190,11 +192,7 @@ const onDiceRolled = (dice) => {
         setScoringPlayer(scoringPlayerId); // Update the scoring player state
         setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes'); // Update the Waltes text state
         // Other logic remains the same
-    } else {
-        // Reset scoringPlayer if no score or turn changes
-        setScoringPlayer(null);
     }
-      playerTurnRef.current = prevPlayerTurn; // This line might not be necessary since the player doesn't switch turns.
     }
     hasClickedRef.current = false;  // Resetting hasClicked here
     return score
