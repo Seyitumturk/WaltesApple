@@ -56,25 +56,36 @@ const CircularButton = ({ type, count }) => {
  };
 
 
- const PlayerArea = ({ player, sticks, playerTurn, scoreText, scoringPlayer, player1Style, player2Style }) => {
+ const PlayerArea = ({
+  player,
+  sticks,
+  playerTurn,
+  player1Style,
+  player2Style,
+  scoringPlayer, // Assume you have a way to determine who is the scoring player
+  scoreText, // The text to display ("Waltes" or "Super Waltes")
+  opacityAnim, // Animation for the score text opacity
+}) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
-  const isScoring = player === scoringPlayer;
-  
-  // Opacity animation for score text
-  const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  // Rotate both piles for the top player
+  const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
+
+  // Determine background color based on the player's turn
+  const personalPileStyle = {
+    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
+  };
+
+  // Animation for the score text appearance
   useEffect(() => {
-    if (isScoring) {
-      // Fade in
+    if (player === scoringPlayer) {
       Animated.sequence([
         Animated.timing(opacityAnim, {
           toValue: 1,
           duration: 500,
           useNativeDriver: true,
         }),
-        // Hold the text visible
         Animated.delay(1500),
-        // Fade out
         Animated.timing(opacityAnim, {
           toValue: 0,
           duration: 500,
@@ -82,41 +93,44 @@ const CircularButton = ({ type, count }) => {
         }),
       ]).start();
     }
-  }, [isScoring, opacityAnim]);
+  }, [player, scoringPlayer, opacityAnim]);
 
-  // Determine background color based on the player's turn
-  const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
-  };
   return (
     <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer]}>
+      <View style={[styles.stickContainer, stickContainerStyle]}>
         <View style={styles.generalPile}>
+          {/* Circular buttons for the general pile */}
           <CircularButton type="plain" count={sticks.general.plain} />
           <CircularButton type="notched" count={sticks.general.notched} />
           <CircularButton type="kingPin" count={sticks.general.kingPin} />
         </View>
         
         <View style={[styles.personalPile, personalPileStyle]}>
+          {/* Circular buttons for the personal pile */}
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton type="notched" count={sticks[player].notched} />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
-          
-         
-          {isScoring && (
-            <Animated.Text style={[styles.scoreTextInPile, {
-              opacity: opacityAnim, // Controlled by state
-              // Make sure the text is centered both horizontally and vertically
-              position: 'absolute',
-              alignSelf: 'center',
-              top: '50%',
-              transform: [{ translateY: -10 }], // Adjust based on text size
-            }]}>
+
+          {player === scoringPlayer && (
+            <Animated.Text
+              style={[
+                styles.scoreTextInPile,
+                {
+                  opacity: opacityAnim, // Use the animated opacity value
+                  // Ensure text is centered within the personal pile
+                  position: 'absolute',
+                  alignSelf: 'center',
+                  top: '50%',
+                  transform: [{ translateY: -10 }],
+                },
+              ]}
+            >
               {scoreText}
             </Animated.Text>
           )}
 
           <View style={styles.scoreIndicatorContainer}>
+            {/* Animated views for the score indicator */}
             <Animated.View style={player1Style} />
             <Animated.View style={player2Style} />
           </View>
@@ -125,6 +139,7 @@ const CircularButton = ({ type, count }) => {
     </View>
   );
 };
+
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, 
