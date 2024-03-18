@@ -20,6 +20,7 @@ import unmarkedDice from '../assets/unmarked-dice.png';
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
+import { ReloadInstructions } from 'react-native/Libraries/NewAppScreen';
 
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
@@ -306,17 +307,22 @@ const rollDice = () => {
   const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
   setDice(newDice);
 
-  let score = onDiceRolled(newDice); // Assuming `onDiceRolled` calculates and returns the score
-  let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
-  setScoreText(text); // Update score text based on score
+  let score = onDiceRolled(newDice); // This function should determine if the player scored
+  console.log("Score: ", score);
 
-  // Determine which player is scoring and update accordingly
-  let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
-  setCurrentScoringPlayer(currentPlayer); // Use the updated state function
-  console.log("Setting scoreText to: ", text);
+  if (score > 0) { // Assuming a score of 0 means no score
+    let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
+    setScoreText(text); // Update score text based on score
 
-  if (score > 0) {
+    let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
+    setCurrentScoringPlayer(currentPlayer); // Update scoring player only if there is a score
+
+    console.log("Setting scoreText to: ", text);
     animateScoreText();
+  } else {
+    // If no score, ensure no scoring player and scoreText is displayed
+    setCurrentScoringPlayer(null);
+    setScoreText('');
   }
 
   setIsDiceRolling(false); // Reset dice rolling state
@@ -355,6 +361,8 @@ useEffect(() => {
     });
   }
 }, [playerTurn, shouldRoll]);
+
+
 
 
   return (
@@ -437,11 +445,9 @@ useEffect(() => {
   playerTurn={playerTurn} 
   player1Style={player1Style}
   player2Style={player2Style}
-  scoreText={waltesText}
+  scoreText={scoreText} // Changed from waltesText to scoreText
   opacityAnim={opacityAnim}
-  translateYAnim={translateYAnim}
-  rotationAngle={rotationAngle}
-  scoringPlayer={scoringPlayer}
+  scoringPlayer={currentScoringPlayer} // Use the correct state variable for scoringPlayer
 />
 
 <PlayerArea
@@ -450,12 +456,11 @@ useEffect(() => {
   playerTurn={playerTurn} 
   player1Style={player1Style}
   player2Style={player2Style}
-  scoreText={waltesText}
+  scoreText={scoreText} // Changed from waltesText to scoreText
   opacityAnim={opacityAnim}
-  translateYAnim={translateYAnim}
-  rotationAngle={rotationAngle}
-  scoringPlayer={scoringPlayer}
+  scoringPlayer={currentScoringPlayer} // Use the correct state variable for scoringPlayer
 />
+
 </View>
   );
 }

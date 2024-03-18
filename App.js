@@ -124,11 +124,20 @@ const triggerAlertForExchange = (currentPlayer) => {
 };
 
 
-const showCustomAlert = (message, buttons = []) => {
-    setAlertMessage(message);
-    setAlertButtons(buttons);
-    setAlertVisible(true);
+const showCustomAlert = (message, buttons = [], shouldRotate) => {
+  setAlertMessage(message);
+  setAlertVisible(true);
 
+  // Update buttons to include closing the alert
+  const updatedButtons = buttons.map(button => ({
+    ...button,
+    onPress: () => {
+      button.onPress?.();
+      setAlertVisible(false); // Ensure the alert is closed after the button is pressed
+    }
+  }));
+
+  setAlertButtons(updatedButtons);
 };
 
 const checkKingPinCondition = () => {
@@ -198,43 +207,44 @@ const onDiceRolled = (dice) => {
     return score
   };
 
-
   const handleNotchedReplacement = () => {
     let newSticks = { ...sticks };
-    let notchedSticksRemaining = sticks.general.notched;
+  
+    if (newSticks.general.plain === 0 && newSticks.general.notched > 0) {
+      showCustomAlert(
+        'No plain sticks left, replacing 15 normal sticks with a notched stick.',
+        [{
+          text: 'OK',
+          onPress: () => proceedWithNotchedReplacement(newSticks)
+        }],
+        currentPlayer === 'player1'
+      );
+    }
+  };
+
+  const proceedWithNotchedReplacement = (newSticks) => {
+    let notchedSticksRemaining = newSticks.general.notched;
   
     while (notchedSticksRemaining > 0) {
-      const eligiblePlayers = ["player1", "player2"].filter((player) => {
-        return newSticks[player].plain >= 15;
-      });
+      const eligiblePlayers = ["player1", "player2"].filter(player => newSticks[player].plain >= 15);
   
       if (eligiblePlayers.length === 0) {
-        // No player is eligible for a notched stick
-        break;
+        break; // Exit if no players are eligible
       }
   
-      let selectedPlayer = null;
-  
-      if (eligiblePlayers.length === 1) {
-        // Only one player is eligible
-        selectedPlayer = eligiblePlayers[0];
-      } else {
-        // Both players are eligible, randomly select one
-        selectedPlayer = eligiblePlayers[Math.floor(Math.random() * 2)];
-      }
-  
-      // Exchange 15 plain sticks for 1 notched stick
-      newSticks[selectedPlayer].plain -= 15;
-      newSticks[selectedPlayer].notched += 1;
-      notchedSticksRemaining -= 1;
-      newSticks.general.notched -= 1;
-      newSticks.general.plain += 15;
+      eligiblePlayers.forEach(player => {
+        if (notchedSticksRemaining > 0) {
+          newSticks[player].plain -= 15; // Deduct 15 plain sticks from the player's pile
+          newSticks[player].notched += 1; // Add a notched stick to the player's pile
+          notchedSticksRemaining--;
+          newSticks.general.plain += 15; // Add the deducted plain sticks back to the general pile
+        }
+      });
     }
   
-    setSticks(newSticks);
+    newSticks.general.notched = notchedSticksRemaining; // Update the notched sticks count in the general pile
+    setSticks(newSticks); // Update the state with the new sticks
   };
-  
- 
 
 const calculateScore = (dice) => {
   const marked = dice.filter((die) => die === 1).length;
@@ -244,6 +254,21 @@ const calculateScore = (dice) => {
 
   const currentPlayer = `player${playerTurn + 1}`;
   const otherPlayer = `player${3 - (playerTurn + 1)}`; // Opponent
+
+  // Check if general pile is exhausted and handle notched stick replacement
+
+  if (sticks.general.plain === 0 && sticks.general.notched > 0) {
+    handleNotchedReplacement();
+  }
+
+ // Kingpin logic
+  if (nextRollForKingPin && score > 0) {
+    // Handle kingpin scoring
+    sticks[currentPlayer].kingPin += 1;
+    sticks.general.kingPin -= 1;
+    setNextRollForKingPin(false);
+  }
+
 
   if (marked === 6 || unmarked === 6) {
     setWaltesText('Super Waltes!');
