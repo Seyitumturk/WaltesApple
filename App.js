@@ -237,96 +237,91 @@ const onDiceRolled = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
     let score = 0;
-  
+
     const currentPlayer = `player${playerTurn + 1}`;
-    const otherPlayer = `player${3 - (playerTurn + 1)}`; // Opponent
+    const otherPlayer = `player${3 - (playerTurn + 1)}`;
     let newSticks = { ...sticks };
-  
-    // Initial scoring logic
+
     if (marked === 6 || unmarked === 6) {
-      setWaltesText('Super Waltes!');
-      score = 5;
+        setWaltesText('Super Waltes!');
+        score = 5;
     } else if (marked === 5 || unmarked === 5) {
-      setWaltesText('Waltes!');
-      score = 1;
+        setWaltesText('Waltes!');
+        score = 1;
     } else {
-      setWaltesText('');
+        setWaltesText('');
     }
-  
-    // Handle general pile and notched stick replacement
-    if (newSticks.general.plain === 0 && newSticks.general.notched > 0) {
-      handleNotchedReplacement();
+
+    if (score > 0) {
+        let requiredPlainSticks = 3 * score;
+
+        // Use general pile plain sticks first
+        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+        newSticks[currentPlayer].plain += availablePlainSticks;
+        newSticks.general.plain -= availablePlainSticks;
+        requiredPlainSticks -= availablePlainSticks;
+
+        // Use opponent's plain sticks next
+        if (requiredPlainSticks > 0 && newSticks[otherPlayer].plain > 0) {
+            let availableOpponentSticks = Math.min(newSticks[otherPlayer].plain, requiredPlainSticks);
+            newSticks[currentPlayer].plain += availableOpponentSticks;
+            newSticks[otherPlayer].plain -= availableOpponentSticks;
+            requiredPlainSticks -= availableOpponentSticks;
+        }
+
+        // If still needed, use opponent's notched sticks
+        while (requiredPlainSticks > 0 && newSticks[otherPlayer].notched > 0) {
+            if (newSticks[otherPlayer].notchedValue >= requiredPlainSticks) {
+                newSticks[otherPlayer].notchedValue -= requiredPlainSticks;
+                requiredPlainSticks = 0;
+            } else {
+                requiredPlainSticks -= newSticks[otherPlayer].notchedValue;
+                newSticks[otherPlayer].notchedValue = 15; // Reset notched stick's meta value
+                newSticks[otherPlayer].notched--;
+
+                // Transfer the used notched stick to the current player
+                newSticks[currentPlayer].notched++;
+            }
+        }
     }
-  
+
     // Kingpin logic
     if (nextRollForKingPin && score > 0) {
-      newSticks[currentPlayer].kingPin += 1;
-      newSticks.general.kingPin -= 1;
-      setNextRollForKingPin(false);
-    }
-  
-    if (score > 0) {
-      if (newSticks.general.plain >= 3 * score) {
-        newSticks[currentPlayer].plain += 3 * score;
-        newSticks.general.plain -= 3 * score;
-        setIsGeneralPileExhausted(false);
-      } else {
-        setIsGeneralPileExhausted(true);
-        newSticks[currentPlayer].plain += newSticks.general.plain;
-        const debtSticks = 3 * score - newSticks.general.plain;
-        newSticks.general.plain = 0;
-  
-        if (newSticks[otherPlayer].plain >= debtSticks) {
-          newSticks[currentPlayer].plain += debtSticks;
-          newSticks[otherPlayer].plain -= debtSticks;
-        } else {
-          // Here we handle the debt with notched sticks if plain sticks are insufficient
-          const remainingDebt = debtSticks - newSticks[otherPlayer].plain;
-          newSticks[currentPlayer].plain += newSticks[otherPlayer].plain;
-          newSticks[otherPlayer].plain = 0;
-  
-          if (remainingDebt > 0 && newSticks[otherPlayer].notched > 0) {
-            let notchedValueNeeded = remainingDebt / 5; // 1 notched = 5 plain sticks
-            if (notchedValueNeeded <= newSticks[otherPlayer].notchedValue) {
-              newSticks[otherPlayer].notchedValue -= notchedValueNeeded;
-            } else {
-              newSticks[otherPlayer].notched--;
-              newSticks[otherPlayer].notchedValue = 15 - (notchedValueNeeded - newSticks[otherPlayer].notchedValue);
-            }
-          }
-        }
-  
-        if (nextRollForKingPin) {
-          newSticks[currentPlayer].kingPin += 1;
-          newSticks.general.kingPin -= 1;
-          setNextRollForKingPin(false);
-          
-          showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
+        newSticks[currentPlayer].kingPin++;
+        newSticks.general.kingPin--;
+        setNextRollForKingPin(false);
+
+        showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
             { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
-          ]);
+        ]);
+
+        if (newSticks.general.kingPin === 0) {
+            Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+            // Logic to end the game or reset the game state here
         }
-      }
-  
-      setScores((prevScores) => {
+    }
+
+    // Trigger exchange alert if applicable
+    if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+        triggerAlertForExchange(currentPlayer);
+    }
+
+    setSticks(newSticks);
+    setScores((prevScores) => {
         const newScores = [...prevScores];
         newScores[playerTurn] += score;
         return newScores;
-      });
-  
-      if (newSticks[currentPlayer].plain >= 15) {
-        if (newSticks.general.notched > 0) {
-          triggerAlertForExchange(currentPlayer);
-        }
-      }
-    }
-  
-    setSticks(newSticks);
+    });
+
     checkKingPinCondition();
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-    
+
     return score;
-  };
-  
+};
+
+
+
+
 
   return (
     <View style={styles.container}>
