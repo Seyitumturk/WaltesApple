@@ -116,7 +116,7 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
   type="notched"
   count={sticks[player].notched}
   notchedValue={sticks[player].notchedValue} // Updated to use notchedValue directly from sticks state
-  showNotchedValue={true} // Assuming you want to always show the notchedValue
+  showNotchedValue={sticks.general.kingPin === 0 && sticks.general.plain && sticks.general.notched} // Assuming you want to always show the notchedValue
 />
 
 
