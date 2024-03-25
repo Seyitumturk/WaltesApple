@@ -26,7 +26,7 @@ const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
 
 
-const CircularButton = ({ type, count }) => {
+const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
   const icons = {
     plain: plainStickIcon,
     notched: notchedStickIcon,
@@ -51,11 +51,12 @@ const CircularButton = ({ type, count }) => {
   return (
     <View style={styles.button}>
       <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
-      <Text style={styles.countText}>{count}</Text>
+      <Text style={styles.countText}>
+        {type === 'notched' && showNotchedValue ? `${count} / ${notchedValue}` : count}
+      </Text>
     </View>
   );
- };
-
+};
 
  const PlayerArea = ({
   player,
@@ -65,7 +66,8 @@ const CircularButton = ({ type, count }) => {
   player2Style,
   scoringPlayer, // Assume you have a way to determine who is the scoring player
   scoreText, // The text to display ("Waltes" or "Super Waltes")
-  opacityAnim, // Animation for the score text opacity
+  opacityAnim,
+  isGeneralPileExhausted, 
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
@@ -109,7 +111,13 @@ const CircularButton = ({ type, count }) => {
         <View style={[styles.personalPile, personalPileStyle]}>
           {/* Circular buttons for the personal pile */}
           <CircularButton type="plain" count={sticks[player].plain} />
-          <CircularButton type="notched" count={sticks[player].notched} />
+          <CircularButton
+              type="notched"
+              count={sticks[player].notched}
+              notchedValue={sticks[player].notchedValue}
+              showNotchedValue={isGeneralPileExhausted}
+            />
+
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
           {player === scoringPlayer && (
@@ -157,7 +165,7 @@ const CircularButton = ({ type, count }) => {
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll, 
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -448,6 +456,8 @@ useEffect(() => {
   scoreText={scoreText} // Changed from waltesText to scoreText
   opacityAnim={opacityAnim}
   scoringPlayer={currentScoringPlayer} // Use the correct state variable for scoringPlayer
+  isGeneralPileExhausted={isGeneralPileExhausted}
+
 />
 
 <PlayerArea
@@ -459,6 +469,8 @@ useEffect(() => {
   scoreText={scoreText} // Changed from waltesText to scoreText
   opacityAnim={opacityAnim}
   scoringPlayer={currentScoringPlayer} // Use the correct state variable for scoringPlayer
+  isGeneralPileExhausted={isGeneralPileExhausted}
+
 />
 
 </View>
