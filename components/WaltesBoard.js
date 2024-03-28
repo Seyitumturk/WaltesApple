@@ -48,11 +48,11 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     },
   });
  
-  return (
+ return (
     <View style={styles.button}>
       <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
       <Text style={styles.countText}>
-        {type === 'notched' && showNotchedValue ? `${count} (${notchedValue})` : count}
+        {type === 'notched' && showNotchedValue ? `${count}/${notchedValue}` : count}
       </Text>
     </View>
   );
@@ -112,13 +112,12 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
           {/* Circular buttons for the personal pile */}
           <CircularButton type="plain" count={sticks[player].plain} />
 
-          <CircularButton 
-  type="notched"
-  count={sticks[player].notched}
-  notchedValue={sticks[player].notchedValue} // Updated to use notchedValue directly from sticks state
-  showNotchedValue={sticks.general.kingPin === 0 && sticks.general.plain && sticks.general.notched} // Assuming you want to always show the notchedValue
-/>
-
+                    <CircularButton 
+            type="notched"
+            count={sticks[player].notched}
+            notchedValue={sticks[player].notched * 15}
+            showNotchedValue={isGeneralPileExhausted} // Show the notched value when the general pile is exhausted
+          />
 
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
 

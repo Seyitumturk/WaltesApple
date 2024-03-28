@@ -4,6 +4,7 @@ import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
 import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
+import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
 
 
 const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
@@ -46,6 +47,7 @@ export default function App() {
 
   const [kingPinWon, setKingPinWon] = useState(false);
 
+  const [showReplacementGif, setShowReplacementGif] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -140,18 +142,18 @@ const showCustomAlert = (message, buttons = [], shouldRotate) => {
 
 const checkKingPinCondition = () => {
   if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
-    setNextRollForKingPin(true);
-    if (!hasShownAlert) {
-      setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
-      setAlertButtons([{
-        text: 'OK',
-        onPress: () => {
-          setAlertVisible(false);
-          setHasShownAlert(true);
-        }
-      }]);
-      setAlertVisible(true);
-    }
+      setNextRollForKingPin(true); // Next score wins the kingpin
+      if (!hasShownAlert) {
+          setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
+          setAlertButtons([{
+              text: 'OK',
+              onPress: () => {
+                  setAlertVisible(false);
+                  setHasShownAlert(true);
+              }
+          }]);
+          setAlertVisible(true);
+      }
   }
 };
 
@@ -193,140 +195,134 @@ const onDiceRolled = (dice) => {
     hasClickedRef.current = false;  // Resetting hasClicked here
     return score
   };
-
-  const handleNotchedReplacement = () => {
-    let newSticks = { ...sticks };
-  
-    if (newSticks.general.plain === 0 && newSticks.general.notched > 0) {
-      showCustomAlert(
-        'No plain sticks left, replacing 15 normal sticks with a notched stick.',
-        [{
-          text: 'OK',
-          onPress: () => proceedWithNotchedReplacement(newSticks)
-        }],
-        currentPlayer === 'player1'
-      );
-    }
-  };
-
-  const proceedWithNotchedReplacement = (newSticks) => {
-    let notchedSticksRemaining = newSticks.general.notched;
-  
-    while (notchedSticksRemaining > 0) {
-      const eligiblePlayers = ["player1", "player2"].filter(player => newSticks[player].plain >= 15);
-  
-      if (eligiblePlayers.length === 0) {
-        break; // Exit if no players are eligible
-      }
-  
-      eligiblePlayers.forEach(player => {
-        if (notchedSticksRemaining > 0) {
-          newSticks[player].plain -= 15; // Deduct 15 plain sticks from the player's pile
-          newSticks[player].notched += 1; // Add a notched stick to the player's pile
-          notchedSticksRemaining--;
-          newSticks.general.plain += 15; // Add the deducted plain sticks back to the general pile
-        }
-      });
-    }
-  
-    newSticks.general.notched = notchedSticksRemaining; // Update the notched sticks count in the general pile
-    setSticks(newSticks); // Update the state with the new sticks
-  };
-
-  const calculateScore = (dice) => {
-    const marked = dice.filter((die) => die === 1).length;
-    const unmarked = 6 - marked;
-    let score = 0;
-
-    const currentPlayer = `player${playerTurn + 1}`;
-    const otherPlayer = `player${3 - (playerTurn + 1)}`;
-    let newSticks = { ...sticks };
-
-    if (marked === 6 || unmarked === 6) {
-        setWaltesText('Super Waltes!');
-        score = 5;
-    } else if (marked === 5 || unmarked === 5) {
-        setWaltesText('Waltes!');
-        score = 1;
-    } else {
-        setWaltesText('');
-    }
-
-    if (score > 0) {
-        let requiredPlainSticks = 3 * score;
-
-        // Use general pile plain sticks first
-        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
-        newSticks[currentPlayer].plain += availablePlainSticks;
-        newSticks.general.plain -= availablePlainSticks;
-        requiredPlainSticks -= availablePlainSticks;
-
-        // Use opponent's plain sticks next
-        if (requiredPlainSticks > 0 && newSticks[otherPlayer].plain > 0) {
-            let availableOpponentSticks = Math.min(newSticks[otherPlayer].plain, requiredPlainSticks);
-            newSticks[currentPlayer].plain += availableOpponentSticks;
-            newSticks[otherPlayer].plain -= availableOpponentSticks;
-            requiredPlainSticks -= availableOpponentSticks;
-        }
-
-        // If still needed, use opponent's notched sticks
-        while (requiredPlainSticks > 0 && newSticks[otherPlayer].notched > 0) {
-            if (newSticks[otherPlayer].notchedValue >= requiredPlainSticks) {
-                newSticks[otherPlayer].notchedValue -= requiredPlainSticks;
-                requiredPlainSticks = 0;
-            } else {
-                requiredPlainSticks -= newSticks[otherPlayer].notchedValue;
-                newSticks[otherPlayer].notchedValue = 15; // Reset notched stick's meta value
-                newSticks[otherPlayer].notched--;
-
-                // Transfer the used notched stick to the current player
-                newSticks[currentPlayer].notched++;
-            }
-        }
-    }
-
-    // Kingpin logic
-    if (nextRollForKingPin && score > 0) {
-        newSticks[currentPlayer].kingPin++;
-        newSticks.general.kingPin--;
-        setNextRollForKingPin(false);
-
-        showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
-            { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
-        ]);
-
-        if (newSticks.general.kingPin === 0) {
-            Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
-            // Logic to end the game or reset the game state here
-        }
-    }
-
-    // Trigger exchange alert if applicable
-    if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-        triggerAlertForExchange(currentPlayer);
-    }
-
-    setSticks(newSticks);
-    setScores((prevScores) => {
-        const newScores = [...prevScores];
-        newScores[playerTurn] += score;
-        return newScores;
-    });
-
-    checkKingPinCondition();
-    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-
-    return score;
+// This function handles the notched stick replacement automatically
+const handleNotchedReplacement = (currentPlayer) => {
+  let newSticks = { ...sticks };
+  if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+      newSticks[currentPlayer].plain -= 15;
+      newSticks[currentPlayer].notched++;
+      newSticks.general.notched--;
+      newSticks.general.plain += 15;
+      setSticks(newSticks);
+      triggerReplacementGif();
+  }
 };
 
 
+const calculateScore = (dice) => {
+  const marked = dice.filter((die) => die === 1).length;
+  const unmarked = 6 - marked;
+  let score = 0;
+
+  const currentPlayer = `player${playerTurn + 1}`;
+  const otherPlayer = `player${3 - (playerTurn + 1)}`;
+  let newSticks = { ...sticks };
+
+  if (marked === 6 || unmarked === 6) {
+    setWaltesText('Super Waltes!');
+    score = 5;
+  } else if (marked === 5 || unmarked === 5) {
+    setWaltesText('Waltes!');
+    score = 1;
+  } else {
+    setWaltesText('');
+  }
+
+  if (score > 0) {
+    if (!isGeneralPileExhausted) {
+      let requiredPlainSticks = 3 * score;
+      let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+      newSticks[currentPlayer].plain += availablePlainSticks;
+      newSticks.general.plain -= availablePlainSticks;
 
 
+      handleNotchedReplacement(currentPlayer);
+
+      if (newSticks.general.plain === 0) {
+        setIsGeneralPileExhausted(true);
+      }
+
+      // Automatic notched stick replacement
+      if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+        newSticks[currentPlayer].plain -= 15;
+        newSticks[currentPlayer].notched++;
+        newSticks.general.notched--;
+        newSticks.general.plain += 15;
+
+        triggerReplacementGif(); // Show the replacement GIF
+      }
+    } else {
+      handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
+    }
+
+    // Check for kingpin win condition
+    if (nextRollForKingPin && score > 0) {
+      newSticks[currentPlayer].kingPin++;
+      newSticks.general.kingPin--;
+      setNextRollForKingPin(false);
+
+      showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
+        { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
+      ]);
+
+      if (newSticks.general.kingPin === 0) {
+        Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+      }
+    }
+  }
+
+  setSticks(newSticks);
+  setScores((prevScores) => {
+    const newScores = [...prevScores];
+    newScores[playerTurn] += score;
+    return newScores;
+  });
+
+  checkKingPinCondition();
+  setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+  return score;
+};
+
+// Debt mode stick handling
+const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
+  let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
+
+  if (newSticks[otherPlayer].plain > 0) {
+      // Handle plain sticks first
+      let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
+      newSticks[otherPlayer].plain -= transfer;
+      newSticks[currentPlayer].plain += transfer;
+      debtSticks -= transfer;
+  } 
+
+  if (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
+      // If there are still sticks to transfer and the other player has notched sticks
+      if (newSticks[otherPlayer].notchedValue >= debtSticks) {
+          // If the notched stick's value is enough to cover the debt
+          newSticks[otherPlayer].notchedValue -= debtSticks;
+      } else {
+          // If the notched stick's value is not enough, transfer one notched stick and adjust the value
+          debtSticks -= newSticks[otherPlayer].notchedValue;
+          newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the other player
+          newSticks[otherPlayer].notched--;
+          newSticks[currentPlayer].notched++;
+      }
+  }
+
+  // Continue with the rest of the logic as before
+  if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
+      Alert.alert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
+  }
+};
+
+// Call this function when notched sticks or king pin are transferred
+const triggerReplacementGif = () => {
+  setShowReplacementGif(true);
+  setTimeout(() => setShowReplacementGif(false), 5000); // Display the GIF for 5 seconds
+};
 
   return (
     <View style={styles.container}>
-
-
      <CustomAlert 
         visible={alertVisible} 
         message={alertMessage} 
@@ -371,6 +367,23 @@ const onDiceRolled = (dice) => {
 
          
           />
+            {showReplacementGif && (
+            <View style={[
+              styles.gifContainer,
+              playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
+            ]}>
+              <Animated.Image
+                source={stickReplacementGif}
+                style={styles.replacementGif}
+              />
+              <View style={styles.swapAlertBox}>
+                <Text style={styles.swapAlertText}>You now have 15 plain sticks, replacing them with a notched stick.</Text>
+              </View>
+            </View>
+          )}
+
+
+          
            <TouchableOpacity
             style={styles.bottomClickableArea}
             activeOpacity={1}
@@ -420,6 +433,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
+  gifContainer: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    zIndex: 999999999999999,
+    borderWidth: 2,
+    borderColor: '#805c15',
+  },
+  replacementGif: {
+    width: 200, // Adjust the size as needed
+    height: 200,
+  },
   scoreTextPlayer1: {
     alignSelf: 'center',
   },
@@ -436,6 +463,33 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }, { translateY: -50 }],
   },
+  rotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  
+  gifContainer: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    zIndex: 999,
+  },
+  
+  swapAlertBox: {
+    marginTop: 20, // Add space between the GIF and text
+    backgroundColor: 'orange', // Example background color for the alert box
+    padding: 10,
+    borderRadius: 5,
+  },
+  
+  swapAlertText: {
+    color: 'black',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  
+  
   alertBox: {
     position: 'absolute',
     top: 0,
@@ -481,10 +535,21 @@ tossText: {
   width: '100%',
   textAlign: 'center',
   fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-
 },
 
-
+swapAlertBox: {
+  backgroundColor: '#FDA10E',
+  padding: 10,
+  marginTop: 10,
+  borderRadius: 5,
+  borderWidth: 2,
+  borderColor: '#805c15',
+},
+swapAlertText: {
+  color: 'black',
+  fontWeight: 'bold',
+  textAlign: 'center',
+},
 
 centeredView: {
     flex: 1,
