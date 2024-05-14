@@ -1,5 +1,5 @@
-import React, { useState, useEffect,useRef } from 'react';
-import {Modal, Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { AppRegistry, Modal, Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert, Platform } from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
@@ -69,7 +69,7 @@ export default function App() {
   const playerTurnRef = useRef(playerTurn)
 
   const [isWaltesVisible, setIsWaltesVisible] = useState(false);
-  
+
   const [sticks, setSticks] = useState({
     general: {
       plain: 51,
@@ -89,92 +89,92 @@ export default function App() {
       notchedValue: 15, // Assuming each notched stick starts with a value of 15
     },
   });
-  
-const triggerAlertForExchange = (currentPlayer) => {
-  const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
-  setTimeout(() => {
-    showCustomAlert(
-      'Do you want to replace 15 normal sticks with a notched stick?',
-      [
-        {
-          text: 'Cancel',
-          onPress: () => { 
-            setAlertVisible(false); // Close the modal
-            // Handle Cancel action
-          }
-        },
-        {
-          text: 'Yes',
-          onPress: () => {
-            // Implement the exchange logic here
-            const newSticks = { ...sticks };
-            newSticks[currentPlayer].plain -= 15;
-            newSticks[currentPlayer].notched += 1;
-            newSticks.general.notched -= 1;
-            newSticks.general.plain += 15;
-            setSticks(newSticks);
 
-            setAlertVisible(false); // Close the modal
+  const triggerAlertForExchange = (currentPlayer) => {
+    const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
+    setTimeout(() => {
+      showCustomAlert(
+        'Do you want to replace 15 normal sticks with a notched stick?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => {
+              setAlertVisible(false); // Close the modal
+              // Handle Cancel action
+            }
           },
-        },
-      ],
-      shouldRotate
-    );
-  }, 1000); // 2000 milliseconds delay
-};
+          {
+            text: 'Yes',
+            onPress: () => {
+              // Implement the exchange logic here
+              const newSticks = { ...sticks };
+              newSticks[currentPlayer].plain -= 15;
+              newSticks[currentPlayer].notched += 1;
+              newSticks.general.notched -= 1;
+              newSticks.general.plain += 15;
+              setSticks(newSticks);
+
+              setAlertVisible(false); // Close the modal
+            },
+          },
+        ],
+        shouldRotate
+      );
+    }, 1000); // 2000 milliseconds delay
+  };
 
 
-const showCustomAlert = (message, buttons = [], shouldRotate) => {
-  setAlertMessage(message);
-  setAlertVisible(true);
+  const showCustomAlert = (message, buttons = [], shouldRotate) => {
+    setAlertMessage(message);
+    setAlertVisible(true);
 
-  // Update buttons to include closing the alert
-  const updatedButtons = buttons.map(button => ({
-    ...button,
-    onPress: () => {
-      button.onPress?.();
-      setAlertVisible(false); // Ensure the alert is closed after the button is pressed
-    }
-  }));
+    // Update buttons to include closing the alert
+    const updatedButtons = buttons.map(button => ({
+      ...button,
+      onPress: () => {
+        button.onPress?.();
+        setAlertVisible(false); // Ensure the alert is closed after the button is pressed
+      }
+    }));
 
-  setAlertButtons(updatedButtons);
-};
+    setAlertButtons(updatedButtons);
+  };
 
-const checkKingPinCondition = () => {
-  if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
+  const checkKingPinCondition = () => {
+    if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
       setNextRollForKingPin(true); // Next score wins the kingpin
       if (!hasShownAlert) {
-          setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
-          setAlertButtons([{
-              text: 'OK',
-              onPress: () => {
-                  setAlertVisible(false);
-                  setHasShownAlert(true);
-              }
-          }]);
-          setAlertVisible(true);
+        setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
+        setAlertButtons([{
+          text: 'OK',
+          onPress: () => {
+            setAlertVisible(false);
+            setHasShownAlert(true);
+          }
+        }]);
+        setAlertVisible(true);
       }
-  }
-};
+    }
+  };
 
 
 
-const startGame = () => {
+  const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
   };
 
-const onTutorialFinished = () => {
+  const onTutorialFinished = () => {
     setCurrentPage('game'); // Change to the game page
   };
-const handlePlayerClick = (player) => {
+  const handlePlayerClick = (player) => {
     if (player === playerTurn && !isDiceRolling && !hasClickedRef.current) {
       hasClickedRef.current = true;
       setPrevPlayerTurn(playerTurn);
       setShouldRoll(true);
     }
   };
-  
-const onDiceRolled = (dice) => {
+
+  const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
 
@@ -190,184 +190,184 @@ const onDiceRolled = (dice) => {
         setScoringPlayer(scoringPlayerId); // Update the scoring player state
         setWaltesText(score === 5 ? 'Super Waltes' : 'Waltes'); // Update the Waltes text state
         // Other logic remains the same
-    }
+      }
     }
     hasClickedRef.current = false;  // Resetting hasClicked here
     return score
   };
-// This function handles the notched stick replacement automatically
-const handleNotchedReplacement = (currentPlayer) => {
-  let newSticks = { ...sticks };
-  if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+  // This function handles the notched stick replacement automatically
+  const handleNotchedReplacement = (currentPlayer) => {
+    let newSticks = { ...sticks };
+    if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
       newSticks[currentPlayer].plain -= 15;
       newSticks[currentPlayer].notched++;
       newSticks.general.notched--;
       newSticks.general.plain += 15;
       setSticks(newSticks);
       triggerReplacementGif();
-  }
-};
+    }
+  };
 
 
-const calculateScore = (dice) => {
-  const marked = dice.filter((die) => die === 1).length;
-  const unmarked = 6 - marked;
-  let score = 0;
+  const calculateScore = (dice) => {
+    const marked = dice.filter((die) => die === 1).length;
+    const unmarked = 6 - marked;
+    let score = 0;
 
-  const currentPlayer = `player${playerTurn + 1}`;
-  const otherPlayer = `player${3 - (playerTurn + 1)}`;
-  let newSticks = { ...sticks };
+    const currentPlayer = `player${playerTurn + 1}`;
+    const otherPlayer = `player${3 - (playerTurn + 1)}`;
+    let newSticks = { ...sticks };
 
-  if (marked === 6 || unmarked === 6) {
-    setWaltesText('Super Waltes!');
-    score = 5;
-  } else if (marked === 5 || unmarked === 5) {
-    setWaltesText('Waltes!');
-    score = 1;
-  } else {
-    setWaltesText('');
-  }
-
-  if (score > 0) {
-    if (!isGeneralPileExhausted) {
-      let requiredPlainSticks = 3 * score;
-      let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
-      newSticks[currentPlayer].plain += availablePlainSticks;
-      newSticks.general.plain -= availablePlainSticks;
-
-
-      handleNotchedReplacement(currentPlayer);
-
-      if (newSticks.general.plain === 0) {
-        setIsGeneralPileExhausted(true);
-      }
-
-      // Automatic notched stick replacement
-      if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-        newSticks[currentPlayer].plain -= 15;
-        newSticks[currentPlayer].notched++;
-        newSticks.general.notched--;
-        newSticks.general.plain += 15;
-
-        triggerReplacementGif(); // Show the replacement GIF
-      }
+    if (marked === 6 || unmarked === 6) {
+      setWaltesText('Super Waltes!');
+      score = 5;
+    } else if (marked === 5 || unmarked === 5) {
+      setWaltesText('Waltes!');
+      score = 1;
     } else {
-      handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
+      setWaltesText('');
     }
 
-    // Check for kingpin win condition
-    if (nextRollForKingPin && score > 0) {
-      newSticks[currentPlayer].kingPin++;
-      newSticks.general.kingPin--;
-      setNextRollForKingPin(false);
+    if (score > 0) {
+      if (!isGeneralPileExhausted) {
+        let requiredPlainSticks = 3 * score;
+        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+        newSticks[currentPlayer].plain += availablePlainSticks;
+        newSticks.general.plain -= availablePlainSticks;
 
-      showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
-        { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
-      ]);
 
-      if (newSticks.general.kingPin === 0) {
-        Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+        handleNotchedReplacement(currentPlayer);
+
+        if (newSticks.general.plain === 0) {
+          setIsGeneralPileExhausted(true);
+        }
+
+        // Automatic notched stick replacement
+        if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+          newSticks[currentPlayer].plain -= 15;
+          newSticks[currentPlayer].notched++;
+          newSticks.general.notched--;
+          newSticks.general.plain += 15;
+
+          triggerReplacementGif(); // Show the replacement GIF
+        }
+      } else {
+        handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
+      }
+
+      // Check for kingpin win condition
+      if (nextRollForKingPin && score > 0) {
+        newSticks[currentPlayer].kingPin++;
+        newSticks.general.kingPin--;
+        setNextRollForKingPin(false);
+
+        showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
+          { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
+        ]);
+
+        if (newSticks.general.kingPin === 0) {
+          Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+        }
       }
     }
-  }
 
-  setSticks(newSticks);
-  setScores((prevScores) => {
-    const newScores = [...prevScores];
-    newScores[playerTurn] += score;
-    return newScores;
-  });
+    setSticks(newSticks);
+    setScores((prevScores) => {
+      const newScores = [...prevScores];
+      newScores[playerTurn] += score;
+      return newScores;
+    });
 
-  checkKingPinCondition();
-  setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
-  return score;
-};
+    checkKingPinCondition();
+    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
+    return score;
+  };
 
-// Debt mode stick handling
-const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
-  let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
+  // Debt mode stick handling
+  const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
+    let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
 
-  if (newSticks[otherPlayer].plain > 0) {
+    if (newSticks[otherPlayer].plain > 0) {
       // Handle plain sticks first
       let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
       newSticks[otherPlayer].plain -= transfer;
       newSticks[currentPlayer].plain += transfer;
       debtSticks -= transfer;
-  } 
+    }
 
-  if (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
+    if (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
       // If there are still sticks to transfer and the other player has notched sticks
       if (newSticks[otherPlayer].notchedValue >= debtSticks) {
-          // If the notched stick's value is enough to cover the debt
-          newSticks[otherPlayer].notchedValue -= debtSticks;
+        // If the notched stick's value is enough to cover the debt
+        newSticks[otherPlayer].notchedValue -= debtSticks;
       } else {
-          // If the notched stick's value is not enough, transfer one notched stick and adjust the value
-          debtSticks -= newSticks[otherPlayer].notchedValue;
-          newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the other player
-          newSticks[otherPlayer].notched--;
-          newSticks[currentPlayer].notched++;
+        // If the notched stick's value is not enough, transfer one notched stick and adjust the value
+        debtSticks -= newSticks[otherPlayer].notchedValue;
+        newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the other player
+        newSticks[otherPlayer].notched--;
+        newSticks[currentPlayer].notched++;
       }
-  }
+    }
 
-  // Continue with the rest of the logic as before
-  if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
+    // Continue with the rest of the logic as before
+    if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
       Alert.alert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
-  }
-};
+    }
+  };
 
-// Call this function when notched sticks or king pin are transferred
-const triggerReplacementGif = () => {
-  setShowReplacementGif(true);
-  setTimeout(() => setShowReplacementGif(false), 5000); // Display the GIF for 5 seconds
-};
+  // Call this function when notched sticks or king pin are transferred
+  const triggerReplacementGif = () => {
+    setShowReplacementGif(true);
+    setTimeout(() => setShowReplacementGif(false), 5000); // Display the GIF for 5 seconds
+  };
 
   return (
     <View style={styles.container}>
-     <CustomAlert 
-        visible={alertVisible} 
-        message={alertMessage} 
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
         buttons={alertButtons}
         shouldRotate={currentPlayer === 'player1'} // Rotate for player1
 
       />
-     <BackgroundVideo />
-    
-    {currentPage === 'home' && <HomePage onStartGame={startGame} />}
+      <BackgroundVideo />
 
-    {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
+      {currentPage === 'home' && <HomePage onStartGame={startGame} />}
 
-    {currentPage === 'game' && (
+      {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
+
+      {currentPage === 'game' && (
         <>
           <TouchableOpacity
-          style={styles.topClickableArea}
-          activeOpacity={1}
-          onPress={() => handlePlayerClick(0)}
-          disabled={playerTurn !== 0 || isDiceRolling}
-        >
-          {showExhaustedAlert && (
-            <View style={styles.alertBox}>
-              <Text style={[styles.alertText, {transform: [{rotate: '180deg'}]}]}>General Pile is Exhausted, Debt Mode</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            style={styles.topClickableArea}
+            activeOpacity={1}
+            onPress={() => handlePlayerClick(0)}
+            disabled={playerTurn !== 0 || isDiceRolling}
+          >
+            {showExhaustedAlert && (
+              <View style={styles.alertBox}>
+                <Text style={[styles.alertText, { transform: [{ rotate: '180deg' }] }]}>General Pile is Exhausted, Debt Mode</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-          <WaltesBoard 
+          <WaltesBoard
             player1TotalScore={scores[0]}
             player2TotalScore={scores[1]}
-            playerTurn={playerTurn} 
+            playerTurn={playerTurn}
             onDiceRolled={onDiceRolled}
-            sticks={sticks} 
-            shouldRoll={shouldRoll} 
-            setShouldRoll={setShouldRoll} 
-            setIsDiceRolling={setIsDiceRolling} 
-            isDiceRolling={isDiceRolling} 
+            sticks={sticks}
+            shouldRoll={shouldRoll}
+            setShouldRoll={setShouldRoll}
+            setIsDiceRolling={setIsDiceRolling}
+            isDiceRolling={isDiceRolling}
             scoringPlayer={scoringPlayer}
             waltesText={waltesText}
             isGeneralPileExhausted={isGeneralPileExhausted} // Pass this prop
 
-         
+
           />
-            {showReplacementGif && (
+          {showReplacementGif && (
             <View style={[
               styles.gifContainer,
               playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
@@ -383,8 +383,8 @@ const triggerReplacementGif = () => {
           )}
 
 
-          
-           <TouchableOpacity
+
+          <TouchableOpacity
             style={styles.bottomClickableArea}
             activeOpacity={1}
             onPress={() => handlePlayerClick(1)}
@@ -392,7 +392,7 @@ const triggerReplacementGif = () => {
           >
             {showExhaustedAlert && (
               <View style={styles.alertBox}>
-                <Text style={[styles.alertText, {transform: [{rotate: '180deg'}]}]}>General Pile is Exhausted, Debt Mode</Text>
+                <Text style={[styles.alertText, { transform: [{ rotate: '180deg' }] }]}>General Pile is Exhausted, Debt Mode</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -409,7 +409,7 @@ const triggerReplacementGif = () => {
               {waltesText}
             </Animated.Text>
           )}
-          
+
         </>
       )}
     </View>
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   rotated: {
     transform: [{ rotate: '180deg' }],
   },
-  
+
   gifContainer: {
     position: 'absolute',
     justifyContent: 'center',
@@ -475,21 +475,21 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 999,
   },
-  
+
   swapAlertBox: {
     marginTop: 20, // Add space between the GIF and text
     backgroundColor: 'orange', // Example background color for the alert box
     padding: 10,
     borderRadius: 5,
   },
-  
+
   swapAlertText: {
     color: 'black',
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  
-  
+
+
   alertBox: {
     position: 'absolute',
     top: 0,
@@ -505,53 +505,53 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff' // Example text color
   },
-  
-container: {
-  flex: 1,
-  flexDirection: 'column',
-},
-topClickableArea: {
-  position: 'absolute',
-  top: 0,
-  width: '100%',
-  height: '50%',
-  zIndex: 10,
-},
-bottomClickableArea: {
-  position: 'absolute',
-  bottom: 0,
-  width: '100%',
-  height: '50%',
-  zIndex: 10, 
-},
-tossText: {
-  fontSize: 32,
-  fontWeight: 'bold',
-  color: 'orange', // This is a hex code for brown
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  zIndex: 999,
-  width: '100%',
-  textAlign: 'center',
-  fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-},
 
-swapAlertBox: {
-  backgroundColor: '#FDA10E',
-  padding: 10,
-  marginTop: 10,
-  borderRadius: 5,
-  borderWidth: 2,
-  borderColor: '#805c15',
-},
-swapAlertText: {
-  color: 'black',
-  fontWeight: 'bold',
-  textAlign: 'center',
-},
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  topClickableArea: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: '50%',
+    zIndex: 10,
+  },
+  bottomClickableArea: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    height: '50%',
+    zIndex: 10,
+  },
+  tossText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'orange', // This is a hex code for brown
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    zIndex: 999,
+    width: '100%',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+  },
 
-centeredView: {
+  swapAlertBox: {
+    backgroundColor: '#FDA10E',
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#805c15',
+  },
+  swapAlertText: {
+    color: 'black',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -580,7 +580,7 @@ centeredView: {
     fontWeight: 'bold', // Increased font weight
     color: '#6A3805' // Set the text color to wood fall color
 
-    
+
   },
   button: {
     backgroundColor: '#2196F3',
