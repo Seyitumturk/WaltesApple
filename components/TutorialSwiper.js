@@ -135,7 +135,7 @@ const slides = images.map((imgSrc, index) => {
 
 
     <View style={styles.slide}>
-          <Image source={require('../assets/9.png')} style={styles.fullImage} />
+          <Image source={require('../assets/1')} style={styles.fullImage} />
       <Animated.View
             style={[
               styles.radioWave,
