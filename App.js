@@ -213,11 +213,11 @@ export default function App() {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
     let score = 0;
-
+  
     const currentPlayer = `player${playerTurn + 1}`;
     const otherPlayer = `player${3 - (playerTurn + 1)}`;
     let newSticks = { ...sticks };
-
+  
     if (marked === 6 || unmarked === 6) {
       setWaltesText('Super Waltes!');
       score = 5;
@@ -227,93 +227,107 @@ export default function App() {
     } else {
       setWaltesText('');
     }
-
+  
     if (score > 0) {
       if (!isGeneralPileExhausted) {
         let requiredPlainSticks = 3 * score;
         let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+  
+        // Complete notched stick first if needed
+        if (newSticks[currentPlayer].notchedValue < 15) {
+          let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
+          let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
+          newSticks[currentPlayer].notchedValue += usedForCompletion;
+          newSticks.general.plain -= usedForCompletion;
+          availablePlainSticks -= usedForCompletion;
+        }
+  
+        // Add remaining plain sticks
         newSticks[currentPlayer].plain += availablePlainSticks;
         newSticks.general.plain -= availablePlainSticks;
-
-
+  
         handleNotchedReplacement(currentPlayer);
-
+  
         if (newSticks.general.plain === 0) {
           setIsGeneralPileExhausted(true);
         }
-
+  
         // Automatic notched stick replacement
         if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
           newSticks[currentPlayer].plain -= 15;
           newSticks[currentPlayer].notched++;
           newSticks.general.notched--;
           newSticks.general.plain += 15;
-
+  
           triggerReplacementGif(); // Show the replacement GIF
         }
       } else {
         handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
       }
-
+  
       // Check for kingpin win condition
       if (nextRollForKingPin && score > 0) {
         newSticks[currentPlayer].kingPin++;
         newSticks.general.kingPin--;
         setNextRollForKingPin(false);
-
+  
         showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
           { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
         ]);
-
+  
         if (newSticks.general.kingPin === 0) {
           Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
         }
       }
     }
-
+  
     setSticks(newSticks);
     setScores((prevScores) => {
       const newScores = [...prevScores];
       newScores[playerTurn] += score;
       return newScores;
     });
-
+  
     checkKingPinCondition();
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
   };
-
+  
   // Debt mode stick handling
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
     let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
-
+  
+    // First, handle the transfer of plain sticks
     if (newSticks[otherPlayer].plain > 0) {
-      // Handle plain sticks first
       let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
       newSticks[otherPlayer].plain -= transfer;
       newSticks[currentPlayer].plain += transfer;
       debtSticks -= transfer;
     }
-
-    if (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
-      // If there are still sticks to transfer and the other player has notched sticks
-      if (newSticks[otherPlayer].notchedValue >= debtSticks) {
-        // If the notched stick's value is enough to cover the debt
-        newSticks[otherPlayer].notchedValue -= debtSticks;
-      } else {
-        // If the notched stick's value is not enough, transfer one notched stick and adjust the value
-        debtSticks -= newSticks[otherPlayer].notchedValue;
-        newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the other player
-        newSticks[otherPlayer].notched--;
-        newSticks[currentPlayer].notched++;
+  
+    // If there is still debt to settle, handle notched sticks
+    while (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
+      let decrementValue = Math.min(debtSticks, newSticks[otherPlayer].notchedValue);
+      newSticks[otherPlayer].notchedValue -= decrementValue;
+      debtSticks -= decrementValue;
+  
+      if (newSticks[otherPlayer].notchedValue === 0) {
+        // If notchedValue is depleted, move to the next notched stick
+        newSticks[otherPlayer].notched -= 1;
+        if (newSticks[otherPlayer].notched > 0) {
+          newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the remaining sticks
+        }
       }
     }
-
-    // Continue with the rest of the logic as before
+  
+    // Check if the other player is out of sticks
     if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
       Alert.alert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
     }
+  
+    setSticks(newSticks); // Ensure the state is updated to reflect changes
   };
+  
 
   // Call this function when notched sticks or king pin are transferred
   const triggerReplacementGif = () => {
