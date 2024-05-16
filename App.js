@@ -293,6 +293,7 @@ export default function App() {
     return score;
   };
   
+  
   // Debt mode stick handling
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
     let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
@@ -301,7 +302,6 @@ export default function App() {
     if (newSticks[otherPlayer].plain > 0) {
       let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
       newSticks[otherPlayer].plain -= transfer;
-      newSticks[currentPlayer].plain += transfer;
       debtSticks -= transfer;
     }
   
@@ -320,6 +320,21 @@ export default function App() {
       }
     }
   
+    // If currentPlayer gains points, complete their notchedValue first
+    if (score > 0) {
+      let gainSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
+  
+      if (newSticks[currentPlayer].notchedValue < 15) {
+        let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
+        let usedForCompletion = Math.min(gainSticks, neededForCompletion);
+        newSticks[currentPlayer].notchedValue += usedForCompletion;
+        gainSticks -= usedForCompletion;
+      }
+  
+      // Add remaining plain sticks if any
+      newSticks[currentPlayer].plain += gainSticks;
+    }
+  
     // Check if the other player is out of sticks
     if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
       Alert.alert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
@@ -327,6 +342,7 @@ export default function App() {
   
     setSticks(newSticks); // Ensure the state is updated to reflect changes
   };
+  
   
 
   // Call this function when notched sticks or king pin are transferred
