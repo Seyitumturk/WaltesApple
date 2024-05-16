@@ -25,7 +25,83 @@ import { ReloadInstructions } from 'react-native/Libraries/NewAppScreen';
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
 
+
+
+const useCountAnimation = (initialCount) => {
+  const [count, setCount] = useState(initialCount);
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  const animateCount = (newCount) => {
+    const isSuperWaltes = Math.abs(newCount - count) > 10; // Determine if it's a Super Waltes increment
+    const incrementValue = (currentValue, targetValue, duration) => {
+      const adjustedDuration = isSuperWaltes ? Math.min(duration, 200) : Math.min(duration, 300); // Adjust max duration for Super Waltes
+
+      if (currentValue < targetValue) {
+        setCount(currentValue + 1);
+        animatedValue.setValue(0);
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: 1,
+            duration: adjustedDuration,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 0,
+            duration: adjustedDuration,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+        ]).start(() => incrementValue(currentValue + 1, targetValue, duration + (isSuperWaltes ? 20 : 50))); // Adjust step increment duration
+      } else if (currentValue > targetValue) {
+        setCount(currentValue - 1);
+        animatedValue.setValue(0);
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: 1,
+            duration: adjustedDuration,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 0,
+            duration: adjustedDuration,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+        ]).start(() => incrementValue(currentValue - 1, targetValue, duration + (isSuperWaltes ? 20 : 50))); // Adjust step increment duration
+      }
+    };
+
+    incrementValue(count, newCount, 50); // Start with a base duration of 50ms
+  };
+
+  return [count, animateCount, animatedValue];
+};
+
+
+
+
 const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
+  const [animatedCount, animateCount, animatedValue] = useCountAnimation(count);
+
+  useEffect(() => {
+    if (count !== animatedCount) {
+      animateCount(count);
+    }
+  }, [count]);
+
+  const animatedStyle = {
+    transform: [
+      {
+        scale: animatedValue.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 1.5],
+        }),
+      },
+    ],
+  };
+
   const icons = {
     plain: plainStickIcon,
     notched: notchedStickIcon,
@@ -34,11 +110,11 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
 
   const styles = StyleSheet.create({
     icon: {
-      width: 60,    // adjust the size as needed
-      height: 75,   // adjust the size as needed
+      width: 60, // adjust the size as needed
+      height: 75, // adjust the size as needed
     },
     button: {
-      marginHorizontal: 10,  // Added margin
+      marginHorizontal: 10, // Added margin
     },
     countText: {
       fontSize: 16,
@@ -50,15 +126,12 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
   return (
     <View style={styles.button}>
       <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
-      <Text style={styles.countText}>
-        {type === 'notched' && showNotchedValue ? `${count}/${notchedValue}` : count}
-      </Text>
+      <Animated.Text style={[styles.countText, animatedStyle]}>
+        {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue}` : animatedCount}
+      </Animated.Text>
     </View>
   );
 };
-
-
-
 
 const PlayerArea = ({
   player,
@@ -156,6 +229,8 @@ const PlayerArea = ({
     </View>
   );
 };
+
+
 
 
 export default function WaltesBoard({
