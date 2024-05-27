@@ -132,7 +132,6 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     </View>
   );
 };
-
 const PlayerArea = ({
   player,
   sticks,
@@ -143,18 +142,16 @@ const PlayerArea = ({
   scoreText,
   opacityAnim,
   isGeneralPileExhausted,
+  debtPile = { player1: 0, player2: 0 }, // Default value to avoid undefined
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
-  // Rotate both piles for the top player
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
 
-  // Determine background color based on the player's turn
   const personalPileStyle = {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
-  // Animation for the score text appearance
   useEffect(() => {
     if (player === scoringPlayer) {
       Animated.sequence([
@@ -191,6 +188,11 @@ const PlayerArea = ({
             showNotchedValue={isGeneralPileExhausted}
           />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
+
+          {/* Add debt display */}
+          <View style={styles.debtContainer}>
+            <Text style={styles.debtText}>Debt: {debtPile[player]}</Text>
+          </View>
 
           {player === scoringPlayer && (
             <Animated.View
@@ -233,9 +235,11 @@ const PlayerArea = ({
 
 
 
+
+
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, debtPile
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -527,6 +531,8 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        debtPile={debtPile} // Pass debtPile prop
+
       />
 
       <PlayerArea
@@ -539,6 +545,8 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        debtPile={debtPile} // Pass debtPile prop
+
       />
 
 
@@ -683,6 +691,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10000000, // Ensure it's on top
+  },
+  debtContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  debtText: {
+    color: 'red',
+    fontWeight: 'bold',
   },
   scoreText: {
     fontSize: 30,

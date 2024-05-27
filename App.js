@@ -6,7 +6,6 @@ import HomePage from './components/HomePage';
 import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
 import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
 
-
 const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
   if (!visible) return null;
 
@@ -27,8 +26,6 @@ const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
     </Modal>
   );
 };
-
-
 
 export default function App() {
   const [playerTurn, setPlayerTurn] = useState(0);
@@ -56,17 +53,19 @@ export default function App() {
 
   const [scoringPlayer, setScoringPlayer] = useState(null);
 
-
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
   //State to keep track of switching to "DEBT" System.  
   const [isGeneralPileExhausted, setIsGeneralPileExhausted] = useState(false);
+  const [playerDebt, setPlayerDebt] = useState({ player1: 0, player2: 0 }); // Track each player's debt
+  const [isDebtMode, setIsDebtMode] = useState(false);
+  const [debtPile, setDebtPile] = useState({ player1: 0, player2: 0 });
 
   const [hasShownAlert, setHasShownAlert] = useState(false);
   const [score, setScore] = useState(0); // add this line
 
   const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
-  const playerTurnRef = useRef(playerTurn)
+  const playerTurnRef = useRef(playerTurn);
 
   const [isWaltesVisible, setIsWaltesVisible] = useState(false);
 
@@ -90,39 +89,9 @@ export default function App() {
     },
   });
 
-  const triggerAlertForExchange = (currentPlayer) => {
-    const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
-    setTimeout(() => {
-      showCustomAlert(
-        'Do you want to replace 15 normal sticks with a notched stick?',
-        [
-          {
-            text: 'Cancel',
-            onPress: () => {
-              setAlertVisible(false); // Close the modal
-              // Handle Cancel action
-            }
-          },
-          {
-            text: 'Yes',
-            onPress: () => {
-              // Implement the exchange logic here
-              const newSticks = { ...sticks };
-              newSticks[currentPlayer].plain -= 15;
-              newSticks[currentPlayer].notched += 1;
-              newSticks.general.notched -= 1;
-              newSticks.general.plain += 15;
-              setSticks(newSticks);
 
-              setAlertVisible(false); // Close the modal
-            },
-          },
-        ],
-        shouldRotate
-      );
-    }, 1000); // 2000 milliseconds delay
-  };
 
+  //Logic starts 
 
   const showCustomAlert = (message, buttons = [], shouldRotate) => {
     setAlertMessage(message);
@@ -157,8 +126,6 @@ export default function App() {
     }
   };
 
-
-
   const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
   };
@@ -166,6 +133,7 @@ export default function App() {
   const onTutorialFinished = () => {
     setCurrentPage('game'); // Change to the game page
   };
+
   const handlePlayerClick = (player) => {
     if (player === playerTurn && !isDiceRolling && !hasClickedRef.current) {
       hasClickedRef.current = true;
@@ -182,7 +150,6 @@ export default function App() {
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
       setScoringPlayer(null);
-
     } else {
       if (score > 0) {
         // Update the scoring player based on the current playerTurn
@@ -192,9 +159,10 @@ export default function App() {
         // Other logic remains the same
       }
     }
-    hasClickedRef.current = false;  // Resetting hasClicked here
-    return score
+    hasClickedRef.current = false; // Resetting hasClicked here
+    return score;
   };
+
   // This function handles the notched stick replacement automatically
   const handleNotchedReplacement = (currentPlayer) => {
     let newSticks = { ...sticks };
@@ -207,17 +175,15 @@ export default function App() {
       triggerReplacementGif();
     }
   };
-
-
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
     let score = 0;
-  
+
     const currentPlayer = `player${playerTurn + 1}`;
     const otherPlayer = `player${3 - (playerTurn + 1)}`;
     let newSticks = { ...sticks };
-  
+
     if (marked === 6 || unmarked === 6) {
       setWaltesText('Super Waltes!');
       score = 5;
@@ -227,12 +193,12 @@ export default function App() {
     } else {
       setWaltesText('');
     }
-  
+
     if (score > 0) {
       if (!isGeneralPileExhausted) {
         let requiredPlainSticks = 3 * score;
         let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
-  
+
         // Complete notched stick first if needed
         if (newSticks[currentPlayer].notchedValue < 15) {
           let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
@@ -241,109 +207,121 @@ export default function App() {
           newSticks.general.plain -= usedForCompletion;
           availablePlainSticks -= usedForCompletion;
         }
-  
+
         // Add remaining plain sticks
         newSticks[currentPlayer].plain += availablePlainSticks;
         newSticks.general.plain -= availablePlainSticks;
-  
+
         handleNotchedReplacement(currentPlayer);
-  
+
         if (newSticks.general.plain === 0) {
           setIsGeneralPileExhausted(true);
         }
-  
+
         // Automatic notched stick replacement
         if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
           newSticks[currentPlayer].plain -= 15;
           newSticks[currentPlayer].notched++;
           newSticks.general.notched--;
           newSticks.general.plain += 15;
-  
+
           triggerReplacementGif(); // Show the replacement GIF
         }
       } else {
         handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
       }
-  
+
       // Check for kingpin win condition
       if (nextRollForKingPin && score > 0) {
         newSticks[currentPlayer].kingPin++;
         newSticks.general.kingPin--;
         setNextRollForKingPin(false);
-  
+
         showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
           { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
         ]);
-  
+
         if (newSticks.general.kingPin === 0) {
           Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
         }
       }
     }
-  
+
     setSticks(newSticks);
     setScores((prevScores) => {
       const newScores = [...prevScores];
       newScores[playerTurn] += score;
       return newScores;
     });
-  
+
     checkKingPinCondition();
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
   };
-  
-  
-  // Debt mode stick handling
+
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
     let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
-  
-    // First, handle the transfer of plain sticks
-    if (newSticks[otherPlayer].plain > 0) {
-      let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
-      newSticks[otherPlayer].plain -= transfer;
-      debtSticks -= transfer;
+
+    // Enter debt mode if not already in it
+    if (!isDebtMode) {
+      setIsDebtMode(true);
+      setDebtPile({ player1: 0, player2: 0 });
+      newSticks.general.plain = 0;
+      newSticks.general.notched = 0;
+      newSticks.general.kingPin = 0;
     }
-  
-    // If there is still debt to settle, handle notched sticks
-    while (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
-      let decrementValue = Math.min(debtSticks, newSticks[otherPlayer].notchedValue);
-      newSticks[otherPlayer].notchedValue -= decrementValue;
-      debtSticks -= decrementValue;
-  
-      if (newSticks[otherPlayer].notchedValue === 0) {
-        // If notchedValue is depleted, move to the next notched stick
-        newSticks[otherPlayer].notched -= 1;
-        if (newSticks[otherPlayer].notched > 0) {
-          newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the remaining sticks
-        }
-      }
+
+    // Add debt to the general pile
+    setDebtPile((prevDebtPile) => ({
+      ...prevDebtPile,
+      [currentPlayer]: prevDebtPile[currentPlayer] + debtSticks,
+    }));
+
+    setSticks(newSticks);
+  };
+
+
+  const askForDebt = (currentPlayer) => {
+    const debt = playerDebt[currentPlayer];
+    if (debt > 0) {
+      showCustomAlert(
+        `${currentPlayer} asks for ${debt} sticks to be settled.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              handleDebtSettlement(currentPlayer);
+              setAlertVisible(false);
+            }
+          }
+        ],
+        currentPlayer === 'player1'
+      );
     }
-  
-    // If currentPlayer gains points, complete their notchedValue first
-    if (score > 0) {
-      let gainSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
-  
-      if (newSticks[currentPlayer].notchedValue < 15) {
-        let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
-        let usedForCompletion = Math.min(gainSticks, neededForCompletion);
-        newSticks[currentPlayer].notchedValue += usedForCompletion;
-        gainSticks -= usedForCompletion;
-      }
-  
-      // Add remaining plain sticks if any
-      newSticks[currentPlayer].plain += gainSticks;
-    }
-  
-    // Check if the other player is out of sticks
-    if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
+  };
+
+  const handleDebtSettlement = (currentPlayer) => {
+    const otherPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+    let newSticks = { ...sticks };
+    let debt = playerDebt[otherPlayer];
+
+    if (newSticks[currentPlayer].plain >= debt) {
+      newSticks[currentPlayer].plain -= debt;
+      playerDebt[otherPlayer] = 0;
+      Alert.alert(`${currentPlayer} has settled the debt!`);
+    } else {
       Alert.alert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
     }
-  
-    setSticks(newSticks); // Ensure the state is updated to reflect changes
+
+    setSticks(newSticks);
+    setPlayerDebt({ ...playerDebt });
   };
-  
-  
+
+  <TouchableOpacity onPress={() => askForDebt(currentPlayer)}>
+    <Text>Ask for Debt</Text>
+  </TouchableOpacity>
+
+
 
   // Call this function when notched sticks or king pin are transferred
   const triggerReplacementGif = () => {
@@ -351,14 +329,36 @@ export default function App() {
     setTimeout(() => setShowReplacementGif(false), 5000); // Display the GIF for 5 seconds
   };
 
+  const requestDebtPayment = (player) => {
+    const otherPlayer = player === 'player1' ? 'player2' : 'player1';
+    const debtAmount = debtPile[player];
+
+    if (debtAmount > 0) {
+      let newSticks = { ...sticks };
+
+      if (newSticks[otherPlayer].plain >= debtAmount) {
+        newSticks[otherPlayer].plain -= debtAmount;
+        newSticks[player].plain += debtAmount;
+        setDebtPile((prevDebtPile) => ({ ...prevDebtPile, [player]: 0 }));
+      } else {
+        Alert.alert(`Player ${otherPlayer} does not have enough sticks to pay the debt! ${player} wins!`);
+      }
+
+      setSticks(newSticks);
+    } else {
+      Alert.alert(`Player ${player} has no debts to claim!`);
+    }
+  };
+
+
+
   return (
     <View style={styles.container}>
       <CustomAlert
         visible={alertVisible}
         message={alertMessage}
         buttons={alertButtons}
-        shouldRotate={currentPlayer === 'player1'} // Rotate for player1
-
+        shouldRotate={currentPlayer === 'player1'}
       />
       <BackgroundVideo />
 
@@ -393,14 +393,14 @@ export default function App() {
             isDiceRolling={isDiceRolling}
             scoringPlayer={scoringPlayer}
             waltesText={waltesText}
-            isGeneralPileExhausted={isGeneralPileExhausted} // Pass this prop
-
-
+            isGeneralPileExhausted={isGeneralPileExhausted}
+            debtPile={debtPile} // Pass debtPile prop
           />
+
           {showReplacementGif && (
             <View style={[
               styles.gifContainer,
-              playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
+              playerTurn === 0 ? styles.rotated : null
             ]}>
               <Animated.Image
                 source={stickReplacementGif}
@@ -411,8 +411,6 @@ export default function App() {
               </View>
             </View>
           )}
-
-
 
           <TouchableOpacity
             style={styles.bottomClickableArea}
@@ -426,7 +424,6 @@ export default function App() {
               </View>
             )}
           </TouchableOpacity>
-
           {isWaltesVisible && (
             <Animated.Text
               style={[
@@ -439,11 +436,19 @@ export default function App() {
               {waltesText}
             </Animated.Text>
           )}
-
+          <View style={styles.debtRequestButtonContainer}>
+            <TouchableOpacity
+              style={styles.debtRequestButton}
+              onPress={() => requestDebtPayment(currentPlayer)}
+            >
+              <Text style={styles.debtRequestButtonText}>Request Debt Payment</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -472,6 +477,22 @@ const styles = StyleSheet.create({
     zIndex: 999999999999999,
     borderWidth: 2,
     borderColor: '#805c15',
+  },
+  debtRequestButtonContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+    alignItems: 'center',
+  },
+  debtRequestButton: {
+    backgroundColor: '#49350D',
+    padding: 10,
+    borderRadius: 5,
+  },
+  debtRequestButtonText: {
+    color: '#FDA10E',
+    fontWeight: 'bold',
   },
   replacementGif: {
     width: 200, // Adjust the size as needed
