@@ -89,10 +89,6 @@ export default function App() {
     },
   });
 
-
-
-  //Logic starts 
-
   const showCustomAlert = (message, buttons = [], shouldRotate) => {
     setAlertMessage(message);
     setAlertVisible(true);
@@ -234,7 +230,7 @@ export default function App() {
       // Check for kingpin win condition
       if (nextRollForKingPin && score > 0) {
         newSticks[currentPlayer].kingPin++;
-        newSticks.general.kingPin--;
+        newSticks.general.kingPin = Math.max(newSticks.general.kingPin - 1, 0); // Ensure it does not go below 0
         setNextRollForKingPin(false);
 
         showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
@@ -245,6 +241,7 @@ export default function App() {
           Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
         }
       }
+
     }
 
     setSticks(newSticks);
@@ -260,9 +257,8 @@ export default function App() {
   };
 
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
-    let debtSticks = score === 5 ? 15 : 3; // 15 sticks for Super Waltes, 3 for normal Waltes
+    let debtSticks = score === 5 ? 15 : 3;
 
-    // Enter debt mode if not already in it
     if (!isDebtMode) {
       setIsDebtMode(true);
       setDebtPile({ player1: 0, player2: 0 });
@@ -271,7 +267,6 @@ export default function App() {
       newSticks.general.kingPin = 0;
     }
 
-    // Add debt to the general pile
     setDebtPile((prevDebtPile) => ({
       ...prevDebtPile,
       [currentPlayer]: prevDebtPile[currentPlayer] + debtSticks,
@@ -279,7 +274,6 @@ export default function App() {
 
     setSticks(newSticks);
   };
-
 
   const askForDebt = (currentPlayer) => {
     const debt = playerDebt[currentPlayer];
@@ -317,12 +311,6 @@ export default function App() {
     setPlayerDebt({ ...playerDebt });
   };
 
-  <TouchableOpacity onPress={() => askForDebt(currentPlayer)}>
-    <Text>Ask for Debt</Text>
-  </TouchableOpacity>
-
-
-
   // Call this function when notched sticks or king pin are transferred
   const triggerReplacementGif = () => {
     setShowReplacementGif(true);
@@ -349,8 +337,6 @@ export default function App() {
       Alert.alert(`Player ${player} has no debts to claim!`);
     }
   };
-
-
 
   return (
     <View style={styles.container}>
@@ -380,7 +366,6 @@ export default function App() {
               </View>
             )}
           </TouchableOpacity>
-
           <WaltesBoard
             player1TotalScore={scores[0]}
             player2TotalScore={scores[1]}
@@ -394,7 +379,9 @@ export default function App() {
             scoringPlayer={scoringPlayer}
             waltesText={waltesText}
             isGeneralPileExhausted={isGeneralPileExhausted}
-            debtPile={debtPile} // Pass debtPile prop
+            debtPile={debtPile}
+            isDebtMode={isDebtMode} // Pass isDebtMode prop
+            requestDebtPayment={requestDebtPayment} // Pass requestDebtPayment function
           />
 
           {showReplacementGif && (
@@ -436,19 +423,11 @@ export default function App() {
               {waltesText}
             </Animated.Text>
           )}
-          <View style={styles.debtRequestButtonContainer}>
-            <TouchableOpacity
-              style={styles.debtRequestButton}
-              onPress={() => requestDebtPayment(currentPlayer)}
-            >
-              <Text style={styles.debtRequestButtonText}>Request Debt Payment</Text>
-            </TouchableOpacity>
-          </View>
+
         </>
       )}
     </View>
   );
-
 }
 
 const styles = StyleSheet.create({
@@ -517,7 +496,6 @@ const styles = StyleSheet.create({
   rotated: {
     transform: [{ rotate: '180deg' }],
   },
-
   gifContainer: {
     position: 'absolute',
     justifyContent: 'center',
@@ -526,21 +504,17 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 999,
   },
-
   swapAlertBox: {
     marginTop: 20, // Add space between the GIF and text
     backgroundColor: 'orange', // Example background color for the alert box
     padding: 10,
     borderRadius: 5,
   },
-
   swapAlertText: {
     color: 'black',
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
-
   alertBox: {
     position: 'absolute',
     top: 0,
@@ -556,7 +530,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff' // Example text color
   },
-
   container: {
     flex: 1,
     flexDirection: 'column',
@@ -587,7 +560,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
   },
-
   swapAlertBox: {
     backgroundColor: '#FDA10E',
     padding: 10,
@@ -601,7 +573,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -630,8 +601,6 @@ const styles = StyleSheet.create({
     fontSize: 20, // Increased font size
     fontWeight: 'bold', // Increased font weight
     color: '#6A3805' // Set the text color to wood fall color
-
-
   },
   button: {
     backgroundColor: '#2196F3',
@@ -643,7 +612,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   rotated: {
     transform: [{ rotate: '180deg' }]
   },

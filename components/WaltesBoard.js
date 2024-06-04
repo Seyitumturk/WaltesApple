@@ -10,7 +10,7 @@ import {
   Text,
   Dimensions,
   StatusBar,
-
+  TouchableOpacity
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -20,12 +20,9 @@ import unmarkedDice from '../assets/unmarked-dice.png';
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
-import { ReloadInstructions } from 'react-native/Libraries/NewAppScreen';
 
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
-
-
 
 const useCountAnimation = (initialCount) => {
   const [count, setCount] = useState(initialCount);
@@ -79,9 +76,6 @@ const useCountAnimation = (initialCount) => {
   return [count, animateCount, animatedValue];
 };
 
-
-
-
 const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
   const [animatedCount, animateCount, animatedValue] = useCountAnimation(count);
 
@@ -132,6 +126,7 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     </View>
   );
 };
+
 const PlayerArea = ({
   player,
   sticks,
@@ -143,11 +138,11 @@ const PlayerArea = ({
   opacityAnim,
   isGeneralPileExhausted,
   debtPile = { player1: 0, player2: 0 }, // Default value to avoid undefined
+  isDebtMode, // Add isDebtMode prop
+  requestDebtPayment, // Add requestDebtPayment prop
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
-
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
-
   const personalPileStyle = {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
@@ -173,12 +168,20 @@ const PlayerArea = ({
   return (
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
-        <View style={styles.generalPile}>
-          <CircularButton type="plain" count={sticks.general.plain} />
-          <CircularButton type="notched" count={sticks.general.notched} />
-          <CircularButton type="kingPin" count={sticks.general.kingPin} />
-        </View>
-
+        {isDebtMode ? (
+          <View style={styles.debtContainer}>
+            <Text style={styles.debtText}>Debt: {debtPile[player]}</Text>
+            <TouchableOpacity style={styles.debtButton} onPress={() => requestDebtPayment(player)}>
+              <Text style={styles.debtButtonText}>Request Debt Payment</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.generalPile}>
+            <CircularButton type="plain" count={sticks.general.plain} />
+            <CircularButton type="notched" count={sticks.general.notched} />
+            <CircularButton type="kingPin" count={sticks.general.kingPin} />
+          </View>
+        )}
         <View style={[styles.personalPile, personalPileStyle]}>
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton
@@ -188,11 +191,6 @@ const PlayerArea = ({
             showNotchedValue={isGeneralPileExhausted}
           />
           <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-          {/* Add debt display */}
-          <View style={styles.debtContainer}>
-            <Text style={styles.debtText}>Debt: {debtPile[player]}</Text>
-          </View>
 
           {player === scoringPlayer && (
             <Animated.View
@@ -233,13 +231,9 @@ const PlayerArea = ({
 };
 
 
-
-
-
-
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, debtPile
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, debtPile, isDebtMode, requestDebtPayment
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -248,7 +242,6 @@ export default function WaltesBoard({
   const totalScore = player1TotalScore + player2TotalScore;
   const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
   const [currentScoringPlayer, setCurrentScoringPlayer] = useState(null); // Renamed to avoid conflict
-
 
   const [scoreText, setScoreText] = useState('');
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
@@ -262,7 +255,6 @@ export default function WaltesBoard({
   const updateScoringPlayer = (player) => {
     setScoringPlayer(player); // 'player1' or 'player2'
   };
-
 
   useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
@@ -331,6 +323,7 @@ export default function WaltesBoard({
       ]),
     ]).start();
   };
+
   const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
     // Start stick at the center with a scale of 0.
@@ -410,7 +403,6 @@ export default function WaltesBoard({
     setIsDiceRolling(false); // Reset dice rolling state
   };
 
-
   setTimeout(() => {
     setIsDiceRolling(false); // The dice have finished rolling
   }, 2000);
@@ -444,9 +436,6 @@ export default function WaltesBoard({
     }
   }, [playerTurn, shouldRoll]);
 
-
-
-
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
@@ -465,7 +454,6 @@ export default function WaltesBoard({
           },
         ]}
       >
-
         <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
           <View style={styles.diceContainer}>
             {dice.map((die, index) => {
@@ -499,7 +487,6 @@ export default function WaltesBoard({
         </ImageBackground>
       </Animated.View>
 
-
       <Animated.Image
         source={require('../assets/animated-plain-stick-icon.png')}
         style={[
@@ -517,10 +504,6 @@ export default function WaltesBoard({
         ]}
       />
 
-
-
-
-
       <PlayerArea
         player="player1"
         sticks={sticks}
@@ -532,7 +515,8 @@ export default function WaltesBoard({
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
         debtPile={debtPile} // Pass debtPile prop
-
+        isDebtMode={isDebtMode} // Pass isDebtMode prop
+        requestDebtPayment={requestDebtPayment} // Pass requestDebtPayment function
       />
 
       <PlayerArea
@@ -546,18 +530,16 @@ export default function WaltesBoard({
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
         debtPile={debtPile} // Pass debtPile prop
-
+        isDebtMode={isDebtMode} // Pass isDebtMode prop
+        requestDebtPayment={requestDebtPayment} // Pass requestDebtPayment function
       />
-
-
     </View>
   );
 }
+
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-
-
   bowlImage: {
     width: '100%',
     height: '100%',
@@ -566,7 +548,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     transform: [{ scale: 0.9 }],  // You can adjust this scale as needed
     zIndex: 9999,
-
   },
   diceContainer: {
     flexDirection: 'row',
@@ -599,7 +580,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-
   scoreIndicatorContainer: {
     position: 'absolute',
     bottom: -20,
@@ -614,26 +594,22 @@ const styles = StyleSheet.create({
     height: '50%',
     justifyContent: 'flex-end',
   },
-
   container: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
     backgroundColor: 'orange',  // Add this line
-
   },
   player1Area: {
     top: 15,
     alignItems: 'center',
     justifyContent: 'flex-start',
-
   },
   player2Area: {
     bottom: 15,
     alignItems: 'center',
     justifyContent: 'flex-end', // Content aligns at the bottom
   },
-
   stickContainer: {
     width: '100%',
     flexDirection: 'column',
@@ -642,7 +618,6 @@ const styles = StyleSheet.create({
     paddingBottom: 30, // You can adjust this padding as needed
     paddingTop: 30, // You can adjust this padding as needed
   },
-
   generalPile: {
     paddingTop: -40,
     flexDirection: 'row',
@@ -669,7 +644,6 @@ const styles = StyleSheet.create({
     left: '50%',
     top: '50%',
     zIndex: 999999,
-
   },
   scoreTextInPile: {
     fontSize: 16,
@@ -678,10 +652,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center', // Center within the personal pile
     marginTop: 10, // Adjust as needed
     zIndex: 9999999999,
-
   },
-
-
   textContainer: {
     position: 'absolute',
     top: 0,
@@ -693,12 +664,25 @@ const styles = StyleSheet.create({
     zIndex: 10000000, // Ensure it's on top
   },
   debtContainer: {
-    marginTop: 10,
     alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#49350D',
+    borderRadius: 5,
+  },
+  debtButton: {
+    backgroundColor: '#FDA10E',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  debtButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
   },
   debtText: {
     color: 'red',
     fontWeight: 'bold',
+    fontSize: 18,
   },
   scoreText: {
     fontSize: 30,
@@ -709,5 +693,4 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 3,
   },
-
 });
