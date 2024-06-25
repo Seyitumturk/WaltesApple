@@ -10,7 +10,7 @@ import {
   Text,
   Dimensions,
   StatusBar,
-
+  TouchableOpacity
 } from 'react-native';
 
 import bowlImage from '../assets/bowl-image.png';
@@ -20,12 +20,9 @@ import unmarkedDice from '../assets/unmarked-dice.png';
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
-import { ReloadInstructions } from 'react-native/Libraries/NewAppScreen';
 
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
-
-
 
 const useCountAnimation = (initialCount) => {
   const [count, setCount] = useState(initialCount);
@@ -78,9 +75,6 @@ const useCountAnimation = (initialCount) => {
 
   return [count, animateCount, animatedValue];
 };
-
-
-
 
 const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
   const [animatedCount, animateCount, animatedValue] = useCountAnimation(count);
@@ -143,6 +137,8 @@ const PlayerArea = ({
   scoreText,
   opacityAnim,
   isGeneralPileExhausted,
+  handleAskDebtPayment, // Add this prop
+  onPileClick, // Add this prop for handling pile clicks
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
 
@@ -177,12 +173,23 @@ const PlayerArea = ({
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
         <View style={styles.generalPile}>
-          <CircularButton type="plain" count={sticks.general.plain} />
-          <CircularButton type="notched" count={sticks.general.notched} />
-          <CircularButton type="kingPin" count={sticks.general.kingPin} />
+          {!isGeneralPileExhausted ? (
+            <>
+              <CircularButton type="plain" count={sticks.general.plain} />
+              <CircularButton type="notched" count={sticks.general.notched} />
+              <CircularButton type="kingPin" count={sticks.general.kingPin} />
+            </>
+          ) : (
+            <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+              <Text style={styles.askButtonText}>Ask</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <View style={[styles.personalPile, personalPileStyle]}>
+        <TouchableOpacity
+          style={[styles.personalPile, personalPileStyle]}
+          onPress={() => onPileClick(player)}
+        >
           <CircularButton type="plain" count={sticks[player].plain} />
           <CircularButton
             type="notched"
@@ -224,12 +231,11 @@ const PlayerArea = ({
             <Animated.View style={player1Style} />
             <Animated.View style={player2Style} />
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
-
 
 
 
@@ -245,7 +251,6 @@ export default function WaltesBoard({
   const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
   const [currentScoringPlayer, setCurrentScoringPlayer] = useState(null); // Renamed to avoid conflict
 
-
   const [scoreText, setScoreText] = useState('');
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
   const [textLayout, setTextLayout] = useState({ width: 0, height: 0 });
@@ -255,10 +260,24 @@ export default function WaltesBoard({
   const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
   const superWaltesScore = 5; // Define this according to your game's logic
 
+  const [askButtonClicked, setAskButtonClicked] = useState(null); // Track Ask button clicks
+
   const updateScoringPlayer = (player) => {
     setScoringPlayer(player); // 'player1' or 'player2'
   };
 
+  const handleAskDebtPayment = (player) => {
+    console.log(`${player} is asking for debt payment`);
+    setAskButtonClicked(player);
+  };
+
+  const handlePileClick = (player) => {
+    if ((player === 'player1' && playerTurn === 0) || (player === 'player2' && playerTurn === 1)) {
+      if (!isDiceRolling) {
+        setShouldRoll(true);
+      }
+    }
+  };
 
   useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
@@ -289,7 +308,7 @@ export default function WaltesBoard({
     }),
     height: 20,
   };
-  // Waltes text on win 
+
   const onTextLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
     setTextLayout({ width, height });
@@ -327,6 +346,7 @@ export default function WaltesBoard({
       ]),
     ]).start();
   };
+
   const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
     // Start stick at the center with a scale of 0.
@@ -406,7 +426,6 @@ export default function WaltesBoard({
     setIsDiceRolling(false); // Reset dice rolling state
   };
 
-
   setTimeout(() => {
     setIsDiceRolling(false); // The dice have finished rolling
   }, 2000);
@@ -440,12 +459,18 @@ export default function WaltesBoard({
     }
   }, [playerTurn, shouldRoll]);
 
-
-
+  useEffect(() => {
+    if (askButtonClicked) {
+      console.log(`Debt payment asked by ${askButtonClicked}`);
+      // Handle debt payment logic here
+      setAskButtonClicked(null); // Reset the state after handling the logic
+    }
+  }, [askButtonClicked]);
 
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
+
       <Animated.View
         style={[
           styles.bowlImage,
@@ -461,7 +486,6 @@ export default function WaltesBoard({
           },
         ]}
       >
-
         <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
           <View style={styles.diceContainer}>
             {dice.map((die, index) => {
@@ -495,7 +519,6 @@ export default function WaltesBoard({
         </ImageBackground>
       </Animated.View>
 
-
       <Animated.Image
         source={require('../assets/animated-plain-stick-icon.png')}
         style={[
@@ -513,10 +536,6 @@ export default function WaltesBoard({
         ]}
       />
 
-
-
-
-
       <PlayerArea
         player="player1"
         sticks={sticks}
@@ -527,6 +546,8 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        handleAskDebtPayment={handleAskDebtPayment} // Pass the function
+        onPileClick={handlePileClick} // Pass the function to handle pile clicks
       />
 
       <PlayerArea
@@ -539,26 +560,54 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        handleAskDebtPayment={handleAskDebtPayment} // Pass the function
+        onPileClick={handlePileClick} // Pass the function to handle pile clicks
       />
-
-
     </View>
   );
 }
+
+
+
 const diceContainerSize = 150;
 
 const styles = StyleSheet.create({
-
-
   bowlImage: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    transform: [{ scale: 0.9 }],  // You can adjust this scale as needed
+    transform: [{ scale: 0.9 }],
     zIndex: 9999,
+  },
 
+  askButton: {
+    backgroundColor: '#FDA10E',
+    padding: 10,
+    marginTop: 5,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#805c15',
+    zIndex: 11, // Ensure it is above other elements
+  },
+  askButtonText: {
+    color: 'black',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  playerArea: {
+    position: 'absolute',
+    width: '100%',
+    height: '50%',
+    justifyContent: 'flex-end',
+  },
+  personalPile: {
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    backgroundColor: '#FDA10E',
   },
   diceContainer: {
     flexDirection: 'row',
@@ -580,6 +629,28 @@ const styles = StyleSheet.create({
     height: 50,
     margin: 5,
   },
+  nonOverlappingDebtContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '50%', // Place it in the middle of the screen
+    alignItems: 'center',
+    zIndex: 10000000000000000, // Ensure it's above other components
+  },
+  debtRequestButton: {
+    backgroundColor: '#49350D',
+    padding: 10,
+    borderRadius: 5,
+    width: '80%', // Make buttons wider for easier access
+    alignItems: 'center', // Center text inside the button
+    marginVertical: 5, // Add vertical margin for spacing between buttons
+    zIndex: 100000000033330000000, // Ensure it's above other components
+
+  },
+  debtRequestButtonText: {
+    color: '#FDA10E',
+    fontWeight: 'bold',
+  },
   stickPileContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -591,14 +662,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-
   scoreIndicatorContainer: {
     position: 'absolute',
     bottom: -20,
     left: 0,
-    right: 0, // Ensure full width utilization
+    right: 0,
     flexDirection: 'row',
-    height: 20, // Match the height of the score indicators
+    height: 20,
   },
   playerArea: {
     position: 'absolute',
@@ -606,49 +676,48 @@ const styles = StyleSheet.create({
     height: '50%',
     justifyContent: 'flex-end',
   },
-
   container: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
-    backgroundColor: 'orange',  // Add this line
-
+    backgroundColor: 'orange',
   },
   player1Area: {
     top: 15,
     alignItems: 'center',
     justifyContent: 'flex-start',
-
   },
   player2Area: {
     bottom: 15,
     alignItems: 'center',
-    justifyContent: 'flex-end', // Content aligns at the bottom
+    justifyContent: 'flex-end',
   },
-
   stickContainer: {
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-end', // Add this line
-    paddingBottom: 30, // You can adjust this padding as needed
-    paddingTop: 30, // You can adjust this padding as needed
+    justifyContent: 'flex-end',
+    paddingBottom: 30,
+    paddingTop: 30,
   },
-
   generalPile: {
     paddingTop: -40,
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    backgroundColor: '#D68402', // Added background color
+    backgroundColor: '#D68402',
   },
-  personalPile: {
-    marginBottom: 20,
+  debtButtonsContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-    backgroundColor: '#FDA10E',
+    justifyContent: 'space-evenly',
+    zIndex: 10000,
+    pointerEvents: 'auto',
   },
+
   countText: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -661,19 +730,15 @@ const styles = StyleSheet.create({
     left: '50%',
     top: '50%',
     zIndex: 999999,
-
   },
   scoreTextInPile: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'white', // Make sure the color contrasts well with the personal pile background
-    alignSelf: 'center', // Center within the personal pile
-    marginTop: 10, // Adjust as needed
+    color: 'white',
+    alignSelf: 'center',
+    marginTop: 10,
     zIndex: 9999999999,
-
   },
-
-
   textContainer: {
     position: 'absolute',
     top: 0,
@@ -682,16 +747,78 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10000000, // Ensure it's on top
+    zIndex: 10000000,
+  },
+  debtContainer: {
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#49350D',
+    borderRadius: 5,
+    zIndex: 99999999999,
+  },
+  debtButton: {
+    backgroundColor: '#FDA10E',
+    padding: 10,
+    borderRadius: 5,
+    zIndex: 10001,
+  },
+  debtButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  debtText: {
+    color: 'red',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   scoreText: {
     fontSize: 30,
     fontWeight: 'bold',
     color: '#FFD700',
-    textAlign: 'center', // Ensure text is centered horizontally
+    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 3,
   },
-
+  topClickableArea: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    height: '50%',
+    zIndex: 10,
+    pointerEvents: 'box-none',
+  },
+  bottomClickableArea: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    height: '50%',
+    zIndex: 10,
+    pointerEvents: 'box-none',
+  },
+  alertBox: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  alertText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  waltesText: {
+    position: 'absolute',
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+  },
 });
