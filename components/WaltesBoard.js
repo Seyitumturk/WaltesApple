@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    transform: [{ scale: 0.9 }],
+    transform: [{ scale: 0.83 }],
     zIndex: 1,
   },
 
