@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     transform: [{ scale: 0.9 }],
-    zIndex: 9999,
+    zIndex: -1,
   },
 
   askButton: {

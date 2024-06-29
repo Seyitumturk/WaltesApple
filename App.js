@@ -544,14 +544,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     width: '100%',
-    height: '50%',
+    height: '10%',
     zIndex: 10,
   },
   bottomClickableArea: {
     position: 'absolute',
     bottom: 0,
     width: '100%',
-    height: '50%',
+    height: '10%',
     zIndex: 10,
   },
   tossText: {
