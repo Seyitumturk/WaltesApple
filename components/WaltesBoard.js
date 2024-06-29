@@ -241,7 +241,7 @@ const PlayerArea = ({
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -278,6 +278,7 @@ export default function WaltesBoard({
       }
     }
   };
+
 
   useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'absolute',
     transform: [{ scale: 0.9 }],
-    zIndex: -1,
+    zIndex: 1,
   },
 
   askButton: {
@@ -675,6 +676,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '50%',
     justifyContent: 'flex-end',
+    zIndex: 100000000033330000000, // Ensure it's above other components
+
   },
   container: {
     flex: 1,
