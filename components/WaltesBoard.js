@@ -137,20 +137,16 @@ const PlayerArea = ({
   scoreText,
   opacityAnim,
   isGeneralPileExhausted,
-  handleAskDebtPayment, // Add this prop
-  onPileClick, // Add this prop for handling pile clicks
+  debt,
+  handleAskDebtPayment,
+  onPileClick,
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
-
-  // Rotate both piles for the top player
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
-
-  // Determine background color based on the player's turn
   const personalPileStyle = {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
-  // Animation for the score text appearance
   useEffect(() => {
     if (player === scoringPlayer) {
       Animated.sequence([
@@ -180,9 +176,12 @@ const PlayerArea = ({
               <CircularButton type="kingPin" count={sticks.general.kingPin} />
             </>
           ) : (
-            <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
-              <Text style={styles.askButtonText}>Ask</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+                <Text style={styles.askButtonText}>Ask</Text>
+              </TouchableOpacity>
+              <Text style={styles.debtText}>Debt: {debt[player]}</Text>
+            </>
           )}
         </View>
 
@@ -241,7 +240,7 @@ const PlayerArea = ({
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -266,10 +265,11 @@ export default function WaltesBoard({
     setScoringPlayer(player); // 'player1' or 'player2'
   };
 
-  const handleAskDebtPayment = (player) => {
-    console.log(`${player} is asking for debt payment`);
-    setAskButtonClicked(player);
-  };
+  // Remove the internal declaration of handleAskDebtPayment to avoid conflict
+  // const handleAskDebtPayment = (player) => {
+  //   console.log(`${player} is asking for debt payment`);
+  //   setAskButtonClicked(player);
+  // };
 
   const handlePileClick = (player) => {
     if ((player === 'player1' && playerTurn === 0) || (player === 'player2' && playerTurn === 1)) {
@@ -547,6 +547,7 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        debt={debt} // Pass the debt state
         handleAskDebtPayment={handleAskDebtPayment} // Pass the function
         onPileClick={handlePileClick} // Pass the function to handle pile clicks
       />
@@ -561,6 +562,7 @@ export default function WaltesBoard({
         opacityAnim={opacityAnim}
         scoringPlayer={currentScoringPlayer}
         isGeneralPileExhausted={isGeneralPileExhausted}
+        debt={debt} // Pass the debt state
         handleAskDebtPayment={handleAskDebtPayment} // Pass the function
         onPileClick={handlePileClick} // Pass the function to handle pile clicks
       />

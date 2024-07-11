@@ -55,6 +55,7 @@ export default function App() {
   const [alertButtons, setAlertButtons] = useState([]);
 
   const [scoringPlayer, setScoringPlayer] = useState(null);
+  const [debt, setDebt] = useState({ player1: 0, player2: 0 });
 
 
   //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
@@ -207,6 +208,43 @@ export default function App() {
       triggerReplacementGif();
     }
   };
+  const handleDebtPayment = (askingPlayer) => {
+    const otherPlayer = askingPlayer === 'player1' ? 'player2' : 'player1';
+    let newSticks = { ...sticks };
+    let debtAmount = debt[askingPlayer];
+
+    if (newSticks[otherPlayer].plain >= debtAmount) {
+      newSticks[otherPlayer].plain -= debtAmount;
+      newSticks[askingPlayer].plain += debtAmount;
+      debtAmount = 0;
+    } else {
+      debtAmount -= newSticks[otherPlayer].plain;
+      newSticks[askingPlayer].plain += newSticks[otherPlayer].plain;
+      newSticks[otherPlayer].plain = 0;
+
+      while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
+        let decrementValue = Math.min(debtAmount, newSticks[otherPlayer].notchedValue);
+        newSticks[otherPlayer].notchedValue -= decrementValue;
+        debtAmount -= decrementValue;
+
+        if (newSticks[otherPlayer].notchedValue === 0) {
+          newSticks[otherPlayer].notched -= 1;
+          if (newSticks[otherPlayer].notched > 0) {
+            newSticks[otherPlayer].notchedValue = 15; // Reset the notchedValue for the remaining sticks
+          }
+        }
+      }
+    }
+
+    if (debtAmount > 0) {
+      Alert.alert(`${askingPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
+    }
+
+    const newDebt = { ...debt };
+    newDebt[askingPlayer] = debtAmount;
+    setDebt(newDebt);
+    setSticks(newSticks);
+  };
 
 
   const calculateScore = (dice) => {
@@ -262,7 +300,10 @@ export default function App() {
           triggerReplacementGif(); // Show the replacement GIF
         }
       } else {
-        handleDebtMode(newSticks, currentPlayer, otherPlayer, score);
+        // Instead of immediately transferring sticks, add to debt
+        const newDebt = { ...debt };
+        newDebt[currentPlayer] += score === 5 ? 15 : 3; // 15 for Super Waltes, 3 for normal Waltes
+        setDebt(newDebt);
       }
 
       // Check for kingpin win condition
@@ -393,9 +434,9 @@ export default function App() {
             isDiceRolling={isDiceRolling}
             scoringPlayer={scoringPlayer}
             waltesText={waltesText}
-            isGeneralPileExhausted={isGeneralPileExhausted} // Pass this prop
-
-
+            isGeneralPileExhausted={isGeneralPileExhausted}
+            debt={debt}
+            handleAskDebtPayment={handleDebtPayment} // Pass the function
           />
           {showReplacementGif && (
             <View style={[
