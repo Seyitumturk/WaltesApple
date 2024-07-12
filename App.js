@@ -143,23 +143,27 @@ export default function App() {
 
   const checkKingPinCondition = () => {
     if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
-      setNextRollForKingPin(true); // Next score wins the kingpin
-      if (!hasShownAlert) {
-        setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
-        setAlertButtons([{
-          text: 'OK',
-          onPress: () => {
-            setAlertVisible(false);
-            setHasShownAlert(true);
-          }
-        }]);
-        setAlertVisible(true);
-      }
+        setNextRollForKingPin(true); // Next score wins the kingpin
+        if (!hasShownAlert) {
+            setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
+            setAlertButtons([{
+                text: 'OK',
+                onPress: () => {
+                    setAlertVisible(false);
+                    setHasShownAlert(true);
+                }
+            }]);
+            setAlertVisible(true);
+        }
     }
-  };
+};
 
-
-
+// Ensure debt mode is only activated after King Pin is won
+useEffect(() => {
+  if (isGeneralPileExhausted && sticks.general.kingPin === 0) {
+      setIsGeneralPileExhausted(true);
+  }
+}, [sticks.general.kingPin, isGeneralPileExhausted]);
   const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
   };
@@ -253,87 +257,88 @@ export default function App() {
     let score = 0;
 
     const currentPlayer = `player${playerTurn + 1}`;
-    const otherPlayer = `player${3 - (playerTurn + 1)}`;
     let newSticks = { ...sticks };
 
     if (marked === 6 || unmarked === 6) {
-      setWaltesText('Super Waltes!');
-      score = 5;
+        setWaltesText('Super Waltes!');
+        score = 5;
     } else if (marked === 5 || unmarked === 5) {
-      setWaltesText('Waltes!');
-      score = 1;
+        setWaltesText('Waltes!');
+        score = 1;
     } else {
-      setWaltesText('');
+        setWaltesText('');
     }
 
-    if (score > 0) {
-      if (!isGeneralPileExhausted) {
-        let requiredPlainSticks = 3 * score;
-        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
-
-        // Complete notched stick first if needed
-        if (newSticks[currentPlayer].notchedValue < 15) {
-          let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
-          let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
-          newSticks[currentPlayer].notchedValue += usedForCompletion;
-          newSticks.general.plain -= usedForCompletion;
-          availablePlainSticks -= usedForCompletion;
-        }
-
-        // Add remaining plain sticks
-        newSticks[currentPlayer].plain += availablePlainSticks;
-        newSticks.general.plain -= availablePlainSticks;
-
-        handleNotchedReplacement(currentPlayer);
-
-        if (newSticks.general.plain === 0) {
-          setIsGeneralPileExhausted(true);
-        }
-
-        // Automatic notched stick replacement
-        if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-          newSticks[currentPlayer].plain -= 15;
-          newSticks[currentPlayer].notched++;
-          newSticks.general.notched--;
-          newSticks.general.plain += 15;
-
-          triggerReplacementGif(); // Show the replacement GIF
-        }
-      } else {
-        // Instead of immediately transferring sticks, add to debt
-        const newDebt = { ...debt };
-        newDebt[currentPlayer] += score === 5 ? 15 : 3; // 15 for Super Waltes, 3 for normal Waltes
-        setDebt(newDebt);
-      }
-
-      // Check for kingpin win condition
-      if (nextRollForKingPin && score > 0) {
+    // Prioritize King Pin check and handling
+    if (nextRollForKingPin && score > 0) {
         newSticks[currentPlayer].kingPin++;
         newSticks.general.kingPin--;
         setNextRollForKingPin(false);
 
         showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
-          { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
+            { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
         ]);
 
         if (newSticks.general.kingPin === 0) {
-          Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+            Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
+            setIsGeneralPileExhausted(true); // Only activate debt mode after King Pin is won
         }
-      }
+
+        setSticks(newSticks);
+        return score;
+    }
+
+    if (score > 0) {
+        if (!isGeneralPileExhausted) {
+            let requiredPlainSticks = 3 * score;
+            let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+
+            // Complete notched stick first if needed
+            if (newSticks[currentPlayer].notchedValue < 15) {
+                let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
+                let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
+                newSticks[currentPlayer].notchedValue += usedForCompletion;
+                newSticks.general.plain -= usedForCompletion;
+                availablePlainSticks -= usedForCompletion;
+            }
+
+            // Add remaining plain sticks
+            newSticks[currentPlayer].plain += availablePlainSticks;
+            newSticks.general.plain -= availablePlainSticks;
+
+            handleNotchedReplacement(currentPlayer);
+
+            if (newSticks.general.plain === 0) {
+                checkKingPinCondition(); // Check if the King Pin is the only item left
+            }
+
+            // Automatic notched stick replacement
+            if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+                newSticks[currentPlayer].plain -= 15;
+                newSticks[currentPlayer].notched++;
+                newSticks.general.notched--;
+                newSticks.general.plain += 15;
+
+                triggerReplacementGif(); // Show the replacement GIF
+            }
+        } else {
+            // Instead of immediately transferring sticks, add to debt
+            const newDebt = { ...debt };
+            newDebt[currentPlayer] += score === 5 ? 15 : 3; // 15 for Super Waltes, 3 for normal Waltes
+            setDebt(newDebt);
+        }
     }
 
     setSticks(newSticks);
     setScores((prevScores) => {
-      const newScores = [...prevScores];
-      newScores[playerTurn] += score;
-      return newScores;
+        const newScores = [...prevScores];
+        newScores[playerTurn] += score;
+        return newScores;
     });
 
-    checkKingPinCondition();
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
-  };
-
+};
 
   // Debt mode stick handling
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {

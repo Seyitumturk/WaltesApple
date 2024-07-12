@@ -144,98 +144,97 @@ const PlayerArea = ({
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
   const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
+      backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
 
   useEffect(() => {
-    if (player === scoringPlayer) {
-      Animated.sequence([
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1500),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
+      if (player === scoringPlayer) {
+          Animated.sequence([
+              Animated.timing(opacityAnim, {
+                  toValue: 1,
+                  duration: 500,
+                  useNativeDriver: true,
+              }),
+              Animated.delay(1500),
+              Animated.timing(opacityAnim, {
+                  toValue: 0,
+                  duration: 500,
+                  useNativeDriver: true,
+              }),
+          ]).start();
+      }
   }, [player, scoringPlayer, opacityAnim, scoreText]);
 
   return (
-    <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer, stickContainerStyle]}>
-        <View style={styles.generalPile}>
-          {!isGeneralPileExhausted ? (
-            <>
-              <CircularButton type="plain" count={sticks.general.plain} />
-              <CircularButton type="notched" count={sticks.general.notched} />
-              <CircularButton type="kingPin" count={sticks.general.kingPin} />
-            </>
-          ) : (
-            <>
-              <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
-                <Text style={styles.askButtonText}>Ask</Text>
-              </TouchableOpacity>
-              <Text style={styles.debtText}>Debt: {debt[player]}</Text>
-            </>
-          )}
-        </View>
+      <View style={[styles.playerArea, playerStyle]}>
+          <View style={[styles.stickContainer, stickContainerStyle]}>
+              <View style={styles.generalPile}>
+                  {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
+                      <>
+                          <CircularButton type="plain" count={sticks.general.plain} />
+                          <CircularButton type="notched" count={sticks.general.notched} />
+                          <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                      </>
+                  ) : (
+                      <>
+                          <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+                              <Text style={styles.askButtonText}>Ask</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.debtText}>Debt: {debt[player]}</Text>
+                      </>
+                  )}
+              </View>
 
-        <TouchableOpacity
-          style={[styles.personalPile, personalPileStyle]}
-          onPress={() => onPileClick(player)}
-        >
-          <CircularButton type="plain" count={sticks[player].plain} />
-          <CircularButton
-            type="notched"
-            count={sticks[player].notched}
-            notchedValue={sticks[player].notchedValue}
-            showNotchedValue={isGeneralPileExhausted}
-          />
-          <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-          {player === scoringPlayer && (
-            <Animated.View
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                borderRadius: 20,
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-                opacity: opacityAnim,
-                position: 'absolute',
-                alignSelf: 'center',
-                top: '50%',
-                transform: [{ translateY: -10 }],
-              }}
-            >
-              <Text
-                style={[
-                  styles.scoreTextInPile,
-                  {
-                    color: 'white',
-                    textAlign: 'center',
-                  },
-                ]}
+              <TouchableOpacity
+                  style={[styles.personalPile, personalPileStyle]}
+                  onPress={() => onPileClick(player)}
               >
-                {scoreText}
-              </Text>
-            </Animated.View>
-          )}
+                  <CircularButton type="plain" count={sticks[player].plain} />
+                  <CircularButton
+                      type="notched"
+                      count={sticks[player].notched}
+                      notchedValue={sticks[player].notchedValue}
+                      showNotchedValue={isGeneralPileExhausted}
+                  />
+                  <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
-          <View style={styles.scoreIndicatorContainer}>
-            <Animated.View style={player1Style} />
-            <Animated.View style={player2Style} />
+                  {player === scoringPlayer && (
+                      <Animated.View
+                          style={{
+                              backgroundColor: 'rgba(0,0,0,0.6)',
+                              borderRadius: 20,
+                              paddingVertical: 5,
+                              paddingHorizontal: 10,
+                              opacity: opacityAnim,
+                              position: 'absolute',
+                              alignSelf: 'center',
+                              top: '50%',
+                              transform: [{ translateY: -10 }],
+                          }}
+                      >
+                          <Text
+                              style={[
+                                  styles.scoreTextInPile,
+                                  {
+                                      color: 'white',
+                                      textAlign: 'center',
+                                  },
+                              ]}
+                          >
+                              {scoreText}
+                          </Text>
+                      </Animated.View>
+                  )}
+
+                  <View style={styles.scoreIndicatorContainer}>
+                      <Animated.View style={player1Style} />
+                      <Animated.View style={player2Style} />
+                  </View>
+              </TouchableOpacity>
           </View>
-        </TouchableOpacity>
       </View>
-    </View>
   );
 };
-
 
 
 export default function WaltesBoard({
