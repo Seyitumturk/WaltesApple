@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppRegistry, Modal, Dimensions, StyleSheet, Text, TouchableOpacity, View, Animated, Easing, Alert, Platform } from 'react-native';
+import {
+  AppRegistry,
+  Modal,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Animated,
+  Easing,
+  Image, // Ensure Image is imported from 'react-native'
+  Alert,
+  Platform
+} from 'react-native';
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
 import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
 import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
-
 
 const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
   if (!visible) return null;
@@ -28,8 +40,6 @@ const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
   );
 };
 
-
-
 export default function App() {
   const [playerTurn, setPlayerTurn] = useState(0);
   const [scores, setScores] = useState([0, 0]);
@@ -44,33 +54,23 @@ export default function App() {
   const [showKingPinAlert, setShowKingPinAlert] = useState(false);
   const [nextRollForKingPin, setNextRollForKingPin] = useState(false);
   const currentPlayer = `player${playerTurn + 1}`; // Assuming playerTurn is 0 or 1
-
   const [kingPinWon, setKingPinWon] = useState(false);
-
   const [showReplacementGif, setShowReplacementGif] = useState(false);
-
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-
   const [alertButtons, setAlertButtons] = useState([]);
-
   const [scoringPlayer, setScoringPlayer] = useState(null);
   const [debt, setDebt] = useState({ player1: 0, player2: 0 });
 
-
-  //State to keep track of once the general pile is exhausted, to calculate the certain winning conditions. 
+  // State to keep track of once the general pile is exhausted, to calculate the certain winning conditions.
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
-  //State to keep track of switching to "DEBT" System.  
+  // State to keep track of switching to "DEBT" System.
   const [isGeneralPileExhausted, setIsGeneralPileExhausted] = useState(false);
-
   const [hasShownAlert, setHasShownAlert] = useState(false);
   const [score, setScore] = useState(0); // add this line
-
   const [prevPlayerTurn, setPrevPlayerTurn] = useState(null);
-  const playerTurnRef = useRef(playerTurn)
-
+  const playerTurnRef = useRef(playerTurn);
   const [isWaltesVisible, setIsWaltesVisible] = useState(false);
-
   const [sticks, setSticks] = useState({
     general: {
       plain: 51,
@@ -124,7 +124,6 @@ export default function App() {
     }, 1000); // 2000 milliseconds delay
   };
 
-
   const showCustomAlert = (message, buttons = [], shouldRotate) => {
     setAlertMessage(message);
     setAlertVisible(true);
@@ -141,29 +140,34 @@ export default function App() {
     setAlertButtons(updatedButtons);
   };
 
+
+
+
   const checkKingPinCondition = () => {
     if (sticks.general.kingPin === 1 && sticks.general.plain === 0 && sticks.general.notched === 0) {
-        setNextRollForKingPin(true); // Next score wins the kingpin
-        if (!hasShownAlert) {
-            setAlertMessage("Only King Pin left. First one to score in the next roll gets it.");
-            setAlertButtons([{
-                text: 'OK',
-                onPress: () => {
-                    setAlertVisible(false);
-                    setHasShownAlert(true);
-                }
-            }]);
-            setAlertVisible(true);
-        }
+      setNextRollForKingPin(true); // Next score wins the kingpin
+      if (!hasShownAlert) {
+        setHasShownAlert(true); // Set this to true to ensure only one alert is shown
+        showCustomAlert("Only King Pin left. First one to score in the next roll gets it.", [
+          {
+            text: 'OK',
+            onPress: () => {
+              setAlertVisible(false);
+              setHasShownAlert(true);
+            }
+          }
+        ]);
+      }
     }
-};
+  };
 
-// Ensure debt mode is only activated after King Pin is won
-useEffect(() => {
-  if (isGeneralPileExhausted && sticks.general.kingPin === 0) {
+  // Ensure debt mode is only activated after King Pin is won
+  useEffect(() => {
+    if (isGeneralPileExhausted && sticks.general.kingPin === 0) {
       setIsGeneralPileExhausted(true);
-  }
-}, [sticks.general.kingPin, isGeneralPileExhausted]);
+    }
+  }, [sticks.general.kingPin, isGeneralPileExhausted]);
+
   const startGame = () => {
     setCurrentPage('tutorial'); // Start with the tutorial
   };
@@ -171,6 +175,7 @@ useEffect(() => {
   const onTutorialFinished = () => {
     setCurrentPage('game'); // Change to the game page
   };
+
   const handlePlayerClick = (player) => {
     if (player === playerTurn && !isDiceRolling && !hasClickedRef.current) {
       hasClickedRef.current = true;
@@ -187,7 +192,6 @@ useEffect(() => {
     if (score === 0) {
       setPlayerTurn((playerTurn + 1) % 2);
       setScoringPlayer(null);
-
     } else {
       if (score > 0) {
         // Update the scoring player based on the current playerTurn
@@ -198,8 +202,9 @@ useEffect(() => {
       }
     }
     hasClickedRef.current = false;  // Resetting hasClicked here
-    return score
+    return score;
   };
+
   // This function handles the notched stick replacement automatically
   const handleNotchedReplacement = (currentPlayer) => {
     let newSticks = { ...sticks };
@@ -240,8 +245,17 @@ useEffect(() => {
       }
     }
 
-    if (debtAmount > 0) {
-      Alert.alert(`${askingPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
+    // Adjust the asking player's notched sticks if necessary
+    if (newSticks[askingPlayer].plain >= 15 && newSticks.general.notched > 0) {
+      newSticks[askingPlayer].plain -= 15;
+      newSticks[askingPlayer].notched++;
+      newSticks.general.notched--;
+      newSticks.general.plain += 15;
+    }
+
+    // Check if the other player is out of sticks
+    if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
+      showGameOverAlert(`${askingPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
     }
 
     const newDebt = { ...debt };
@@ -250,6 +264,81 @@ useEffect(() => {
     setSticks(newSticks);
   };
 
+
+
+  const triggerReplacementAnimation = () => {
+    // Highlight the notched and plain sticks
+    Animated.sequence([
+      Animated.timing(highlightAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(highlightAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  // Initialize the highlight animation value
+  const highlightAnim = useRef(new Animated.Value(0)).current;
+
+  const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
+    const [animatedCount, animateCount, animatedValue] = useCountAnimation(count);
+
+    useEffect(() => {
+      if (count !== animatedCount) {
+        animateCount(count);
+      }
+    }, [count]);
+
+    const animatedStyle = {
+      transform: [
+        {
+          scale: animatedValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 1.5],
+          }),
+        },
+      ],
+      backgroundColor: highlightAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['transparent', 'yellow'],
+      }),
+    };
+
+    const icons = {
+      plain: plainStickIcon,
+      notched: notchedStickIcon,
+      kingPin: kingPinIcon,
+    };
+
+    const styles = StyleSheet.create({
+      icon: {
+        width: 60, // adjust the size as needed
+        height: 75, // adjust the size as needed
+      },
+      button: {
+        marginHorizontal: 10, // Added margin
+      },
+      countText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+      },
+    });
+
+    return (
+      <View style={styles.button}>
+        <Animated.Image source={icons[type]} style={[styles.icon, animatedStyle]} resizeMode="contain" />
+        <Animated.Text style={[styles.countText, animatedStyle]}>
+          {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue * count}` : animatedCount}
+        </Animated.Text>
+      </View>
+    );
+  };
 
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
@@ -260,85 +349,95 @@ useEffect(() => {
     let newSticks = { ...sticks };
 
     if (marked === 6 || unmarked === 6) {
-        setWaltesText('Super Waltes!');
-        score = 5;
+      setWaltesText('Super Waltes!');
+      score = 5;
     } else if (marked === 5 || unmarked === 5) {
-        setWaltesText('Waltes!');
-        score = 1;
+      setWaltesText('Waltes!');
+      score = 1;
     } else {
-        setWaltesText('');
+      setWaltesText('');
     }
 
     // Prioritize King Pin check and handling
     if (nextRollForKingPin && score > 0) {
-        newSticks[currentPlayer].kingPin++;
-        newSticks.general.kingPin--;
-        setNextRollForKingPin(false);
+      newSticks[currentPlayer].kingPin++;
+      newSticks.general.kingPin--;
+      setNextRollForKingPin(false);
 
-        showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
-            { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
-        ]);
+      showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
+        { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
+      ]);
 
-        if (newSticks.general.kingPin === 0) {
-            Alert.alert(`${currentPlayer} wins the game with the King Pin!`);
-            setIsGeneralPileExhausted(true); // Only activate debt mode after King Pin is won
-        }
+      if (newSticks.general.kingPin === 0) {
+        setIsGeneralPileExhausted(true); // Only activate debt mode after King Pin is won
+      }
 
-        setSticks(newSticks);
-        return score;
+      setSticks(newSticks);
+      return score;
     }
 
     if (score > 0) {
-        if (!isGeneralPileExhausted) {
-            let requiredPlainSticks = 3 * score;
-            let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
+      if (!isGeneralPileExhausted) {
+        let requiredPlainSticks = 3 * score;
+        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
 
-            // Complete notched stick first if needed
-            if (newSticks[currentPlayer].notchedValue < 15) {
-                let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
-                let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
-                newSticks[currentPlayer].notchedValue += usedForCompletion;
-                newSticks.general.plain -= usedForCompletion;
-                availablePlainSticks -= usedForCompletion;
-            }
-
-            // Add remaining plain sticks
-            newSticks[currentPlayer].plain += availablePlainSticks;
-            newSticks.general.plain -= availablePlainSticks;
-
-            handleNotchedReplacement(currentPlayer);
-
-            if (newSticks.general.plain === 0) {
-                checkKingPinCondition(); // Check if the King Pin is the only item left
-            }
-
-            // Automatic notched stick replacement
-            if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-                newSticks[currentPlayer].plain -= 15;
-                newSticks[currentPlayer].notched++;
-                newSticks.general.notched--;
-                newSticks.general.plain += 15;
-
-                triggerReplacementGif(); // Show the replacement GIF
-            }
-        } else {
-            // Instead of immediately transferring sticks, add to debt
-            const newDebt = { ...debt };
-            newDebt[currentPlayer] += score === 5 ? 15 : 3; // 15 for Super Waltes, 3 for normal Waltes
-            setDebt(newDebt);
+        // Complete notched stick first if needed
+        if (newSticks[currentPlayer].notchedValue < 15) {
+          let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
+          let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
+          newSticks[currentPlayer].notchedValue += usedForCompletion;
+          newSticks.general.plain -= usedForCompletion;
+          availablePlainSticks -= usedForCompletion;
         }
+
+        // Add remaining plain sticks
+        newSticks[currentPlayer].plain += availablePlainSticks;
+        newSticks.general.plain -= availablePlainSticks;
+
+        handleNotchedReplacement(currentPlayer);
+
+        if (newSticks.general.plain === 0) {
+          checkKingPinCondition(); // Check if the King Pin is the only item left
+        }
+
+        // Automatic notched stick replacement
+        if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+          newSticks[currentPlayer].plain -= 15;
+          newSticks[currentPlayer].notched++;
+          newSticks.general.notched--;
+          newSticks.general.plain += 15;
+
+          triggerReplacementAnimation(); // Trigger the swap animation
+        }
+      } else {
+        // Instead of immediately transferring sticks, add to debt
+        const newDebt = { ...debt };
+        newDebt[currentPlayer] += score === 5 ? 15 : 3; // 15 for Super Waltes, 3 for normal Waltes
+        setDebt(newDebt);
+      }
     }
 
     setSticks(newSticks);
     setScores((prevScores) => {
-        const newScores = [...prevScores];
-        newScores[playerTurn] += score;
-        return newScores;
+      const newScores = [...prevScores];
+      newScores[playerTurn] += score;
+      return newScores;
     });
 
     setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
-};
+  };
+
+  const showGameOverAlert = (message) => {
+    showCustomAlert(message, [
+      {
+        text: 'OK',
+        onPress: () => {
+          setCurrentPage('home');
+        },
+      },
+    ]);
+  };
 
   // Debt mode stick handling
   const handleDebtMode = (newSticks, currentPlayer, otherPlayer, score) => {
@@ -389,8 +488,6 @@ useEffect(() => {
     setSticks(newSticks); // Ensure the state is updated to reflect changes
   };
 
-
-
   // Call this function when notched sticks or king pin are transferred
   const triggerReplacementGif = () => {
     setShowReplacementGif(true);
@@ -404,14 +501,11 @@ useEffect(() => {
         message={alertMessage}
         buttons={alertButtons}
         shouldRotate={currentPlayer === 'player1'} // Rotate for player1
-
       />
       <BackgroundVideo />
 
       {currentPage === 'home' && <HomePage onStartGame={startGame} />}
-
       {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
-
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
@@ -443,22 +537,20 @@ useEffect(() => {
             debt={debt}
             handleAskDebtPayment={handleDebtPayment} // Pass the function
           />
+
           {showReplacementGif && (
-            <View style={[
-              styles.gifContainer,
-              playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
-            ]}>
-              <Animated.Image
-                source={stickReplacementGif}
-                style={styles.replacementGif}
-              />
+            <View
+              style={[
+                styles.gifContainer,
+                playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
+              ]}
+            >
+              <Animated.Image source={stickReplacementGif} style={styles.replacementGif} />
               <View style={styles.swapAlertBox}>
                 <Text style={styles.swapAlertText}>You now have 15 plain sticks, replacing them with a notched stick.</Text>
               </View>
             </View>
           )}
-
-
 
           <TouchableOpacity
             style={styles.bottomClickableArea}
@@ -485,7 +577,6 @@ useEffect(() => {
               {waltesText}
             </Animated.Text>
           )}
-
         </>
       )}
     </View>
@@ -508,6 +599,13 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginTop: 40,
+  },
+  confettiGif: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   gifContainer: {
     position: 'absolute',
@@ -542,7 +640,6 @@ const styles = StyleSheet.create({
   rotated: {
     transform: [{ rotate: '180deg' }],
   },
-
   gifContainer: {
     position: 'absolute',
     justifyContent: 'center',
@@ -551,21 +648,17 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 999,
   },
-
   swapAlertBox: {
     marginTop: 20, // Add space between the GIF and text
     backgroundColor: 'orange', // Example background color for the alert box
     padding: 10,
     borderRadius: 5,
   },
-
   swapAlertText: {
     color: 'black',
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
-
   alertBox: {
     position: 'absolute',
     top: 0,
@@ -581,7 +674,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff' // Example text color
   },
-
   container: {
     flex: 1,
     flexDirection: 'column',
@@ -612,7 +704,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
   },
-
   swapAlertBox: {
     backgroundColor: '#FDA10E',
     padding: 10,
@@ -626,7 +717,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -655,8 +745,6 @@ const styles = StyleSheet.create({
     fontSize: 20, // Increased font size
     fontWeight: 'bold', // Increased font weight
     color: '#6A3805' // Set the text color to wood fall color
-
-
   },
   button: {
     backgroundColor: '#2196F3',
@@ -668,7 +756,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   rotated: {
     transform: [{ rotate: '180deg' }]
   },
@@ -682,4 +769,4 @@ const styles = StyleSheet.create({
     marginLeft: 5, // Add some space between buttons
     marginRight: 5
   },
-}); 
+});
