@@ -237,6 +237,8 @@ const PlayerArea = ({
 
 
 
+
+
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
   setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment
@@ -758,7 +760,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#805C15',
+    backgroundColor: '#805c15',
     borderRadius: 5,
     zIndex: 99999999999,
     width: '100%', // Stretch to full width
