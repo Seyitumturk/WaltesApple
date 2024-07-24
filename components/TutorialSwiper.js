@@ -1,6 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Image, StyleSheet, Animated, TouchableOpacity, Text } from 'react-native';
+import { View, Image, StyleSheet, Animated, TouchableOpacity, Text, Dimensions } from 'react-native';
 import Swiper from 'react-native-swiper';
+
+const { width, height } = Dimensions.get('window');
+
 const images = [
   require('../assets/1.png'),
   require('../assets/2.png'),
@@ -11,13 +14,13 @@ const images = [
   require('../assets/7.png'),
   require('../assets/8.png'),
   require('../assets/9.png'),
+  require('../assets/10.png'),
+  require('../assets/11.png'),
+  require('../assets/12.png'),
 ];
-
-
 
 const Slide = ({ source, fadeAnim }) => {
   useEffect(() => {
-    // Start the fade animation when the slide is rendered
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -35,34 +38,30 @@ const Slide = ({ source, fadeAnim }) => {
   );
 };
 
-
 const TutorialSwiper = ({ onFinished }) => {
   const fadeOutAnim = useRef(new Animated.Value(1)).current;
   const radioWaveAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current; 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-useEffect(() => {
-    // Start the radio wave animation loop
+  useEffect(() => {
     const startAnimation = () => {
-      radioWaveAnim.setValue(1); // Reset to initial value
+      radioWaveAnim.setValue(1);
       Animated.sequence([
         Animated.timing(radioWaveAnim, {
-          toValue: 2, // Scale up
+          toValue: 2,
           duration: 1000,
-          useNativeDriver: true
+          useNativeDriver: true,
         }),
         Animated.timing(radioWaveAnim, {
-          toValue: 1, // Scale down
+          toValue: 1,
           duration: 1000,
-          useNativeDriver: true
-        })
-      ]).start(() => startAnimation()); // Loop the animation
+          useNativeDriver: true,
+        }),
+      ]).start(() => startAnimation());
     };
 
-    startAnimation(); // Trigger the animation
-  }, []); // Empty array ensures this effect runs only once
-
-
+    startAnimation();
+  }, [radioWaveAnim]);
 
   const handlePress = () => {
     Animated.timing(fadeOutAnim, {
@@ -72,86 +71,43 @@ useEffect(() => {
     }).start(onFinished);
   };
 
-const slides = images.map((imgSrc, index) => {
-    const fadeAnim = useRef(new Animated.Value(0)).current; // Each slide has its own fade animation
-    return (
-      <Slide
-        key={`slide_${index}`}
-        source={imgSrc}
-        fadeAnim={fadeAnim}
-      />
-    );
-  });
-
-
-
-
-
   return (
     <Animated.View style={[styles.container, { opacity: fadeOutAnim }]}>
+      <Image source={require('../assets/bg.jpg')} style={styles.backgroundImage} />
       <Swiper loop={false}>
-       <View style={styles.slide}>
-          <Image source={require('../assets/1.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-          <TouchableOpacity style={styles.skipButton} onPress={handlePress}>
-  <Text style={styles.buttonText}>Skip Tutorial →</Text>
-</TouchableOpacity>
-
-        </View>
-      
-         <View style={styles.slide}>
-          <Image source={require('../assets/2.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-         <View style={styles.slide}>
-          <Image source={require('../assets/3.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-
-         <View style={styles.slide}>
-          <Image source={require('../assets/4.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-
-         <View style={styles.slide}>
-          <Image source={require('../assets/5.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-
-         <View style={styles.slide}>
-          <Image source={require('../assets/6.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-         <View style={styles.slide}>
-          <Image source={require('../assets/7.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>
-
-       <View style={styles.slide}>
-          <Image source={require('../assets/8.png')} style={styles.fullImage} />
-          <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>Swipe to see more</Animated.Text>
-        </View>  
-
-
-
-    <View style={styles.slide}>
-          <Image source={require('../assets/9.png')} style={styles.fullImage} />
-      <Animated.View
-            style={[
-              styles.radioWave,
-              {
-                transform: [{ scale: radioWaveAnim }],
-                opacity: radioWaveAnim.interpolate({
-                  inputRange: [1, 2],
-                  outputRange: [0.5, 0]
-                }),
-              }
-            ]}
-          />
-          <TouchableOpacity style={styles.button} onPress={handlePress}>
-            <Text style={styles.buttonText}>Start</Text>
-          </TouchableOpacity>
-        </View>
+        {images.map((imgSrc, index) => (
+          <View key={index} style={index === images.length - 1 ? styles.lastSlide : styles.slide}>
+            <Image source={imgSrc} style={styles.fullImage} />
+            <Animated.Text style={{ ...styles.swipeText, opacity: fadeAnim }}>
+              Swipe to see more
+            </Animated.Text>
+            {index !== images.length - 1 && (
+              <TouchableOpacity style={styles.skipButton} onPress={handlePress}>
+                <Text style={styles.skipButtonText}>Skip</Text>
+                <View style={styles.arrow} />
+              </TouchableOpacity>
+            )}
+            {index === images.length - 1 && (
+              <>
+                <Animated.View
+                  style={[
+                    styles.radioWave,
+                    {
+                      transform: [{ scale: radioWaveAnim }],
+                      opacity: radioWaveAnim.interpolate({
+                        inputRange: [1, 2],
+                        outputRange: [0.5, 0],
+                      }),
+                    },
+                  ]}
+                />
+                <TouchableOpacity style={styles.button} onPress={handlePress}>
+                  <Text style={styles.buttonText}>Start</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        ))}
       </Swiper>
     </Animated.View>
   );
@@ -160,13 +116,26 @@ const slides = images.map((imgSrc, index) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#BF8A1F', // Set your preferred background color
+    backgroundColor: '#BF8A1F',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    transform: [{ rotate: '180deg' }],
   },
   slide: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  lastSlide: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 20,
+    marginBottom: height * 0.1,
   },
   fullImage: {
     width: '100%',
@@ -178,44 +147,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
   },
-
   button: {
-    backgroundColor: '#F7B329', // Vibrant orange from your color scheme
-    width: 60, // Width of the circular button
-    height: 60, // Height of the circular button
-    borderRadius: 30, // Half of width/height to make it circular
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    alignSelf: 'center', // Center the button
-    bottom: 100
-  },
- buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-    radioWave: {
-    position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(73, 53, 13, 0.5)',
-    bottom: 85, // Position it behind the button
-    alignSelf: 'center', // Center the wave
-    zIndex: -1, // Ensure it's behind the button
-  },
-
-   skipButton: {
-    backgroundColor: '#F7B329', // Same styling as 'Start' button
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: '#F7B329',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
     alignSelf: 'center',
-    top: 20, // Adjust as needed to position at the top
+    bottom: height * 0.15,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  radioWave: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(73, 53, 13, 0.5)',
+    bottom: height * 0.15 - 20,
+    alignSelf: 'center',
+    zIndex: -1,
+  },
+  skipButton: {
+    backgroundColor: '#F7B329',
+    width: width * 0.3,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 20,
+    bottom: height * 0.1,
+    flexDirection: 'row',
+  },
+  skipButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  arrow: {
+    width: 15,
+    height: 15,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#FFF',
+    transform: [{ rotate: '45deg' }],
   },
 });
 

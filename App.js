@@ -61,6 +61,7 @@ export default function App() {
   const [alertButtons, setAlertButtons] = useState([]);
   const [scoringPlayer, setScoringPlayer] = useState(null);
   const [debt, setDebt] = useState({ player1: 0, player2: 0 });
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // State to keep track of once the general pile is exhausted, to calculate the certain winning conditions.
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
@@ -222,7 +223,7 @@ export default function App() {
     const otherPlayer = askingPlayer === 'player1' ? 'player2' : 'player1';
     let newSticks = { ...sticks };
     let debtAmount = debt[askingPlayer];
-  
+
     // Use plain sticks first
     if (newSticks[otherPlayer].plain >= debtAmount) {
       newSticks[otherPlayer].plain -= debtAmount;
@@ -233,15 +234,15 @@ export default function App() {
       newSticks[askingPlayer].plain += newSticks[otherPlayer].plain;
       newSticks[otherPlayer].plain = 0;
     }
-  
+
     // Use notched sticks if there's still debt to settle
     while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
       newSticks[otherPlayer].notched -= 1;
       newSticks[askingPlayer].notched += 1;
-  
+
       // Transfer 15 plain sticks equivalent for the notched stick
       let plainSticksFromNotched = 15;
-  
+
       // Transfer plain sticks from other player to cover the notched stick transfer
       if (newSticks[otherPlayer].plain >= plainSticksFromNotched) {
         newSticks[otherPlayer].plain -= plainSticksFromNotched;
@@ -251,15 +252,15 @@ export default function App() {
         plainSticksFromNotched -= newSticks[otherPlayer].plain;
         newSticks[otherPlayer].plain = 0;
       }
-  
+
       // Adjust the debt amount based on the transfer
       debtAmount -= 15;
-  
+
       // If the debtAmount becomes negative, it means there is excess plain sticks
       if (debtAmount < 0) {
         let excessPlainSticks = -debtAmount;
         debtAmount = 0;
-  
+
         // Return excess plain sticks to the opponent
         if (newSticks[askingPlayer].plain >= excessPlainSticks) {
           newSticks[askingPlayer].plain -= excessPlainSticks;
@@ -270,24 +271,24 @@ export default function App() {
         }
       }
     }
-  
+
     // Ensure plain sticks do not exceed the maximum count
     if (newSticks[askingPlayer].plain > 51) {
       newSticks[askingPlayer].plain = 51;
     }
-  
+
     // Check if the other player is out of sticks
     if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
       showGameOverAlert(`${askingPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
       return;
     }
-  
+
     const newDebt = { ...debt };
     newDebt[askingPlayer] = debtAmount > 0 ? debtAmount : 0;
     setDebt(newDebt);
     setSticks(newSticks);
   };
-  
+
 
 
 
@@ -532,6 +533,21 @@ export default function App() {
       />
       <BackgroundVideo />
 
+      {/* Help Button */}
+      <TouchableOpacity style={styles.helpButton} onPress={() => setShowTutorial(true)}>
+        <Text style={styles.helpButtonText}>?</Text>
+      </TouchableOpacity>
+
+      {showTutorial && (
+        <View style={styles.fullScreenOverlay}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => setShowTutorial(false)}>
+            <Text style={styles.closeButtonText}>X</Text>
+          </TouchableOpacity>
+          <TutorialSwiper onFinished={() => setShowTutorial(false)} />
+        </View>
+      )}
+
+
       {currentPage === 'home' && <HomePage onStartGame={startGame} />}
       {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
       {currentPage === 'game' && (
@@ -563,14 +579,14 @@ export default function App() {
             waltesText={waltesText}
             isGeneralPileExhausted={isGeneralPileExhausted}
             debt={debt}
-            handleAskDebtPayment={handleDebtPayment} // Pass the function
+            handleAskDebtPayment={handleDebtPayment}
           />
 
           {showReplacementGif && (
             <View
               style={[
                 styles.gifContainer,
-                playerTurn === 0 ? styles.rotated : null // Apply rotation for the upper player
+                playerTurn === 0 ? styles.rotated : null
               ]}
             >
               <Animated.Image source={stickReplacementGif} style={styles.replacementGif} />
@@ -609,6 +625,7 @@ export default function App() {
       )}
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -620,6 +637,38 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
+  }, fullScreenOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)', // Semi-transparent background
+    zIndex: 1000,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 1001,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  helpButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1000,
+    backgroundColor: '#FFD700',
+    borderRadius: 25,
+    padding: 10,
+  },
+  helpButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   scoreText: {
     fontSize: 64,
