@@ -143,9 +143,37 @@ const PlayerArea = ({
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
+
+  // Define the personal pile style based on player turn
   const personalPileStyle = {
     backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
   };
+
+  const tossTextAnim = useRef(new Animated.Value(1)).current;
+
+  // Animation for the Toss text
+  useEffect(() => {
+    if (playerTurn === (player === 'player1' ? 0 : 1)) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(tossTextAnim, {
+            toValue: 1.5,
+            duration: 500,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+          Animated.timing(tossTextAnim, {
+            toValue: 1,
+            duration: 500,
+            easing: Easing.bounce,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      tossTextAnim.setValue(1); // Reset animation if it's not the player's turn
+    }
+  }, [playerTurn]);
 
   useEffect(() => {
     if (player === scoringPlayer) {
@@ -168,14 +196,8 @@ const PlayerArea = ({
   return (
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
-
-
-
-
         <View style={styles.generalPile}>
           <Text style={styles.generalPileTitle}>General Pile</Text>
-
-
           <View style={styles.generalPileContainer}>
             {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
               <>
@@ -195,12 +217,9 @@ const PlayerArea = ({
         </View>
 
         <TouchableOpacity
-
-
           style={[styles.personalPile, personalPileStyle]}
           onPress={() => onPileClick(player)}
         >
-
           <Text style={styles.personalPileTitle}>Personal Pile</Text>
 
           <View style={styles.personalPileContainer}>
@@ -212,38 +231,55 @@ const PlayerArea = ({
               showNotchedValue={isGeneralPileExhausted}
             />
             <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-            {player === scoringPlayer && (
-              <Animated.View
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  borderRadius: 20,
-                  paddingVertical: 5,
-                  paddingHorizontal: 10,
-                  opacity: opacityAnim,
-                  position: 'absolute',
-                  alignSelf: 'center',
-                  top: '50%',
-                  transform: [{ translateY: -10 }],
-                }}
-              >
-                <Text
-                  style={[
-                    styles.scoreTextInPile,
-                    {
-                      color: 'white',
-                      textAlign: 'center',
-                    },
-                  ]}
-                >
-                  {scoreText}
-                </Text>
-              </Animated.View>
-            )}
-
-
           </View>
 
+          {playerTurn === (player === 'player1' ? 0 : 1) && (
+            <Animated.View style={styles.tossOverlay}>
+              <Animated.Text
+                style={[
+                  styles.tossText,
+                  {
+                    transform: [{ scale: tossTextAnim }],
+                  },
+                ]}
+              >
+                Toss
+              </Animated.Text>
+            </Animated.View>
+          )}
+
+          {player === scoringPlayer && (
+            <Animated.View
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                borderRadius: 20,
+                paddingVertical: 5,
+                paddingHorizontal: 10,
+                opacity: opacityAnim,
+                position: 'absolute',
+                alignSelf: 'center',
+                top: '50%',
+                transform: [{ translateY: -10 }],
+              }}
+            >
+              <Text
+                style={[
+                  styles.scoreTextInPile,
+                  {
+                    color: 'white',
+                    textAlign: 'center',
+                  },
+                ]}
+              >
+                {scoreText}
+              </Text>
+            </Animated.View>
+          )}
+
+          <View style={styles.scoreIndicatorContainer}>
+            <Animated.View style={player1Style} />
+            <Animated.View style={player2Style} />
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -702,6 +738,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   personalPile: {
+    position: 'relative', // Ensure this container can be covered by the overlay
     flexDirection: 'column',
     justifyContent: 'center',
     width: '100%',
@@ -777,6 +814,26 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FDA10E',
 
+  },
+  tossOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Dark background covering the entire personal pile
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999, // Ensure it appears above other elements
+  },
+  tossText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 3,
   },
   playerArea: {
     position: 'absolute',

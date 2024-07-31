@@ -289,21 +289,6 @@ export default function App() {
     setSticks(newSticks);
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const triggerReplacementAnimation = () => {
     // Highlight the notched and plain sticks
     Animated.sequence([
