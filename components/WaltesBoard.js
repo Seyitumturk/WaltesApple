@@ -169,66 +169,67 @@ const PlayerArea = ({
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
         <View style={styles.generalPile}>
-          {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
-            <>
-              <CircularButton type="plain" count={sticks.general.plain} />
-              <CircularButton type="notched" count={sticks.general.notched} />
-              <CircularButton type="kingPin" count={sticks.general.kingPin} />
-            </>
-          ) : (
-            <View style={styles.debtContainer}>
-              <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
-                <Text style={styles.askButtonText}>Ask</Text>
-              </TouchableOpacity>
-              <Text style={styles.debtText}>Debt: {debt[player]}</Text>
-            </View>
-          )}
+          <Text style={styles.generalPileTitle}>General Pile</Text>
+          <View style={styles.generalPileContainer}>
+            {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
+              <>
+                <CircularButton type="plain" count={sticks.general.plain} />
+                <CircularButton type="notched" count={sticks.general.notched} />
+                <CircularButton type="kingPin" count={sticks.general.kingPin} />
+              </>
+            ) : (
+              <View style={styles.debtContainer}>
+                <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+                  <Text style={styles.askButtonText}>Ask</Text>
+                </TouchableOpacity>
+                <Text style={styles.debtText}>Debt: {debt[player]}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <TouchableOpacity
           style={[styles.personalPile, personalPileStyle]}
           onPress={() => onPileClick(player)}
         >
-          <CircularButton type="plain" count={sticks[player].plain} />
-          <CircularButton
-            type="notched"
-            count={sticks[player].notched}
-            notchedValue={sticks[player].notchedValue}
-            showNotchedValue={isGeneralPileExhausted}
-          />
-          <CircularButton type="kingPin" count={sticks[player].kingPin} />
+          <Text style={styles.personalPileTitle}>Personal Pile</Text>
+          <View style={styles.personalPileContainer}>
+            <CircularButton type="plain" count={sticks[player].plain} />
+            <CircularButton
+              type="notched"
+              count={sticks[player].notched}
+              notchedValue={sticks[player].notchedValue}
+              showNotchedValue={isGeneralPileExhausted}
+            />
+            <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
-          {player === scoringPlayer && (
-            <Animated.View
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                borderRadius: 20,
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-                opacity: opacityAnim,
-                position: 'absolute',
-                alignSelf: 'center',
-                top: '50%',
-                transform: [{ translateY: -10 }],
-              }}
-            >
-              <Text
-                style={[
-                  styles.scoreTextInPile,
-                  {
-                    color: 'white',
-                    textAlign: 'center',
-                  },
-                ]}
+            {player === scoringPlayer && (
+              <Animated.View
+                style={{
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  borderRadius: 20,
+                  paddingVertical: 5,
+                  paddingHorizontal: 10,
+                  opacity: opacityAnim,
+                  position: 'absolute',
+                  alignSelf: 'center',
+                  top: '50%',
+                  transform: [{ translateY: -10 }],
+                }}
               >
-                {scoreText}
-              </Text>
-            </Animated.View>
-          )}
-
-          <View style={styles.scoreIndicatorContainer}>
-            <Animated.View style={player1Style} />
-            <Animated.View style={player2Style} />
+                <Text
+                  style={[
+                    styles.scoreTextInPile,
+                    {
+                      color: 'white',
+                      textAlign: 'center',
+                    },
+                  ]}
+                >
+                  {scoreText}
+                </Text>
+              </Animated.View>
+            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -589,6 +590,29 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.83 }],
     zIndex: 1,
   },
+  playerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+    marginBottom: 10,
+  },
+  generalPileTitle: {
+    backgroundColor: "#FDA10E",
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+    marginBottom: 5,
+  },
+  personalPileTitle: {
+    backgroundColor: "#805c15",
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+    marginBottom: 5,
+  },
   background: {
     flex: 1,
     width: '100%',
@@ -613,12 +637,11 @@ const styles = StyleSheet.create({
   playerArea: {
     position: 'absolute',
     width: '100%',
-    height: '50%',
+    height: '40%',
     justifyContent: 'flex-end',
   },
   personalPile: {
-    marginBottom: 20,
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#FDA10E',
@@ -683,6 +706,14 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     height: 20,
+    zIndex: 999999999999999999999999999999999999999999999999999999999999,
+  },
+  personalPileContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    backgroundColor: '#FDA10E',
+
   },
   playerArea: {
     position: 'absolute',
@@ -699,12 +730,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'orange',
   },
   player1Area: {
-    top: 15,
+    paddingBottom: 200,
+    top: 0,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
   player2Area: {
-    bottom: 15,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -717,7 +749,13 @@ const styles = StyleSheet.create({
     paddingTop: 30,
   },
   generalPile: {
-    paddingTop: -40,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    width: '100%',
+
+    backgroundColor: '#D68402',
+  },
+  generalPileContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
