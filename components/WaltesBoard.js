@@ -168,8 +168,14 @@ const PlayerArea = ({
   return (
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
+
+
+
+
         <View style={styles.generalPile}>
           <Text style={styles.generalPileTitle}>General Pile</Text>
+
+
           <View style={styles.generalPileContainer}>
             {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
               <>
@@ -189,10 +195,14 @@ const PlayerArea = ({
         </View>
 
         <TouchableOpacity
+
+
           style={[styles.personalPile, personalPileStyle]}
           onPress={() => onPileClick(player)}
         >
+
           <Text style={styles.personalPileTitle}>Personal Pile</Text>
+
           <View style={styles.personalPileContainer}>
             <CircularButton type="plain" count={sticks[player].plain} />
             <CircularButton
@@ -230,7 +240,10 @@ const PlayerArea = ({
                 </Text>
               </Animated.View>
             )}
+
+
           </View>
+
         </TouchableOpacity>
       </View>
     </View>
@@ -470,10 +483,46 @@ export default function WaltesBoard({
       setAskButtonClicked(null); // Reset the state after handling the logic
     }
   }, [askButtonClicked]);
+  useEffect(() => {
+    let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
+      ? 50
+      : (player1TotalScore / (player1TotalScore + player2TotalScore)) * 100;
+
+    Animated.timing(player1ScoreWidth, {
+      toValue: player1WidthPercentage,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  }, [player1TotalScore, player2TotalScore]);
 
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
+
+      {/* score tracker */}
+
+      <View style={styles.scoreTrackerContainer}>
+        <Animated.View
+          style={{
+            backgroundColor: '#0EFDA1', // Static color for now
+            height: player1ScoreWidth.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'], // Ensure the height scales correctly
+            }),
+            width: 10,
+          }}
+        />
+        <Animated.View
+          style={{
+            backgroundColor: '#A10EFD', // Static color for now
+            height: player1ScoreWidth.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['100%', '0%'], // Inverse height scaling
+            }),
+            width: 10,
+          }}
+        />
+      </View>
 
       <ImageBackground source={backgroundImage} style={styles.background}>
         <Animated.View
@@ -491,6 +540,8 @@ export default function WaltesBoard({
             },
           ]}
         >
+
+
           <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
             <View style={styles.diceContainer}>
               {dice.map((die, index) => {
@@ -620,6 +671,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scoreTrackerContainer: {
+    position: 'absolute',
+    left: 0, // Stick to the left edge of the screen
+    top: 0, // Start from the top of the screen
+    bottom: 0, // Extend to the bottom of the screen
+    width: 20, // Adjust the width of the score tracker
+    flexDirection: 'column',
+    zIndex: 10000, // Ensure it's above other elements
+    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Optional: Add a background to help visualize the container
+  },
+
   askButton: {
     backgroundColor: '#FDA10E',
     padding: 10,
