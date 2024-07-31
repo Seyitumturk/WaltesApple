@@ -16,6 +16,7 @@ import {
 import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
+import backgroundImage from '../assets/bg.jpg';
 
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
@@ -473,102 +474,105 @@ export default function WaltesBoard({
     <View style={styles.container}>
       <StatusBar hidden={true} />
 
-      <Animated.View
-        style={[
-          styles.bowlImage,
-          {
-            transform: [
-              {
-                rotate: shakeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0deg', '40deg'],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-          <View style={styles.diceContainer}>
-            {dice.map((die, index) => {
-              const position = randomPosition();
-              const rotation = diceRotation();
-              return (
-                <View key={index}>
-                  <Animated.Image
-                    resizeMode="contain"
-                    source={die === 1 ? markedDice : unmarkedDice}
-                    style={[
-                      styles.dice,
-                      {
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: [
-                          { translateX: position.x },
-                          { translateY: position.y },
-                          { rotate: `${rotation}deg` },
-                          { scaleX: 0.7 },
-                          { scaleY: 0.7 },
-                        ],
-                      },
-                    ]}
-                  />
-                </View>
-              );
-            })}
-          </View>
-        </ImageBackground>
-      </Animated.View>
+      <ImageBackground source={backgroundImage} style={styles.background}>
+        <Animated.View
+          style={[
+            styles.bowlImage,
+            {
+              transform: [
+                {
+                  rotate: shakeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '40deg'],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
+            <View style={styles.diceContainer}>
+              {dice.map((die, index) => {
+                const position = randomPosition();
+                const rotation = diceRotation();
+                return (
+                  <View key={index}>
+                    <Animated.Image
+                      resizeMode="contain"
+                      source={die === 1 ? markedDice : unmarkedDice}
+                      style={[
+                        styles.dice,
+                        {
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: [
+                            { translateX: position.x },
+                            { translateY: position.y },
+                            { rotate: `${rotation}deg` },
+                            { scaleX: 0.7 },
+                            { scaleY: 0.7 },
+                          ],
+                        },
+                      ]}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          </ImageBackground>
+        </Animated.View>
 
-      <Animated.Image
-        source={require('../assets/animated-plain-stick-icon.png')}
-        style={[
-          styles.animatedStick,
-          {
-            transform: [
-              ...stickAnimPosition.getTranslateTransform(),
-              { rotate: playerTurn === 1 ? '0deg' : '180deg' },
-              { scale: fadeAnim },
-              { translateX: Animated.add(stickAnimPosition.x, -30) },
-              { translateY: Animated.add(stickAnimPosition.y, -30) }
-            ],
-            opacity: fadeAnim
-          }
-        ]}
-      />
+        <Animated.Image
+          source={require('../assets/animated-plain-stick-icon.png')}
+          style={[
+            styles.animatedStick,
+            {
+              transform: [
+                ...stickAnimPosition.getTranslateTransform(),
+                { rotate: playerTurn === 1 ? '0deg' : '180deg' },
+                { scale: fadeAnim },
+                { translateX: Animated.add(stickAnimPosition.x, -30) },
+                { translateY: Animated.add(stickAnimPosition.y, -30) }
+              ],
+              opacity: fadeAnim
+            }
+          ]}
+        />
 
-      <PlayerArea
-        player="player1"
-        sticks={sticks}
-        playerTurn={playerTurn}
-        player1Style={player1Style}
-        player2Style={player2Style}
-        scoreText={scoreText}
-        opacityAnim={opacityAnim}
-        scoringPlayer={currentScoringPlayer}
-        isGeneralPileExhausted={isGeneralPileExhausted}
-        debt={debt} // Pass the debt state
-        handleAskDebtPayment={handleAskDebtPayment} // Pass the function
-        onPileClick={handlePileClick} // Pass the function to handle pile clicks
-      />
+        <PlayerArea
+          player="player1"
+          sticks={sticks}
+          playerTurn={playerTurn}
+          player1Style={player1Style}
+          player2Style={player2Style}
+          scoreText={scoreText}
+          opacityAnim={opacityAnim}
+          scoringPlayer={currentScoringPlayer}
+          isGeneralPileExhausted={isGeneralPileExhausted}
+          debt={debt} // Pass the debt state
+          handleAskDebtPayment={handleAskDebtPayment} // Pass the function
+          onPileClick={handlePileClick} // Pass the function to handle pile clicks
+        />
 
-      <PlayerArea
-        player="player2"
-        sticks={sticks}
-        playerTurn={playerTurn}
-        player1Style={player1Style}
-        player2Style={player2Style}
-        scoreText={scoreText}
-        opacityAnim={opacityAnim}
-        scoringPlayer={currentScoringPlayer}
-        isGeneralPileExhausted={isGeneralPileExhausted}
-        debt={debt} // Pass the debt state
-        handleAskDebtPayment={handleAskDebtPayment} // Pass the function
-        onPileClick={handlePileClick} // Pass the function to handle pile clicks
-      />
+        <PlayerArea
+          player="player2"
+          sticks={sticks}
+          playerTurn={playerTurn}
+          player1Style={player1Style}
+          player2Style={player2Style}
+          scoreText={scoreText}
+          opacityAnim={opacityAnim}
+          scoringPlayer={currentScoringPlayer}
+          isGeneralPileExhausted={isGeneralPileExhausted}
+          debt={debt} // Pass the debt state
+          handleAskDebtPayment={handleAskDebtPayment} // Pass the function
+          onPileClick={handlePileClick} // Pass the function to handle pile clicks
+        />
+      </ImageBackground>
     </View>
   );
+
 }
 
 
@@ -585,7 +589,13 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.83 }],
     zIndex: 1,
   },
-
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   askButton: {
     backgroundColor: '#FDA10E',
     padding: 10,
