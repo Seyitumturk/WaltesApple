@@ -679,7 +679,6 @@ const styles = StyleSheet.create({
     width: 20, // Adjust the width of the score tracker
     flexDirection: 'column',
     zIndex: 10000, // Ensure it's above other elements
-    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Optional: Add a background to help visualize the container
   },
 
   askButton: {
@@ -707,6 +706,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#FDA10E',
+    marginBottom: -50, // Extend the background color downwards without affecting the position
+    paddingBottom: 50, // Maintain the original padding if needed
   },
   diceContainer: {
     flexDirection: 'row',
@@ -783,6 +784,8 @@ const styles = StyleSheet.create({
     height: '50%',
     justifyContent: 'flex-end',
     zIndex: 100000000033330000000, // Ensure it's above other components
+    paddingBottom: 0, // Ensure there's no padding affecting the position
+
 
   },
   container: {
