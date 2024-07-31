@@ -220,6 +220,7 @@ const PlayerArea = ({
           style={[styles.personalPile, personalPileStyle]}
           onPress={() => onPileClick(player)}
         >
+          {/* Keep the "Personal Pile" text outside of the overlay */}
           <Text style={styles.personalPileTitle}>Personal Pile</Text>
 
           <View style={styles.personalPileContainer}>
@@ -231,50 +232,50 @@ const PlayerArea = ({
               showNotchedValue={isGeneralPileExhausted}
             />
             <CircularButton type="kingPin" count={sticks[player].kingPin} />
+
+            {playerTurn === (player === 'player1' ? 0 : 1) && (
+              <Animated.View style={styles.tossOverlay}>
+                <Animated.Text
+                  style={[
+                    styles.tossText,
+                    {
+                      transform: [{ scale: tossTextAnim }],
+                    },
+                  ]}
+                >
+                  Toss
+                </Animated.Text>
+              </Animated.View>
+            )}
+
+            {player === scoringPlayer && (
+              <Animated.View
+                style={{
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  borderRadius: 20,
+                  paddingVertical: 5,
+                  paddingHorizontal: 10,
+                  opacity: opacityAnim,
+                  position: 'absolute',
+                  alignSelf: 'center',
+                  top: '50%',
+                  transform: [{ translateY: -10 }],
+                }}
+              >
+                <Text
+                  style={[
+                    styles.scoreTextInPile,
+                    {
+                      color: 'white',
+                      textAlign: 'center',
+                    },
+                  ]}
+                >
+                  {scoreText}
+                </Text>
+              </Animated.View>
+            )}
           </View>
-
-          {playerTurn === (player === 'player1' ? 0 : 1) && (
-            <Animated.View style={styles.tossOverlay}>
-              <Animated.Text
-                style={[
-                  styles.tossText,
-                  {
-                    transform: [{ scale: tossTextAnim }],
-                  },
-                ]}
-              >
-                Toss
-              </Animated.Text>
-            </Animated.View>
-          )}
-
-          {player === scoringPlayer && (
-            <Animated.View
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                borderRadius: 20,
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-                opacity: opacityAnim,
-                position: 'absolute',
-                alignSelf: 'center',
-                top: '50%',
-                transform: [{ translateY: -10 }],
-              }}
-            >
-              <Text
-                style={[
-                  styles.scoreTextInPile,
-                  {
-                    color: 'white',
-                    textAlign: 'center',
-                  },
-                ]}
-              >
-                {scoreText}
-              </Text>
-            </Animated.View>
-          )}
 
           <View style={styles.scoreIndicatorContainer}>
             <Animated.View style={player1Style} />
@@ -285,6 +286,7 @@ const PlayerArea = ({
     </View>
   );
 };
+
 
 
 
@@ -560,7 +562,8 @@ export default function WaltesBoard({
         />
       </View>
 
-      <ImageBackground source={backgroundImage} style={styles.background}>
+      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }} // Set opacity for the background image
+      >
         <Animated.View
           style={[
             styles.bowlImage,
@@ -746,6 +749,9 @@ const styles = StyleSheet.create({
     marginBottom: -50, // Extend the background color downwards without affecting the position
     paddingBottom: 50, // Maintain the original padding if needed
   },
+  backgroundImage: {
+    opacity: '0.5',
+  },
   diceContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -817,7 +823,7 @@ const styles = StyleSheet.create({
   },
   tossOverlay: {
     position: 'absolute',
-    top: 0,
+    top: 30, // Adjust this to make space for the "Personal Pile" text
     left: 0,
     right: 0,
     bottom: 0,
