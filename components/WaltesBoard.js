@@ -140,12 +140,12 @@ const PlayerArea = ({
   debt,
   handleAskDebtPayment,
   onPileClick,
-  replacementMessage, 
+  replacementMessage,
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
 
-  const personalPileBackgroundColor = player === 'player1' ? '#F7B329' : '#29B7F7';
+  const personalPileBackgroundColor = player === 'player1' ? '#F76929' : '#29B7F7';
 
   const personalPileStyle = {
     backgroundColor: personalPileBackgroundColor,
@@ -378,7 +378,7 @@ const PlayerArea = ({
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage  
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -939,7 +939,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 10,  // Space between the text and animation
-    zIndex:99999999999999999999999999999999999999999999999999999,
+    zIndex: 99999999999999999999999999999999999999999999999999999,
   },
   replacementText: {
     fontSize: 16,
