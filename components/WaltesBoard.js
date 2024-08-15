@@ -16,7 +16,8 @@ import {
 import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
-import backgroundImage from '../assets/bg.jpg';
+import backgroundImage from '../assets/bg.png';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
@@ -126,7 +127,6 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     </View>
   );
 };
-
 const PlayerArea = ({
   player,
   sticks,
@@ -140,18 +140,63 @@ const PlayerArea = ({
   debt,
   handleAskDebtPayment,
   onPileClick,
+  replacementMessage, 
 }) => {
   const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
   const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
 
-  // Define the personal pile style based on player turn
+  const personalPileBackgroundColor = player === 'player1' ? '#F7B329' : '#29B7F7';
+
   const personalPileStyle = {
-    backgroundColor: playerTurn === (player === 'player1' ? 0 : 1) ? '#49350D' : '#FDA10E',
+    backgroundColor: personalPileBackgroundColor,
   };
 
-  const tossTextAnim = useRef(new Animated.Value(1)).current;
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;  // For fading
+  const swapAnim = useRef(new Animated.Value(0)).current;  // For swapping icons
+  const initialTextOpacity = useRef(new Animated.Value(1)).current;  // Start with fully visible text
+  const tossTextAnim = useRef(new Animated.Value(1)).current; // Animation for toss text
 
-  // Animation for the Toss text
+  useEffect(() => {
+    if (replacementMessage) {
+      // Reset animations before starting
+      fadeAnim.setValue(0);
+      swapAnim.setValue(0);
+      initialTextOpacity.setValue(1); // Ensure text starts visible
+
+      // Sequential animations for the effect
+      Animated.sequence([
+        // Keep the initial text visible for 2 seconds
+        Animated.delay(2000),
+        Animated.timing(initialTextOpacity, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        // Start the icon swap animation
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1, // Fade in the icons
+            duration: 1000, // Smooth appearance
+            useNativeDriver: true,
+          }),
+          Animated.timing(swapAnim, {
+            toValue: 1, // Move icons
+            duration: 2000, // Smooth transition
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.delay(2000),  // Keep the swapped position visible for 2 seconds
+        // Fade out the entire animation
+        Animated.timing(fadeAnim, {
+          toValue: 0, // Fade out everything
+          duration: 1000, // Smooth fade-out
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [replacementMessage]);
+
   useEffect(() => {
     if (playerTurn === (player === 'player1' ? 0 : 1)) {
       Animated.loop(
@@ -199,28 +244,77 @@ const PlayerArea = ({
         <View style={styles.generalPile}>
           <Text style={styles.generalPileTitle}>General Pile</Text>
           <View style={styles.generalPileContainer}>
-            {(!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
-              <>
-                <CircularButton type="plain" count={sticks.general.plain} />
-                <CircularButton type="notched" count={sticks.general.notched} />
-                <CircularButton type="kingPin" count={sticks.general.kingPin} />
-              </>
+            {replacementMessage ? (
+              <Animated.View
+                style={[
+                  styles.replacementContainer,
+                  { opacity: fadeAnim },
+                ]}
+              >
+                <Animated.Text style={[styles.initialText, { opacity: initialTextOpacity }]}>
+                  Replacing 15 plain sticks with 1 notched stick
+                </Animated.Text>
+                <View style={styles.replacementTextContainer}>
+                  <Animated.Text style={[styles.replacementText, {
+                    transform: [{
+                      translateX: swapAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-50, 0]  // Move plain stick to center
+                      })
+                    }]
+                  }]}>
+                    15x
+                  </Animated.Text>
+                  <Animated.Image
+                    source={require('../assets/plain-stick-icon.png')}
+                    style={[styles.icon, {
+                      transform: [{
+                        translateX: swapAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-50, 0]  // Move plain stick to center
+                        })
+                      }]
+                    }]}
+                  />
+                  <Animated.View style={{ opacity: fadeAnim }}>
+                    <MaterialIcons name="swap-horiz" size={50} color="white" style={styles.swapIcon} />
+                  </Animated.View>
+                  <Animated.Image
+                    source={require('../assets/notched-stick-icon.png')}
+                    style={[styles.icon, {
+                      transform: [{
+                        translateX: swapAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [50, 0]  // Move notched stick to center
+                        })
+                      }]
+                    }]}
+                  />
+                </View>
+              </Animated.View>
             ) : (
-              <View style={styles.debtContainer}>
-                <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
-                  <Text style={styles.askButtonText}>Ask</Text>
-                </TouchableOpacity>
-                <Text style={styles.debtText}>Debt: {debt[player]}</Text>
-              </View>
+              (!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
+                <>
+                  <CircularButton type="plain" count={sticks.general.plain} />
+                  <CircularButton type="notched" count={sticks.general.notched} />
+                  <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                </>
+              ) : (
+                <View style={styles.debtContainer}>
+                  <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+                    <Text style={styles.askButtonText}>Ask</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.debtText}>Debt: {debt[player]}</Text>
+                </View>
+              )
             )}
           </View>
         </View>
 
         <TouchableOpacity
-          style={[styles.personalPile, personalPileStyle]}
+          style={[styles.personalPile, personalPileStyle]} // Apply personalPileStyle here
           onPress={() => onPileClick(player)}
         >
-          {/* Keep the "Personal Pile" text outside of the overlay */}
           <Text style={styles.personalPileTitle}>Personal Pile</Text>
 
           <View style={styles.personalPileContainer}>
@@ -234,7 +328,7 @@ const PlayerArea = ({
             <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
             {playerTurn === (player === 'player1' ? 0 : 1) && (
-              <Animated.View style={styles.tossOverlay}>
+              <Animated.View style={[styles.tossOverlay, { backgroundColor: personalPileBackgroundColor }]}>
                 <Animated.Text
                   style={[
                     styles.tossText,
@@ -243,7 +337,7 @@ const PlayerArea = ({
                     },
                   ]}
                 >
-                  Toss
+                  toss
                 </Animated.Text>
               </Animated.View>
             )}
@@ -276,25 +370,15 @@ const PlayerArea = ({
               </Animated.View>
             )}
           </View>
-
-          <View style={styles.scoreIndicatorContainer}>
-            <Animated.View style={player1Style} />
-            <Animated.View style={player2Style} />
-          </View>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-
-
-
-
-
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage  
 }) {
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -542,7 +626,7 @@ export default function WaltesBoard({
       <View style={styles.scoreTrackerContainer}>
         <Animated.View
           style={{
-            backgroundColor: '#0EFDA1', // Static color for now
+            backgroundColor: '#F7B329', // Static color for now
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
               outputRange: ['0%', '100%'], // Ensure the height scales correctly
@@ -552,7 +636,7 @@ export default function WaltesBoard({
         />
         <Animated.View
           style={{
-            backgroundColor: '#A10EFD', // Static color for now
+            backgroundColor: '#805C15', // Static color for now
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
               outputRange: ['100%', '0%'], // Inverse height scaling
@@ -562,7 +646,7 @@ export default function WaltesBoard({
         />
       </View>
 
-      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }} // Set opacity for the background image
+      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 1 }} // Set opacity for the background image
       >
         <Animated.View
           style={[
@@ -644,6 +728,8 @@ export default function WaltesBoard({
           debt={debt} // Pass the debt state
           handleAskDebtPayment={handleAskDebtPayment} // Pass the function
           onPileClick={handlePileClick} // Pass the function to handle pile clicks
+          replacementMessage={replacementMessage}  // <-- Pass the prop here
+
         />
 
         <PlayerArea
@@ -659,6 +745,8 @@ export default function WaltesBoard({
           debt={debt} // Pass the debt state
           handleAskDebtPayment={handleAskDebtPayment} // Pass the function
           onPileClick={handlePileClick} // Pass the function to handle pile clicks
+          replacementMessage={replacementMessage}  // <-- Pass the prop here
+
         />
       </ImageBackground>
     </View>
@@ -696,12 +784,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   personalPileTitle: {
-    backgroundColor: "#805c15",
+    backgroundColor: "#BF8A1F",
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'white',
-    marginBottom: 5,
   },
   background: {
     flex: 1,
@@ -745,7 +832,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     width: '100%',
-    backgroundColor: '#FDA10E',
+    backgroundColor: '#F7B329',
     marginBottom: -50, // Extend the background color downwards without affecting the position
     paddingBottom: 50, // Maintain the original padding if needed
   },
@@ -818,16 +905,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    backgroundColor: '#FDA10E',
+    backgroundColor: '#F7B329',
 
   },
   tossOverlay: {
     position: 'absolute',
-    top: 30, // Adjust this to make space for the "Personal Pile" text
     left: 0,
+    top: 0, // Adjust this to align with the top of the personal pile
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Dark background covering the entire personal pile
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999, // Ensure it appears above other elements
@@ -837,9 +923,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 3,
+  },
+  replacementContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',  // Align elements vertically to center
+  },
+  replacementTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initialText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 10,  // Space between the text and animation
+    zIndex:99999999999999999999999999999999999999999999999999999,
+  },
+  replacementText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',  // Use consistent white color for the text
+    textAlign: 'center',
+    marginHorizontal: 5,
+  },
+  icon: {
+    width: 40,  // Make icons slightly bigger
+    height: 60,  // Make icons slightly bigger
+    marginHorizontal: 5,
+  },
+  swapIcon: {
+    marginHorizontal: 10,
   },
   playerArea: {
     position: 'absolute',
@@ -883,11 +998,21 @@ const styles = StyleSheet.create({
 
     backgroundColor: '#D68402',
   },
+
+  replacementText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'red',  // Customize as needed
+    textAlign: 'center',
+    marginTop: 10,
+  },
   generalPileContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#D68402',
+    alignItems: 'center',  // Center content vertically
+
   },
   debtButtonsContainer: {
     position: 'absolute',

@@ -73,7 +73,7 @@ const TutorialSwiper = ({ onFinished }) => {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeOutAnim }]}>
-      <Image source={require('../assets/bg.jpg')} style={styles.backgroundImage} />
+      <Image source={require('../assets/bg.png')} style={styles.backgroundImage} />
       <Swiper loop={false}>
         {images.map((imgSrc, index) => (
           <View key={index} style={index === images.length - 1 ? styles.lastSlide : styles.slide}>
@@ -122,7 +122,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    transform: [{ rotate: '180deg' }],
   },
   slide: {
     flex: 1,

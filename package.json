@@ -25,6 +25,7 @@
     "react-native-svg": "15.2.0",
     "react-native-swiper": "^1.6.0",
     "react-native-swiper-flatlist": "^3.2.3",
+    "react-native-vector-icons": "^10.1.0",
     "react-native-video": "^5.2.1"
   },
   "devDependencies": {

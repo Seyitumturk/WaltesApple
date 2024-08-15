@@ -91,6 +91,7 @@ export default function App() {
       notchedValue: 15, // Assuming each notched stick starts with a value of 15
     },
   });
+  const [replacementMessage, setReplacementMessage] = useState(''); // <-- New State
 
   const triggerAlertForExchange = (currentPlayer) => {
     const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
@@ -216,7 +217,9 @@ export default function App() {
       newSticks.general.notched--;
       newSticks.general.plain += 15;
       setSticks(newSticks);
-      triggerReplacementGif();
+      setReplacementMessage('15 plain sticks are swapped with 1 notched stick'); // <-- Set the message
+      
+      setTimeout(() => setReplacementMessage(''), 3000); // Clear the message after 3 seconds
     }
   };
   const handleDebtPayment = (askingPlayer) => {
@@ -565,6 +568,8 @@ export default function App() {
             isGeneralPileExhausted={isGeneralPileExhausted}
             debt={debt}
             handleAskDebtPayment={handleDebtPayment}
+            replacementMessage={replacementMessage}  
+
           />
 
           {showReplacementGif && (
