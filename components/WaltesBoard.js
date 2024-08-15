@@ -13,11 +13,12 @@ import {
   TouchableOpacity
 } from 'react-native';
 
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
 import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
 import backgroundImage from '../assets/bg.png';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
@@ -127,6 +128,8 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     </View>
   );
 };
+
+
 const PlayerArea = ({
   player,
   sticks,
@@ -152,48 +155,51 @@ const PlayerArea = ({
   };
 
   // Animation refs
-  const fadeAnim = useRef(new Animated.Value(0)).current;  // For fading
+  const fadeAnim = useRef(new Animated.Value(1)).current;  // Start with full opacity
   const swapAnim = useRef(new Animated.Value(0)).current;  // For swapping icons
   const initialTextOpacity = useRef(new Animated.Value(1)).current;  // Start with fully visible text
   const tossTextAnim = useRef(new Animated.Value(1)).current; // Animation for toss text
+  const [title, setTitle] = useState("General Pile");  // State to manage the title
 
   useEffect(() => {
     if (replacementMessage) {
       // Reset animations before starting
-      fadeAnim.setValue(0);
+      fadeAnim.setValue(1); // Start with full opacity
       swapAnim.setValue(0);
       initialTextOpacity.setValue(1); // Ensure text starts visible
+      setTitle(replacementMessage); // Set the title to the replacement message
 
       // Sequential animations for the effect
       Animated.sequence([
-        // Keep the initial text visible for 2 seconds
-        Animated.delay(2000),
+        // Display the initial text for 2.5 seconds
+        Animated.timing(initialTextOpacity, {
+          toValue: 1,
+          duration: 2500, // Extended duration
+          useNativeDriver: true,
+        }),
         Animated.timing(initialTextOpacity, {
           toValue: 0,
           duration: 1000,
           useNativeDriver: true,
         }),
         // Start the icon swap animation
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1, // Fade in the icons
-            duration: 1000, // Smooth appearance
-            useNativeDriver: true,
-          }),
-          Animated.timing(swapAnim, {
-            toValue: 1, // Move icons
-            duration: 2000, // Smooth transition
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.delay(2000),  // Keep the swapped position visible for 2 seconds
+        Animated.timing(swapAnim, {
+          toValue: 1, // Move icons
+          duration: 3000, // Extended duration for smooth transition
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
         // Fade out the entire animation
         Animated.timing(fadeAnim, {
           toValue: 0, // Fade out everything
           duration: 1000, // Smooth fade-out
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        // Reset title to "General Pile" after the animation completes
+        setTitle("General Pile");
+        fadeAnim.setValue(1); // Restore full opacity for the title
+      });
     }
   }, [replacementMessage]);
 
@@ -242,54 +248,58 @@ const PlayerArea = ({
     <View style={[styles.playerArea, playerStyle]}>
       <View style={[styles.stickContainer, stickContainerStyle]}>
         <View style={styles.generalPile}>
-          <Text style={styles.generalPileTitle}>General Pile</Text>
+          <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
+            {title}
+          </Animated.Text>
           <View style={styles.generalPileContainer}>
             {replacementMessage ? (
-              <Animated.View
-                style={[
-                  styles.replacementContainer,
-                  { opacity: fadeAnim },
-                ]}
-              >
-                <Animated.Text style={[styles.initialText, { opacity: initialTextOpacity }]}>
-                  Replacing 15 plain sticks with 1 notched stick
-                </Animated.Text>
+              <Animated.View style={[styles.replacementContainer, { opacity: fadeAnim }]}>
                 <View style={styles.replacementTextContainer}>
-                  <Animated.Text style={[styles.replacementText, {
-                    transform: [{
-                      translateX: swapAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-50, 0]  // Move plain stick to center
-                      })
-                    }]
-                  }]}>
-                    15x
-                  </Animated.Text>
-                  <Animated.Image
-                    source={require('../assets/plain-stick-icon.png')}
-                    style={[styles.icon, {
+                  <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Animated.Text style={[styles.replacementText, {
                       transform: [{
                         translateX: swapAnim.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [-50, 0]  // Move plain stick to center
-                        })
-                      }]
-                    }]}
-                  />
-                  <Animated.View style={{ opacity: fadeAnim }}>
-                    <MaterialIcons name="swap-horiz" size={50} color="white" style={styles.swapIcon} />
+                          outputRange: [-30, 0],  // Move plain stick text
+                        }),
+                      }],
+                    }]}>
+                      15x
+                    </Animated.Text>
+                    <Animated.Image
+                      source={require('../assets/plain-stick-icon.png')}
+                      style={[styles.icon, {
+                        transform: [{
+                          translateX: swapAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-30, 0],  // Move plain stick icon
+                          }),
+                        }],
+                      }]}
+                    />
+                    <Animated.View style={{
+                      opacity: fadeAnim,
+                      transform: [{
+                        scale: swapAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.2], // Slightly scale up during animation
+                        }),
+                      }],
+                    }}>
+                      <MaterialIcons name="swap-horiz" size={50} color="white" style={styles.swapIcon} />
+                    </Animated.View>
+                    <Animated.Image
+                      source={require('../assets/notched-stick-icon.png')}
+                      style={[styles.icon, {
+                        transform: [{
+                          translateX: swapAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [30, 0],  // Move notched stick icon
+                          }),
+                        }],
+                      }]}
+                    />
                   </Animated.View>
-                  <Animated.Image
-                    source={require('../assets/notched-stick-icon.png')}
-                    style={[styles.icon, {
-                      transform: [{
-                        translateX: swapAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [50, 0]  // Move notched stick to center
-                        })
-                      }]
-                    }]}
-                  />
                 </View>
               </Animated.View>
             ) : (
@@ -334,6 +344,9 @@ const PlayerArea = ({
                     styles.tossText,
                     {
                       transform: [{ scale: tossTextAnim }],
+                      opacity: 1, // Ensure text opacity is fully opaque
+                      fontWeight: 'bold', // Keep text bold
+
                     },
                   ]}
                 >
@@ -343,31 +356,70 @@ const PlayerArea = ({
             )}
 
             {player === scoringPlayer && (
-              <Animated.View
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  borderRadius: 20,
-                  paddingVertical: 5,
-                  paddingHorizontal: 10,
-                  opacity: opacityAnim,
-                  position: 'absolute',
-                  alignSelf: 'center',
-                  top: '50%',
-                  transform: [{ translateY: -10 }],
-                }}
-              >
-                <Text
-                  style={[
-                    styles.scoreTextInPile,
-                    {
-                      color: 'white',
-                      textAlign: 'center',
-                    },
-                  ]}
+              <>
+                <Animated.View
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    borderRadius: 20,
+                    paddingVertical: 5,
+                    paddingHorizontal: 10,
+                    opacity: opacityAnim,
+                    position: 'absolute',
+                    alignSelf: 'center',
+                    top: '50%',
+                    transform: [{ translateY: -10 }],
+                  }}
                 >
-                  {scoreText}
-                </Text>
-              </Animated.View>
+                  <Text
+                    style={[
+                      styles.scoreTextInPile,
+                      {
+                        color: 'white',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        fontSize: 24,
+                        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+                        textShadowOffset: { width: 2, height: 2 },
+                        textShadowRadius: 3,
+                      },
+                    ]}
+                  >
+                    Waltes!
+                  </Text>
+                </Animated.View>
+
+                {/* Same text for the General Pile */}
+                <Animated.View
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    borderRadius: 20,
+                    paddingVertical: 5,
+                    paddingHorizontal: 10,
+                    opacity: opacityAnim,
+                    position: 'absolute',
+                    alignSelf: 'center',
+                    top: '50%',
+                    transform: [{ translateY: -10 }],
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.scoreTextInPile,
+                      {
+                        color: 'white',
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                        fontSize: 24,
+                        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+                        textShadowOffset: { width: 2, height: 2 },
+                        textShadowRadius: 3,
+                      },
+                    ]}
+                  >
+                    Waltes!
+                  </Text>
+                </Animated.View>
+              </>
             )}
           </View>
         </TouchableOpacity>
@@ -375,6 +427,11 @@ const PlayerArea = ({
     </View>
   );
 };
+
+
+
+
+
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
@@ -431,7 +488,7 @@ export default function WaltesBoard({
   }, [player1TotalScore, player2TotalScore]);
 
   const player1Style = {
-    backgroundColor: '#0EFDA1',
+    backgroundColor: '#29B7F7',
     width: player1ScoreWidth.interpolate({
       inputRange: [0, 100],
       outputRange: ['0%', '100%'], // Ensure it starts at 0% and goes up to 100%
@@ -440,7 +497,7 @@ export default function WaltesBoard({
   };
 
   const player2Style = {
-    backgroundColor: '#A10EFD',
+    backgroundColor: '#F76929',
     width: player1ScoreWidth.interpolate({
       inputRange: [0, 100],
       outputRange: ['100%', '0%'], // Inverse of player1's width
@@ -626,7 +683,7 @@ export default function WaltesBoard({
       <View style={styles.scoreTrackerContainer}>
         <Animated.View
           style={{
-            backgroundColor: '#F7B329', // Static color for now
+            backgroundColor: '#F76929', // Static color for now
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
               outputRange: ['0%', '100%'], // Ensure the height scales correctly
@@ -636,7 +693,7 @@ export default function WaltesBoard({
         />
         <Animated.View
           style={{
-            backgroundColor: '#805C15', // Static color for now
+            backgroundColor: '#29B7F7', // Static color for now
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
               outputRange: ['100%', '0%'], // Inverse height scaling
@@ -646,7 +703,7 @@ export default function WaltesBoard({
         />
       </View>
 
-      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 1 }} // Set opacity for the background image
+      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }} // Set opacity for the background image
       >
         <Animated.View
           style={[
@@ -776,15 +833,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   generalPileTitle: {
-    backgroundColor: "#FDA10E",
+    backgroundColor: "#BF8A1F",
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'white',
-    marginBottom: 5,
   },
   personalPileTitle: {
-    backgroundColor: "#BF8A1F",
+    backgroundColor: "#FDA10E",
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -821,18 +877,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  playerArea: {
-    position: 'absolute',
-    width: '100%',
-    height: '40%',
-    justifyContent: 'flex-end',
-  },
+
   personalPile: {
     position: 'relative', // Ensure this container can be covered by the overlay
     flexDirection: 'column',
     justifyContent: 'center',
     width: '100%',
-    backgroundColor: '#F7B329',
+    backgroundColor: '#D68402',
     marginBottom: -50, // Extend the background color downwards without affecting the position
     paddingBottom: 50, // Maintain the original padding if needed
   },
@@ -917,13 +968,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999, // Ensure it appears above other elements
+    borderTopLeftRadius: 100, // Adjust the radius value as needed
+    borderTopRightRadius: 100, // Adjust the radius value as needed
+    opacity: 0.7,
   },
+
   tossText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#FFFFFF',  // Bright white text color
     textAlign: 'center',
+    opacity: 1,  // Ensure full opacity for the text
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',  // Add shadow for contrast if needed
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    zIndex: 99999999, // Ensure it appears above other elements
+
   },
+
   replacementContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -938,8 +1000,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 10,  // Space between the text and animation
-    zIndex: 99999999999999999999999999999999999999999999999999999,
+    marginBottom: 10,
   },
   replacementText: {
     fontSize: 16,
@@ -995,17 +1056,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     width: '100%',
-
-    backgroundColor: '#D68402',
+    backgroundColor: '#F7B329',
   },
 
-  replacementText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'red',  // Customize as needed
-    textAlign: 'center',
-    marginTop: 10,
-  },
+
   generalPileContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1039,12 +1093,15 @@ const styles = StyleSheet.create({
     zIndex: 999999,
   },
   scoreTextInPile: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
     alignSelf: 'center',
     marginTop: 10,
     zIndex: 9999999999,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 3,
   },
   textContainer: {
     position: 'absolute',
