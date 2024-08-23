@@ -968,8 +968,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999, // Ensure it appears above other elements
-    borderTopLeftRadius: 100, // Adjust the radius value as needed
-    borderTopRightRadius: 100, // Adjust the radius value as needed
+    borderTopLeftRadius: 300, // Adjust the radius value as needed
+    borderTopRightRadius: 300, // Adjust the radius value as needed
     opacity: 0.7,
   },
 
