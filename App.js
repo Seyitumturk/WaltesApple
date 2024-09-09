@@ -511,6 +511,21 @@ export default function App() {
     setTimeout(() => setShowReplacementGif(false), 5000); // Display the GIF for 5 seconds
   };
 
+  const getTutorialText = (step) => {
+    switch (step) {
+      case 'scoreTracker':
+        return "This is the score tracker. It shows the current score for both players.";
+      case 'bowl':
+        return "This is the bowl where the dice are tossed.";
+      case 'player1Area':
+        return "This is Player 1's area. It shows their personal pile and general pile.";
+      case 'player2Area':
+        return "This is Player 2's area. It shows their personal pile and general pile.";
+      default:
+        return "";
+    }
+  };
+
   return (
     <View style={styles.container}>
       <CustomAlert
@@ -569,7 +584,7 @@ export default function App() {
             debt={debt}
             handleAskDebtPayment={handleDebtPayment}
             replacementMessage={replacementMessage}  
-
+            tutorialMode={showTutorial}
           />
 
           {showReplacementGif && (
