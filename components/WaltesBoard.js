@@ -1,3 +1,4 @@
+// WaltesBoard.js
 import React, { useRef, useState, useEffect } from 'react';
 import {
   Animated,
@@ -13,427 +14,18 @@ import {
   TouchableOpacity
 } from 'react-native';
 
-import styles from './WaltesBoardStyles';
-
-
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import styles from './WaltesBoardStyles';
 
 import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
 import backgroundImage from '../assets/bg.png';
 
-import plainStickIcon from '../assets/plain-stick-icon.png';
-import notchedStickIcon from '../assets/notched-stick-icon.png';
-import kingPinIcon from '../assets/king-pin-icon.png';
+import PlayerArea from './PlayerArea';
 
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
-
-const useCountAnimation = (initialCount) => {
-  const [count, setCount] = useState(initialCount);
-  const animatedValue = useRef(new Animated.Value(0)).current;
-
-  const animateCount = (newCount) => {
-    const isSuperWaltes = Math.abs(newCount - count) > 10; // Determine if it's a Super Waltes increment
-    const incrementValue = (currentValue, targetValue, duration) => {
-      const adjustedDuration = isSuperWaltes ? Math.min(duration, 200) : Math.min(duration, 300); // Adjust max duration for Super Waltes
-
-      if (currentValue < targetValue) {
-        setCount(currentValue + 1);
-        animatedValue.setValue(0);
-        Animated.sequence([
-          Animated.timing(animatedValue, {
-            toValue: 1,
-            duration: adjustedDuration,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 0,
-            duration: adjustedDuration,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-        ]).start(() => incrementValue(currentValue + 1, targetValue, duration + (isSuperWaltes ? 20 : 50))); // Adjust step increment duration
-      } else if (currentValue > targetValue) {
-        setCount(currentValue - 1);
-        animatedValue.setValue(0);
-        Animated.sequence([
-          Animated.timing(animatedValue, {
-            toValue: 1,
-            duration: adjustedDuration,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-          Animated.timing(animatedValue, {
-            toValue: 0,
-            duration: adjustedDuration,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-        ]).start(() => incrementValue(currentValue - 1, targetValue, duration + (isSuperWaltes ? 20 : 50))); // Adjust step increment duration
-      }
-    };
-
-    incrementValue(count, newCount, 50); // Start with a base duration of 50ms
-  };
-
-  return [count, animateCount, animatedValue];
-};
-const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
-  const [animatedCount, animateCount, animatedValue] = useCountAnimation(count);
-
-  useEffect(() => {
-    if (count !== animatedCount) {
-      animateCount(count);
-    }
-  }, [count]);
-
-  const animatedStyle = {
-    transform: [
-      {
-        scale: animatedValue.interpolate({
-          inputRange: [0, 1],
-          outputRange: [1, 1.5],
-        }),
-      },
-    ],
-  };
-
-  const icons = {
-    plain: plainStickIcon,
-    notched: notchedStickIcon,
-    kingPin: kingPinIcon,
-  };
-
-  const styles = StyleSheet.create({
-    icon: {
-      width: 60, // adjust the size as needed
-      height: 75, // adjust the size as needed
-    },
-    button: {
-      marginHorizontal: 10, // Added margin
-    },
-    countText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: 'white',
-    },
-  });
-
-  return (
-    <View style={styles.button}>
-      <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
-      <Animated.Text style={[styles.countText, animatedStyle]}>
-        {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue * count}` : animatedCount}
-      </Animated.Text>
-    </View>
-  );
-};
-
-
-const PlayerArea = ({
-  player,
-  sticks,
-  playerTurn,
-  player1Style,
-  player2Style,
-  scoringPlayer,
-  scoreText,
-  opacityAnim,
-  isGeneralPileExhausted,
-  debt,
-  handleAskDebtPayment,
-  onPileClick,
-  replacementMessage,
-}) => {
-  const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
-  const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
-
-  const personalPileBackgroundColor = player === 'player1' ? '#F76929' : '#29B7F7';
-
-  const personalPileStyle = {
-    backgroundColor: personalPileBackgroundColor,
-  };
-
-  // Animation refs
-  const fadeAnim = useRef(new Animated.Value(1)).current;  // Start with full opacity
-  const swapAnim = useRef(new Animated.Value(0)).current;  // For swapping icons
-  const initialTextOpacity = useRef(new Animated.Value(1)).current;  // Start with fully visible text
-  const tossTextAnim = useRef(new Animated.Value(1)).current; // Animation for toss text
-  const [title, setTitle] = useState("General Pile");  // State to manage the title
-
-  useEffect(() => {
-    if (replacementMessage) {
-      // Reset animations before starting
-      fadeAnim.setValue(1); // Start with full opacity
-      swapAnim.setValue(0);
-      initialTextOpacity.setValue(1); // Ensure text starts visible
-      setTitle(replacementMessage); // Set the title to the replacement message
-
-      // Sequential animations for the effect
-      Animated.sequence([
-        // Display the initial text for 2.5 seconds
-        Animated.timing(initialTextOpacity, {
-          toValue: 1,
-          duration: 2500, // Extended duration
-          useNativeDriver: true,
-        }),
-        Animated.timing(initialTextOpacity, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        // Start the icon swap animation
-        Animated.timing(swapAnim, {
-          toValue: 1, // Move icons
-          duration: 3000, // Extended duration for smooth transition
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        // Fade out the entire animation
-        Animated.timing(fadeAnim, {
-          toValue: 0, // Fade out everything
-          duration: 1000, // Smooth fade-out
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        // Reset title to "General Pile" after the animation completes
-        setTitle("General Pile");
-        fadeAnim.setValue(1); // Restore full opacity for the title
-      });
-    }
-  }, [replacementMessage]);
-
-  useEffect(() => {
-    if (playerTurn === (player === 'player1' ? 0 : 1)) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(tossTextAnim, {
-            toValue: 1.5,
-            duration: 500,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-          Animated.timing(tossTextAnim, {
-            toValue: 1,
-            duration: 500,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    } else {
-      tossTextAnim.setValue(1); // Reset animation if it's not the player's turn
-    }
-  }, [playerTurn]);
-
-  useEffect(() => {
-    if (player === scoringPlayer) {
-      Animated.sequence([
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1500),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [player, scoringPlayer, opacityAnim, scoreText]);
-
-  return (
-    <View style={[styles.playerArea, playerStyle]}>
-      <View style={[styles.stickContainer, stickContainerStyle]}>
-        <View style={styles.generalPile}>
-          <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
-            {title}
-          </Animated.Text>
-          <View style={styles.generalPileContainer}>
-            {replacementMessage ? (
-              <Animated.View style={[styles.replacementContainer, { opacity: fadeAnim }]}>
-                <View style={styles.replacementTextContainer}>
-                  <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Animated.Text style={[styles.replacementText, {
-                      transform: [{
-                        translateX: swapAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-30, 0],  // Move plain stick text
-                        }),
-                      }],
-                    }]}>
-                      15x
-                    </Animated.Text>
-                    <Animated.Image
-                      source={require('../assets/plain-stick-icon.png')}
-                      style={[styles.icon, {
-                        transform: [{
-                          translateX: swapAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [-30, 0],  // Move plain stick icon
-                          }),
-                        }],
-                      }]}
-                    />
-                    <Animated.View style={{
-                      opacity: fadeAnim,
-                      transform: [{
-                        scale: swapAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 1.2], // Slightly scale up during animation
-                        }),
-                      }],
-                    }}>
-                      <MaterialIcons name="swap-horiz" size={50} color="white" style={styles.swapIcon} />
-                    </Animated.View>
-                    <Animated.Image
-                      source={require('../assets/notched-stick-icon.png')}
-                      style={[styles.icon, {
-                        transform: [{
-                          translateX: swapAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [30, 0],  // Move notched stick icon
-                          }),
-                        }],
-                      }]}
-                    />
-                  </Animated.View>
-                </View>
-              </Animated.View>
-            ) : (
-              (!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
-                <>
-                  <CircularButton type="plain" count={sticks.general.plain} />
-                  <CircularButton type="notched" count={sticks.general.notched} />
-                  <CircularButton type="kingPin" count={sticks.general.kingPin} />
-                </>
-              ) : (
-                <View style={styles.debtContainer}>
-                  <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
-                    <Text style={styles.askButtonText}>Ask</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.debtText}>Debt: {debt[player]}</Text>
-                </View>
-              )
-            )}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.personalPile, personalPileStyle]} // Apply personalPileStyle here
-          onPress={() => onPileClick(player)}
-        >
-          <Text style={styles.personalPileTitle}>Personal Pile</Text>
-
-          <View style={styles.personalPileContainer}>
-            <CircularButton type="plain" count={sticks[player].plain} />
-            <CircularButton
-              type="notched"
-              count={sticks[player].notched}
-              notchedValue={sticks[player].notchedValue}
-              showNotchedValue={isGeneralPileExhausted}
-            />
-            <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-            {playerTurn === (player === 'player1' ? 0 : 1) && (
-              <Animated.View style={[styles.tossOverlay, { backgroundColor: personalPileBackgroundColor }]}>
-                <Animated.Text
-                  style={[
-                    styles.tossText,
-                    {
-                      transform: [{ scale: tossTextAnim }],
-                      opacity: 1, // Ensure text opacity is fully opaque
-                      fontWeight: 'bold', // Keep text bold
-
-                    },
-                  ]}
-                >
-                  toss
-                </Animated.Text>
-              </Animated.View>
-            )}
-
-            {player === scoringPlayer && (
-              <>
-                <Animated.View
-                  style={{
-                    backgroundColor: 'rgba(0,0,0,0.6)',
-                    borderRadius: 20,
-                    paddingVertical: 5,
-                    paddingHorizontal: 10,
-                    opacity: opacityAnim,
-                    position: 'absolute',
-                    alignSelf: 'center',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.scoreTextInPile,
-                      {
-                        color: 'white',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: 24,
-                        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                        textShadowOffset: { width: 2, height: 2 },
-                        textShadowRadius: 3,
-                      },
-                    ]}
-                  >
-                    Waltes!
-                  </Text>
-                </Animated.View>
-
-                {/* Same text for the General Pile */}
-                <Animated.View
-                  style={{
-                    backgroundColor: 'rgba(0,0,0,0.6)',
-                    borderRadius: 20,
-                    paddingVertical: 5,
-                    paddingHorizontal: 10,
-                    opacity: opacityAnim,
-                    position: 'absolute',
-                    alignSelf: 'center',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.scoreTextInPile,
-                      {
-                        color: 'white',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: 24,
-                        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-                        textShadowOffset: { width: 2, height: 2 },
-                        textShadowRadius: 3,
-                      },
-                    ]}
-                  >
-                    Waltes!
-                  </Text>
-                </Animated.View>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
-
-
-
-
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
@@ -444,29 +36,24 @@ export default function WaltesBoard({
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const stickAnimPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const totalScore = player1TotalScore + player2TotalScore;
-  const player1ScoreWidth = useRef(new Animated.Value(50)).current; // Initialize with 50%
-  const [currentScoringPlayer, setCurrentScoringPlayer] = useState(null); // Renamed to avoid conflict
+  const player1ScoreWidth = useRef(new Animated.Value(50)).current;
+  const [currentScoringPlayer, setCurrentScoringPlayer] = useState(null);
 
   const [scoreText, setScoreText] = useState('');
   const scoreTextAnim = useRef(new Animated.ValueXY({ x: -screenWidth, y: 0 })).current;
   const [textLayout, setTextLayout] = useState({ width: 0, height: 0 });
   const [rotationAngle, setRotationAngle] = useState('0deg');
-  const opacityAnim = useRef(new Animated.Value(0)).current; // Controls opacity
+  const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(20)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current; // For controlling scale, starting at 0.5
-  const superWaltesScore = 5; // Define this according to your game's logic
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const superWaltesScore = 5;
 
-  const [askButtonClicked, setAskButtonClicked] = useState(null); // Track Ask button clicks
+  const [askButtonClicked, setAskButtonClicked] = useState(null);
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const updateScoringPlayer = (player) => {
-    setScoringPlayer(player); // 'player1' or 'player2'
+    setScoringPlayer(player);
   };
-
-  // Remove the internal declaration of handleAskDebtPayment to avoid conflict
-  // const handleAskDebtPayment = (player) => {
-  //   console.log(`${player} is asking for debt payment`);
-  //   setAskButtonClicked(player);
-  // };
 
   const handlePileClick = (player) => {
     if ((player === 'player1' && playerTurn === 0) || (player === 'player2' && playerTurn === 1)) {
@@ -475,7 +62,6 @@ export default function WaltesBoard({
       }
     }
   };
-
 
   useEffect(() => {
     let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
@@ -493,7 +79,7 @@ export default function WaltesBoard({
     backgroundColor: '#29B7F7',
     width: player1ScoreWidth.interpolate({
       inputRange: [0, 100],
-      outputRange: ['0%', '100%'], // Ensure it starts at 0% and goes up to 100%
+      outputRange: ['0%', '100%'],
     }),
     height: 10,
   };
@@ -502,7 +88,7 @@ export default function WaltesBoard({
     backgroundColor: '#F76929',
     width: player1ScoreWidth.interpolate({
       inputRange: [0, 100],
-      outputRange: ['100%', '0%'], // Inverse of player1's width
+      outputRange: ['100%', '0%'],
     }),
     height: 10,
   };
@@ -513,31 +99,28 @@ export default function WaltesBoard({
   };
 
   const animateScoreText = () => {
-    // First, make the text visible and move it to the center
     Animated.sequence([
       Animated.parallel([
         Animated.timing(opacityAnim, {
-          toValue: 1, // Make the text fully visible
+          toValue: 1,
           duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(translateYAnim, {
-          toValue: 0, // Move text to its final position
+          toValue: 0,
           duration: 500,
           useNativeDriver: true,
         }),
       ]),
-      // Keep the text visible for 1500 milliseconds
       Animated.delay(1500),
-      // Then, fade out the text and move it down slightly
       Animated.parallel([
         Animated.timing(opacityAnim, {
-          toValue: 0, // Make the text fully invisible
+          toValue: 0,
           duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(translateYAnim, {
-          toValue: 20, // Move text back down slightly
+          toValue: 20,
           duration: 500,
           useNativeDriver: true,
         }),
@@ -547,14 +130,11 @@ export default function WaltesBoard({
 
   const scaleAndMoveStick = () => {
     console.log('THE FUNCTION IS CALLED');
-    // Start stick at the center with a scale of 0.
     stickAnimPosition.setValue({ x: 0, y: 0 });
     fadeAnim.setValue(0);
 
-    // Determine the correct direction based on the player who scored.
     const direction = playerTurn === 0 ? -screenHeight * 0.45 : screenHeight * 0.25;
 
-    // Enlarge the stick.
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -562,14 +142,12 @@ export default function WaltesBoard({
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-      // Scale the stick up.
       Animated.timing(fadeAnim, {
-        toValue: 1.5, // Adjust this value to make it grow larger
-        duration: 1000, // Increase duration to make the scaling effect last longer
+        toValue: 1.5,
+        duration: 1000,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-      // Move the stick towards the scoring player's pile while shrinking it.
       Animated.parallel([
         Animated.timing(stickAnimPosition, {
           toValue: { x: 0, y: direction },
@@ -577,7 +155,6 @@ export default function WaltesBoard({
           easing: Easing.linear,
           useNativeDriver: true,
         }),
-        // Shrink the stick back to its original size.
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 500,
@@ -585,7 +162,6 @@ export default function WaltesBoard({
           useNativeDriver: true,
         }),
       ]),
-      // Dissolve the stick.
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500,
@@ -599,33 +175,32 @@ export default function WaltesBoard({
     console.log("Roll Dice is Called");
     Vibration.vibrate(500);
 
-    setIsDiceRolling(true); // The dice have started rolling
+    setIsDiceRolling(true);
     const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
     setDice(newDice);
 
-    let score = onDiceRolled(newDice); // This function should determine if the player scored
+    let score = onDiceRolled(newDice);
     console.log("Score: ", score);
 
-    if (score > 0) { // Assuming a score of 0 means no score
+    if (score > 0) {
       let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
-      setScoreText(text); // Update score text based on score
+      setScoreText(text);
 
       let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
-      setCurrentScoringPlayer(currentPlayer); // Update scoring player only if there is a score
+      setCurrentScoringPlayer(currentPlayer);
 
       console.log("Setting scoreText to: ", text);
       animateScoreText();
     } else {
-      // If no score, ensure no scoring player and scoreText is displayed
       setCurrentScoringPlayer(null);
       setScoreText('');
     }
 
-    setIsDiceRolling(false); // Reset dice rolling state
+    setIsDiceRolling(false);
   };
 
   setTimeout(() => {
-    setIsDiceRolling(false); // The dice have finished rolling
+    setIsDiceRolling(false);
   }, 2000);
 
   const randomPosition = () => {
@@ -640,7 +215,7 @@ export default function WaltesBoard({
 
   useEffect(() => {
     if (shouldRoll) {
-      setShouldRoll(false); // Reset shouldRoll
+      setShouldRoll(false);
       Animated.timing(shakeAnim, {
         toValue: 1,
         duration: 100,
@@ -660,55 +235,38 @@ export default function WaltesBoard({
   useEffect(() => {
     if (askButtonClicked) {
       console.log(`Debt payment asked by ${askButtonClicked}`);
-      // Handle debt payment logic here
-      setAskButtonClicked(null); // Reset the state after handling the logic
+      setAskButtonClicked(null);
     }
   }, [askButtonClicked]);
-  useEffect(() => {
-    let player1WidthPercentage = (player1TotalScore + player2TotalScore) === 0
-      ? 50
-      : (player1TotalScore / (player1TotalScore + player2TotalScore)) * 100;
-
-    Animated.timing(player1ScoreWidth, {
-      toValue: player1WidthPercentage,
-      duration: 500,
-      useNativeDriver: false,
-    }).start();
-  }, [player1TotalScore, player2TotalScore]);
-
-  const [showTutorial, setShowTutorial] = useState(true);
 
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
 
-      {/* score tracker */}
-
       <View style={styles.scoreTrackerContainer}>
         <Animated.View
           style={{
-            backgroundColor: '#F76929', // Static color for now
+            backgroundColor: '#F76929',
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
-              outputRange: ['0%', '100%'], // Ensure the height scales correctly
+              outputRange: ['0%', '100%'],
             }),
             width: 10,
           }}
         />
         <Animated.View
           style={{
-            backgroundColor: '#29B7F7', // Static color for now
+            backgroundColor: '#29B7F7',
             height: player1ScoreWidth.interpolate({
               inputRange: [0, 100],
-              outputRange: ['100%', '0%'], // Inverse height scaling
+              outputRange: ['100%', '0%'],
             }),
             width: 10,
           }}
         />
       </View>
 
-      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }} // Set opacity for the background image
-      >
+      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }}>
         <Animated.View
           style={[
             styles.bowlImage,
@@ -721,11 +279,10 @@ export default function WaltesBoard({
                   }),
                 },
               ],
+              zIndex: showTutorial ? 1000001 : 1,
             },
           ]}
         >
-
-
           <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
             <View style={styles.diceContainer}>
               {dice.map((die, index) => {
@@ -786,11 +343,13 @@ export default function WaltesBoard({
           opacityAnim={opacityAnim}
           scoringPlayer={currentScoringPlayer}
           isGeneralPileExhausted={isGeneralPileExhausted}
-          debt={debt} // Pass the debt state
-          handleAskDebtPayment={handleAskDebtPayment} // Pass the function
-          onPileClick={handlePileClick} // Pass the function to handle pile clicks
-          replacementMessage={replacementMessage}  // <-- Pass the prop here
-
+          debt={debt}
+          handleAskDebtPayment={handleAskDebtPayment}
+          onPileClick={handlePileClick}
+          replacementMessage={replacementMessage}
+          style={showTutorial ? styles.blurredArea : {}}
+          showTutorial={showTutorial}
+          setShowTutorial={setShowTutorial}
         />
 
         <PlayerArea
@@ -803,79 +362,37 @@ export default function WaltesBoard({
           opacityAnim={opacityAnim}
           scoringPlayer={currentScoringPlayer}
           isGeneralPileExhausted={isGeneralPileExhausted}
-          debt={debt} // Pass the debt state
-          handleAskDebtPayment={handleAskDebtPayment} // Pass the function
-          onPileClick={handlePileClick} // Pass the function to handle pile clicks
-          replacementMessage={replacementMessage}  // <-- Pass the prop here
-
+          debt={debt}
+          handleAskDebtPayment={handleAskDebtPayment}
+          onPileClick={handlePileClick}
+          replacementMessage={replacementMessage}
+          style={showTutorial ? styles.blurredArea : {}}
+          showTutorial={showTutorial}
+          setShowTutorial={setShowTutorial}
         />
 
         {showTutorial && (
-          <View style={styles.tutorialOverlay}>
-            <View style={styles.tutorialBlur} />
-            <View style={styles.bowlCutout}>
-              <Animated.View
-                style={[
-                  styles.bowlImage,
-                  {
-                    transform: [
-                      {
-                        rotate: shakeAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '40deg'],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-                  <View style={styles.diceContainer}>
-                    {dice.map((die, index) => {
-                      const position = randomPosition();
-                      const rotation = diceRotation();
-                      return (
-                        <View key={index}>
-                          <Animated.Image
-                            resizeMode="contain"
-                            source={die === 1 ? markedDice : unmarkedDice}
-                            style={[
-                              styles.dice,
-                              {
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: [
-                                  { translateX: position.x },
-                                  { translateY: position.y },
-                                  { rotate: `${rotation}deg` },
-                                  { scaleX: 0.7 },
-                                  { scaleY: 0.7 },
-                                ],
-                              },
-                            ]}
-                          />
-                        </View>
-                      );
-                    })}
-                  </View>
-                </ImageBackground>
-              </Animated.View>
+          <>
+            <View style={styles.tutorialOverlay} pointerEvents="none" />
+            <View style={[styles.tutorialContent, styles.player1TutorialContent]}>
+              <View style={styles.chatBox}>
+                <Text style={styles.chatBoxText}>This is the Waltes bowl. Dice are tossed in here to determine the score.</Text>
+                <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
+                  <Text style={styles.chatBoxButtonText}>Got it!</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.chatBox}>
-              <Text style={styles.chatBoxText}>
-                This is the Waltes bowl. Dice are tossed in here to determine your score!
-              </Text>
-              <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
-                <Text style={styles.chatBoxButtonText}>Got it!</Text>
-              </TouchableOpacity>
+            <View style={[styles.tutorialContent, styles.player2TutorialContent]}>
+              <View style={styles.chatBox}>
+                <Text style={styles.chatBoxText}>This is the Waltes bowl. Dice are tossed in here to determine the score.</Text>
+                <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
+                  <Text style={styles.chatBoxButtonText}>Got it!</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </>
         )}
       </ImageBackground>
     </View>
   );
-
 }
-
-

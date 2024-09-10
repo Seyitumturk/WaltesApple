@@ -218,7 +218,7 @@ export default function App() {
       newSticks.general.plain += 15;
       setSticks(newSticks);
       setReplacementMessage('15 plain sticks are swapped with 1 notched stick'); // <-- Set the message
-      
+
       setTimeout(() => setReplacementMessage(''), 3000); // Clear the message after 3 seconds
     }
   };
@@ -583,7 +583,7 @@ export default function App() {
             isGeneralPileExhausted={isGeneralPileExhausted}
             debt={debt}
             handleAskDebtPayment={handleDebtPayment}
-            replacementMessage={replacementMessage}  
+            replacementMessage={replacementMessage}
             tutorialMode={showTutorial}
           />
 

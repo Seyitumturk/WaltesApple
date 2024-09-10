@@ -379,32 +379,30 @@ const styles = StyleSheet.create({
         left: '50%',
         transform: [{ translateX: -50 }, { translateY: -50 }],
     },
+    blurredArea: {
+        opacity: 0.2, // Make this darker (was 0.3)
+    },
     tutorialOverlay: {
         ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10000, // Ensure it's above everything else
+        backgroundColor: 'rgba(0, 0, 0, 0.7)', // Make this darker (was 0.5)
+        zIndex: 1000000,
     },
-    tutorialBlur: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    },
-    bowlCutout: {
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        overflow: 'hidden',
-        borderWidth: 2,
-        borderColor: 'white',
+    tutorialContent: {
         position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: [{ translateX: -150 }, { translateY: -150 }],
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 1000002, // Ensure it's above the blurred area
+    },
+    player1TutorialContent: {
+        bottom: '2%', // Keep at the bottom for player 1
+        transform: [{ rotate: '180deg' }], // Rotate for player 1
+    },
+    player2TutorialContent: {
+        top: '2%', // Move to the top for player 2
     },
     chatBox: {
-        position: 'absolute',
-        bottom: 50,
-        backgroundColor: 'white',
+        backgroundColor: '#1a1a1a', // Darker background
         borderRadius: 20,
         padding: 20,
         width: '80%',
@@ -417,14 +415,16 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        opacity: 1, // Ensure full opacity
     },
     chatBoxText: {
         fontSize: 16,
         textAlign: 'center',
         marginBottom: 15,
+        color: 'white',
     },
     chatBoxButton: {
-        backgroundColor: '#29B7F7',
+        backgroundColor: '#0077be', // Darker blue
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 20,
