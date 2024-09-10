@@ -240,23 +240,21 @@ export default function WaltesBoard({
   }, [askButtonClicked]);
 
   const [typedText, setTypedText] = useState('');
-  const fullText = "This is the Waltes bowl. Dice are tossed in here to determine the score.";
+  const [typedIndex, setTypedIndex] = useState(0);
+  const textToType = "This is the Waltes bowl. Dice are tossed in here to determine the score.";
 
   useEffect(() => {
-    if (showTutorial) {
-      let i = 0;
-      const typingInterval = setInterval(() => {
-        if (i < fullText.length) {
-          setTypedText(prev => prev + fullText.charAt(i));
-          i++;
-        } else {
-          clearInterval(typingInterval);
-        }
-      }, 50); // Adjust typing speed here
+    const typingInterval = setInterval(() => {
+      if (typedIndex < textToType.length) {
+        setTypedText(prevText => prevText + textToType[typedIndex]);
+        setTypedIndex(prevIndex => prevIndex + 1);
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 50);
 
-      return () => clearInterval(typingInterval);
-    }
-  }, [showTutorial]);
+    return () => clearInterval(typingInterval);
+  }, [typedIndex]);
 
   return (
     <View style={styles.container}>
@@ -303,37 +301,35 @@ export default function WaltesBoard({
           ]}
         >
           <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-            {!showTutorial && (
-              <View style={styles.diceContainer}>
-                {dice.map((die, index) => {
-                  const position = randomPosition();
-                  const rotation = diceRotation();
-                  return (
-                    <View key={index}>
-                      <Animated.Image
-                        resizeMode="contain"
-                        source={die === 1 ? markedDice : unmarkedDice}
-                        style={[
-                          styles.dice,
-                          {
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: [
-                              { translateX: position.x },
-                              { translateY: position.y },
-                              { rotate: `${rotation}deg` },
-                              { scaleX: 0.7 },
-                              { scaleY: 0.7 },
-                            ],
-                          },
-                        ]}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+            <View style={styles.diceContainer}>
+              {showTutorial ? null : dice.map((die, index) => {
+                const position = randomPosition();
+                const rotation = diceRotation();
+                return (
+                  <View key={index}>
+                    <Animated.Image
+                      resizeMode="contain"
+                      source={die === 1 ? markedDice : unmarkedDice}
+                      style={[
+                        styles.dice,
+                        {
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: [
+                            { translateX: position.x },
+                            { translateY: position.y },
+                            { rotate: `${rotation}deg` },
+                            { scaleX: 0.7 },
+                            { scaleY: 0.7 },
+                          ],
+                        },
+                      ]}
+                    />
+                  </View>
+                );
+              })}
+            </View>
           </ImageBackground>
         </Animated.View>
 
@@ -395,20 +391,30 @@ export default function WaltesBoard({
         {showTutorial && (
           <>
             <View style={styles.tutorialOverlay} pointerEvents="none" />
-            <View style={[styles.tutorialContent, styles.player1TutorialContent]}>
-              <View style={styles.chatBox}>
-                <Text style={styles.chatBoxText}>{typedText}</Text>
-                <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
-                  <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
-                </TouchableOpacity>
-              </View>
-            </View>
             <View style={[styles.tutorialContent, styles.player2TutorialContent]}>
               <View style={styles.chatBox}>
-                <Text style={styles.chatBoxText}>{typedText}</Text>
-                <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
-                  <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
-                </TouchableOpacity>
+                <View style={styles.chatBoxInner}>
+                  <Text style={styles.chatBoxText}>{typedText}</Text>
+                  <TouchableOpacity
+                    style={styles.chatBoxButton}
+                    onPress={() => setShowTutorial(false)}
+                  >
+                    <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            <View style={[styles.tutorialContent, styles.player1TutorialContent]}>
+              <View style={styles.chatBox}>
+                <View style={styles.chatBoxInner}>
+                  <TouchableOpacity
+                    style={[styles.chatBoxButton, styles.player1ChatBoxButton]}
+                    onPress={() => setShowTutorial(false)}
+                  >
+                    <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
+                  </TouchableOpacity>
+                  <Text style={[styles.chatBoxText, styles.player1ChatBoxText]}>{typedText}</Text>
+                </View>
               </View>
             </View>
           </>

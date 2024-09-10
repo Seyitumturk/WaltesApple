@@ -396,9 +396,11 @@ const styles = StyleSheet.create({
     },
     player1TutorialContent: {
         bottom: '2%', // Keep at the bottom for player 1
+        transform: [{ rotate: '180deg' }], // Rotate for player 1
     },
     player2TutorialContent: {
         top: '2%', // Move to the top for player 2
+        transform: [{ rotate: '180deg' }], // Rotate the entire content for player 2
     },
     chatBox: {
         backgroundColor: '#1a1a1a', // Darker background
@@ -422,8 +424,25 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         color: 'white',
     },
+    player1ChatBoxText: {
+        transform: [{ rotate: '180deg' }],
+    },
+    player2ChatBoxText: {
+        // Remove the rotation for player 2's text
+    },
     chatBoxButton: {
         marginTop: 10,
+    },
+    player1ChatBoxButton: {
+        transform: [{ rotate: '180deg' }],
+    },
+    player2ChatBoxButton: {
+        // Remove the rotation for player 2's button
+    },
+    // Add this new style
+    chatBoxInner: {
+        flexDirection: 'column',
+        alignItems: 'center',
     },
 });
 
