@@ -396,7 +396,6 @@ const styles = StyleSheet.create({
     },
     player1TutorialContent: {
         bottom: '2%', // Keep at the bottom for player 1
-        transform: [{ rotate: '180deg' }], // Rotate for player 1
     },
     player2TutorialContent: {
         top: '2%', // Move to the top for player 2
@@ -424,14 +423,7 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     chatBoxButton: {
-        backgroundColor: '#0077be', // Darker blue
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 20,
-    },
-    chatBoxButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
+        marginTop: 10,
     },
 });
 

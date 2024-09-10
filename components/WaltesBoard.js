@@ -239,6 +239,25 @@ export default function WaltesBoard({
     }
   }, [askButtonClicked]);
 
+  const [typedText, setTypedText] = useState('');
+  const fullText = "This is the Waltes bowl. Dice are tossed in here to determine the score.";
+
+  useEffect(() => {
+    if (showTutorial) {
+      let i = 0;
+      const typingInterval = setInterval(() => {
+        if (i < fullText.length) {
+          setTypedText(prev => prev + fullText.charAt(i));
+          i++;
+        } else {
+          clearInterval(typingInterval);
+        }
+      }, 50); // Adjust typing speed here
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [showTutorial]);
+
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
@@ -284,35 +303,37 @@ export default function WaltesBoard({
           ]}
         >
           <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-            <View style={styles.diceContainer}>
-              {dice.map((die, index) => {
-                const position = randomPosition();
-                const rotation = diceRotation();
-                return (
-                  <View key={index}>
-                    <Animated.Image
-                      resizeMode="contain"
-                      source={die === 1 ? markedDice : unmarkedDice}
-                      style={[
-                        styles.dice,
-                        {
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: [
-                            { translateX: position.x },
-                            { translateY: position.y },
-                            { rotate: `${rotation}deg` },
-                            { scaleX: 0.7 },
-                            { scaleY: 0.7 },
-                          ],
-                        },
-                      ]}
-                    />
-                  </View>
-                );
-              })}
-            </View>
+            {!showTutorial && (
+              <View style={styles.diceContainer}>
+                {dice.map((die, index) => {
+                  const position = randomPosition();
+                  const rotation = diceRotation();
+                  return (
+                    <View key={index}>
+                      <Animated.Image
+                        resizeMode="contain"
+                        source={die === 1 ? markedDice : unmarkedDice}
+                        style={[
+                          styles.dice,
+                          {
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: [
+                              { translateX: position.x },
+                              { translateY: position.y },
+                              { rotate: `${rotation}deg` },
+                              { scaleX: 0.7 },
+                              { scaleY: 0.7 },
+                            ],
+                          },
+                        ]}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </ImageBackground>
         </Animated.View>
 
@@ -376,17 +397,17 @@ export default function WaltesBoard({
             <View style={styles.tutorialOverlay} pointerEvents="none" />
             <View style={[styles.tutorialContent, styles.player1TutorialContent]}>
               <View style={styles.chatBox}>
-                <Text style={styles.chatBoxText}>This is the Waltes bowl. Dice are tossed in here to determine the score.</Text>
+                <Text style={styles.chatBoxText}>{typedText}</Text>
                 <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
-                  <Text style={styles.chatBoxButtonText}>Got it!</Text>
+                  <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
                 </TouchableOpacity>
               </View>
             </View>
             <View style={[styles.tutorialContent, styles.player2TutorialContent]}>
               <View style={styles.chatBox}>
-                <Text style={styles.chatBoxText}>This is the Waltes bowl. Dice are tossed in here to determine the score.</Text>
+                <Text style={styles.chatBoxText}>{typedText}</Text>
                 <TouchableOpacity style={styles.chatBoxButton} onPress={() => setShowTutorial(false)}>
-                  <Text style={styles.chatBoxButtonText}>Got it!</Text>
+                  <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
                 </TouchableOpacity>
               </View>
             </View>
