@@ -129,6 +129,10 @@ const PlayerArea = ({
     onPileClick,
     replacementMessage,
     style,
+    onPersonalPileLayout,
+    tutorialStep,
+    onTutorialNext,
+    generalPileHighlightAnim
 }) => {
     const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
     const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
@@ -145,6 +149,17 @@ const PlayerArea = ({
     const initialTextOpacity = useRef(new Animated.Value(1)).current;  // Start with fully visible text
     const tossTextAnim = useRef(new Animated.Value(1)).current; // Animation for toss text
     const [title, setTitle] = useState("General Pile");  // State to manage the title
+
+    const generalPileStyle = [
+        styles.generalPile,
+        tutorialStep === 3 && {
+            opacity: generalPileHighlightAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.2, 1.5],
+            }),
+            zIndex: 1000002,
+        },
+    ];
 
     useEffect(() => {
         if (replacementMessage) {
@@ -229,10 +244,64 @@ const PlayerArea = ({
         }
     }, [player, scoringPlayer, opacityAnim, scoreText]);
 
+    const [checkmarkScale] = useState(new Animated.Value(1));
+
+    const handleCheckmarkClick = () => {
+        Animated.sequence([
+            Animated.timing(checkmarkScale, {
+                toValue: 0.8,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(checkmarkScale, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            })
+        ]).start(() => {
+            onTutorialNext();
+        });
+    };
+
+    const renderTutorialOverlay = () => {
+        switch (tutorialStep) {
+            case 'bowl':
+            case 'dice':
+                return (
+                    <View style={styles.tutorialContentWrapper}>
+                        <View style={[styles.tutorialContent, player === 'player1' ? styles.player1TutorialContent : styles.player2TutorialContent]}>
+                            <TouchableOpacity
+                                style={styles.chatBox}
+                                onPress={handleCheckmarkClick}
+                            >
+                                <View style={styles.chatBoxInner}>
+                                    <Text style={[styles.chatBoxText, player === 'player1' ? styles.player1ChatBoxText : styles.player2ChatBoxText]}>
+                                        {tutorialStep === 'bowl' && "This is the bowl where you'll toss the dice."}
+                                        {tutorialStep === 'dice' && "These are the dice you'll use to play. Tap to toss them!"}
+                                    </Text>
+                                    <Animated.View 
+                                        style={[
+                                            styles.chatBoxButton, 
+                                            player === 'player1' ? styles.player1ChatBoxButton : styles.player2ChatBoxButton,
+                                            { transform: [{ scale: checkmarkScale }] }
+                                        ]}
+                                    >
+                                        <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
+                                    </Animated.View>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
         <View style={[styles.playerArea, playerStyle, style]}>
             <View style={[styles.stickContainer, stickContainerStyle]}>
-                <View style={styles.generalPile}>
+                <Animated.View style={generalPileStyle}>
                     <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
                         {title}
                     </Animated.Text>
@@ -304,11 +373,14 @@ const PlayerArea = ({
                             )
                         )}
                     </View>
-                </View>
-
+                </Animated.View>
                 <TouchableOpacity
                     style={[styles.personalPile, personalPileStyle]}
                     onPress={() => onPileClick(player)}
+                    onLayout={(event) => {
+                        const { height } = event.nativeEvent.layout;
+                        onPersonalPileLayout(height); // Pass the height up
+                    }}
                 >
                     <Text style={styles.personalPileTitle}>Personal Pile</Text>
 
@@ -363,6 +435,7 @@ const PlayerArea = ({
                     </View>
                 </TouchableOpacity>
             </View>
+            {renderTutorialOverlay()}
         </View>
     );
 };

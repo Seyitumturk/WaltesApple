@@ -21,6 +21,8 @@ import bowlImage from '../assets/bowl-image.png';
 import markedDice from '../assets/marked-dice.png';
 import unmarkedDice from '../assets/unmarked-dice.png';
 import backgroundImage from '../assets/bg.png';
+import plainStickIcon from '../assets/plain-stick-icon.png';
+import markedStickIcon from '../assets/notched-stick-icon.png';
 
 import PlayerArea from './PlayerArea';
 
@@ -31,6 +33,12 @@ export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
   setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage
 }) {
+  const [personalPileHeight, setPersonalPileHeight] = useState(0);
+
+  const handlePersonalPileLayout = (height) => {
+    setPersonalPileHeight(height);
+  };
+
   const [dice, setDice] = useState([0, 0, 0, 0, 0, 0]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -239,22 +247,72 @@ export default function WaltesBoard({
     }
   }, [askButtonClicked]);
 
+  const [tutorialStep, setTutorialStep] = useState(1);
   const [typedText, setTypedText] = useState('');
-  const [typedIndex, setTypedIndex] = useState(0);
-  const textToType = "This is the Waltes bowl. Dice are tossed in here to determine the score.";
+  const tutorialTexts = [
+    "This is the Waltes bowl. Dice are tossed in here to determine the score.",
+    "The bowl contains six dice. Three are marked on one side, and three are unmarked.",
+    "Players draw sticks from the general pile when they score points.",
+  ];
+
+  const bowlHighlightAnim = useRef(new Animated.Value(0)).current;
+  const diceOpacityAnims = useRef(dice.map(() => new Animated.Value(0))).current;
+  const stickIconsAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const typingInterval = setInterval(() => {
-      if (typedIndex < textToType.length) {
-        setTypedText(prevText => prevText + textToType[typedIndex]);
-        setTypedIndex(prevIndex => prevIndex + 1);
-      } else {
-        clearInterval(typingInterval);
-      }
-    }, 50);
+    if (showTutorial) {
+      const textToType = tutorialTexts[tutorialStep - 1];
+      let currentIndex = 0;
 
-    return () => clearInterval(typingInterval);
-  }, [typedIndex]);
+      const typingInterval = setInterval(() => {
+        if (currentIndex < textToType.length) {
+          setTypedText(prevText => prevText + textToType[currentIndex]);
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          if (tutorialStep === 1) {
+            Animated.timing(bowlHighlightAnim, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+          } else if (tutorialStep === 2) {
+            diceOpacityAnims.forEach((anim, index) => {
+              Animated.timing(anim, {
+                toValue: 1,
+                duration: 300,
+                delay: index * 150,
+                useNativeDriver: true,
+              }).start();
+            });
+          } else if (tutorialStep === 3) {
+            Animated.timing(stickIconsAnim, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+          }
+        }
+      }, 50);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [tutorialStep, showTutorial]);
+
+  const handleNextTutorialStep = () => {
+    if (tutorialStep < tutorialTexts.length) {
+      setTutorialStep(prevStep => prevStep + 1);
+      setTypedText('');
+      if (tutorialStep === 1) {
+        diceOpacityAnims.forEach(anim => anim.setValue(0));
+      } else if (tutorialStep === 2) {
+        diceOpacityAnims.forEach(anim => anim.setValue(0));
+        stickIconsAnim.setValue(0);
+      }
+    } else {
+      setShowTutorial(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -297,16 +355,35 @@ export default function WaltesBoard({
                 },
               ],
               zIndex: showTutorial ? 1000001 : 1,
+              opacity: showTutorial ?
+                (tutorialStep === 3 ? 0 :
+                  bowlHighlightAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.2, 1.5],
+                  })
+                ) : 1,
             },
           ]}
         >
           <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
             <View style={styles.diceContainer}>
-              {showTutorial ? null : dice.map((die, index) => {
+              {dice.map((die, index) => {
                 const position = randomPosition();
                 const rotation = diceRotation();
                 return (
-                  <View key={index}>
+                  <Animated.View
+                    key={index}
+                    style={{
+                      opacity: showTutorial ?
+                        (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                      transform: [{
+                        scale: diceOpacityAnims[index].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 1.2],
+                        })
+                      }],
+                    }}
+                  >
                     <Animated.Image
                       resizeMode="contain"
                       source={die === 1 ? markedDice : unmarkedDice}
@@ -326,7 +403,7 @@ export default function WaltesBoard({
                         },
                       ]}
                     />
-                  </View>
+                  </Animated.View>
                 );
               })}
             </View>
@@ -353,6 +430,7 @@ export default function WaltesBoard({
         <PlayerArea
           player="player1"
           sticks={sticks}
+          onPersonalPileLayout={handlePersonalPileLayout}
           playerTurn={playerTurn}
           player1Style={player1Style}
           player2Style={player2Style}
@@ -367,11 +445,14 @@ export default function WaltesBoard({
           style={showTutorial ? styles.blurredArea : {}}
           showTutorial={showTutorial}
           setShowTutorial={setShowTutorial}
+          generalPileHighlightAnim={stickIconsAnim}
+          tutorialStep={tutorialStep}
         />
 
         <PlayerArea
           player="player2"
           sticks={sticks}
+          onPersonalPileLayout={handlePersonalPileLayout}
           playerTurn={playerTurn}
           player1Style={player1Style}
           player2Style={player2Style}
@@ -386,40 +467,77 @@ export default function WaltesBoard({
           style={showTutorial ? styles.blurredArea : {}}
           showTutorial={showTutorial}
           setShowTutorial={setShowTutorial}
+          generalPileHighlightAnim={stickIconsAnim}
+          tutorialStep={tutorialStep}
         />
-
-        {showTutorial && (
-          <>
-            <View style={styles.tutorialOverlay} pointerEvents="none" />
-            <View style={[styles.tutorialContent, styles.player2TutorialContent]}>
-              <View style={styles.chatBox}>
-                <View style={styles.chatBoxInner}>
-                  <Text style={styles.chatBoxText}>{typedText}</Text>
-                  <TouchableOpacity
-                    style={styles.chatBoxButton}
-                    onPress={() => setShowTutorial(false)}
-                  >
-                    <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-            <View style={[styles.tutorialContent, styles.player1TutorialContent]}>
-              <View style={styles.chatBox}>
-                <View style={styles.chatBoxInner}>
-                  <TouchableOpacity
-                    style={[styles.chatBoxButton, styles.player1ChatBoxButton]}
-                    onPress={() => setShowTutorial(false)}
-                  >
-                    <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
-                  </TouchableOpacity>
-                  <Text style={[styles.chatBoxText, styles.player1ChatBoxText]}>{typedText}</Text>
-                </View>
-              </View>
-            </View>
-          </>
-        )}
       </ImageBackground>
+
+      {showTutorial && tutorialStep === 3 && (
+        <Animated.View
+          style={[
+            styles.stickIconsContainer,
+            {
+              opacity: stickIconsAnim,
+              transform: [{
+                scale: stickIconsAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.5, 1],
+                }),
+              }],
+            },
+          ]}
+        >
+          <Image source={plainStickIcon} style={styles.stickIcon} />
+          <Image source={markedStickIcon} style={styles.stickIcon} />
+          <Image source={plainStickIcon} style={styles.stickIcon} />
+        </Animated.View>
+      )}
+
+      {showTutorial && (
+        <>
+          <View style={styles.tutorialOverlay} pointerEvents="none" />
+          <View
+            style={[
+              styles.tutorialContent,
+              styles.player2TutorialContent,
+              { height: personalPileHeight },
+            ]}
+          >
+            <View style={styles.chatBox}>
+              <View style={styles.chatBoxInner}>
+                <Text style={styles.chatBoxText}>{typedText}</Text>
+                <TouchableOpacity
+                  style={styles.chatBoxButton}
+                  onPress={handleNextTutorialStep}
+                >
+                  <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          <View
+            style={[
+              styles.tutorialContent,
+              styles.player1TutorialContent,
+              { height: personalPileHeight },
+            ]}
+          >
+            <View style={styles.chatBox}>
+              <View style={styles.chatBoxInner}>
+                <TouchableOpacity
+                  style={[styles.chatBoxButton, styles.player1ChatBoxButton]}
+                  onPress={handleNextTutorialStep}
+                >
+                  <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
+                </TouchableOpacity>
+                <Text style={[styles.chatBoxText, styles.player1ChatBoxText]}>
+                  {typedText}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 }

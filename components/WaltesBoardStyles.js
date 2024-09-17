@@ -44,14 +44,13 @@ const styles = StyleSheet.create({
     },
     scoreTrackerContainer: {
         position: 'absolute',
-        left: 0, // Stick to the left edge of the screen
-        top: 0, // Start from the top of the screen
-        bottom: 0, // Extend to the bottom of the screen
-        width: 20, // Adjust the width of the score tracker
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 20,
         flexDirection: 'column',
-        zIndex: 10000, // Ensure it's above other elements
+        zIndex: 10000,
     },
-
     askButton: {
         backgroundColor: '#FDA10E',
         padding: 10,
@@ -59,25 +58,24 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         borderWidth: 2,
         borderColor: '#805c15',
-        zIndex: 11, // Ensure it is above other elements
+        zIndex: 11,
     },
     askButtonText: {
         color: 'black',
         fontWeight: 'bold',
         textAlign: 'center',
     },
-
     personalPile: {
-        position: 'relative', // Ensure this container can be covered by the overlay
+        position: 'relative',
         flexDirection: 'column',
         justifyContent: 'center',
         width: '100%',
         backgroundColor: '#D68402',
-        marginBottom: -50, // Extend the background color downwards without affecting the position
-        paddingBottom: 50, // Maintain the original padding if needed
+        marginBottom: -50,
+        paddingBottom: 50,
     },
     backgroundImage: {
-        opacity: '0.5',
+        opacity: 0.5,
     },
     diceContainer: {
         flexDirection: 'row',
@@ -103,19 +101,18 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        top: '50%', // Place it in the middle of the screen
+        top: '50%',
         alignItems: 'center',
-        zIndex: 10000000000000000, // Ensure it's above other components
+        zIndex: 10000000000000000,
     },
     debtRequestButton: {
         backgroundColor: '#49350D',
         padding: 10,
         borderRadius: 5,
-        width: '80%', // Make buttons wider for easier access
-        alignItems: 'center', // Center text inside the button
-        marginVertical: 5, // Add vertical margin for spacing between buttons
-        zIndex: 100000000033330000000, // Ensure it's above other components
-
+        width: '80%',
+        alignItems: 'center',
+        marginVertical: 5,
+        zIndex: 100000000033330000000,
     },
     debtRequestButtonText: {
         color: '#FDA10E',
@@ -146,39 +143,35 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '100%',
         backgroundColor: '#F7B329',
-
     },
     tossOverlay: {
         position: 'absolute',
         left: 0,
-        top: 0, // Adjust this to align with the top of the personal pile
+        top: 0,
         right: 0,
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 9999, // Ensure it appears above other elements
-        borderTopLeftRadius: 300, // Adjust the radius value as needed
-        borderTopRightRadius: 300, // Adjust the radius value as needed
+        zIndex: 9999,
+        borderTopLeftRadius: 300,
+        borderTopRightRadius: 300,
         opacity: 0.7,
     },
-
     tossText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#FFFFFF',  // Bright white text color
+        color: '#FFFFFF',
         textAlign: 'center',
-        opacity: 1,  // Ensure full opacity for the text
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',  // Add shadow for contrast if needed
+        opacity: 1,
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 3,
-        zIndex: 99999999, // Ensure it appears above other elements
-
+        zIndex: 99999999,
     },
-
     replacementContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'column',  // Align elements vertically to center
+        flexDirection: 'column',
     },
     replacementTextContainer: {
         flexDirection: 'row',
@@ -194,13 +187,13 @@ const styles = StyleSheet.create({
     replacementText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',  // Use consistent white color for the text
+        color: 'white',
         textAlign: 'center',
         marginHorizontal: 5,
     },
     icon: {
-        width: 40,  // Make icons slightly bigger
-        height: 60,  // Make icons slightly bigger
+        width: 40,
+        height: 60,
         marginHorizontal: 5,
     },
     swapIcon: {
@@ -211,10 +204,8 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '50%',
         justifyContent: 'flex-end',
-        zIndex: 100000000033330000000, // Ensure it's above other components
-        paddingBottom: 0, // Ensure there's no padding affecting the position
-
-
+        zIndex: 100000000033330000000,
+        paddingBottom: 0,
     },
     container: {
         flex: 1,
@@ -247,15 +238,12 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: '#F7B329',
     },
-
-
     generalPileContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         width: '100%',
         backgroundColor: '#D68402',
-        alignItems: 'center',  // Center content vertically
-
+        alignItems: 'center',
     },
     debtButtonsContainer: {
         position: 'absolute',
@@ -267,7 +255,6 @@ const styles = StyleSheet.create({
         zIndex: 10000,
         pointerEvents: 'auto',
     },
-
     countText: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -310,7 +297,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#805c15',
         borderRadius: 5,
         zIndex: 99999999999,
-        width: '100%', // Stretch to full width
+        width: '100%',
     },
     debtButton: {
         backgroundColor: '#FDA10E',
@@ -326,9 +313,8 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         fontSize: 18,
-        marginLeft: 100, // Add margin for spacing
+        marginLeft: 100,
     },
-
     scoreText: {
         fontSize: 30,
         fontWeight: 'bold',
@@ -380,30 +366,29 @@ const styles = StyleSheet.create({
         transform: [{ translateX: -50 }, { translateY: -50 }],
     },
     blurredArea: {
-        opacity: 0.2, // Make this darker (was 0.3)
+        opacity: 0.2,
     },
-    tutorialOverlay: {
+    tutorialContentWrapper: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)', // Make this darker (was 0.5)
         zIndex: 1000000,
+        pointerEvents: 'box-none',
     },
     tutorialContent: {
         position: 'absolute',
         left: 0,
         right: 0,
         alignItems: 'center',
-        zIndex: 1000002, // Ensure it's above the blurred area
+        zIndex: 1000002,
     },
     player1TutorialContent: {
-        bottom: '2%', // Keep at the bottom for player 1
-        transform: [{ rotate: '180deg' }], // Rotate for player 1
+        bottom: '2%',
+        transform: [{ rotate: '180deg' }],
     },
     player2TutorialContent: {
-        top: '2%', // Move to the top for player 2
-        transform: [{ rotate: '180deg' }], // Rotate the entire content for player 2
+        top: '2%',
     },
     chatBox: {
-        backgroundColor: '#1a1a1a', // Darker background
+        backgroundColor: 'rgba(26, 26, 26, 0.9)',
         borderRadius: 20,
         padding: 20,
         width: '80%',
@@ -416,33 +401,60 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        opacity: 1, // Ensure full opacity
     },
     chatBoxText: {
-        fontSize: 16,
+        fontSize: 18,
         textAlign: 'center',
-        marginBottom: 15,
+        marginBottom: 20,
         color: 'white',
+        lineHeight: 24,
     },
     player1ChatBoxText: {
         transform: [{ rotate: '180deg' }],
     },
-    player2ChatBoxText: {
-        // Remove the rotation for player 2's text
-    },
     chatBoxButton: {
-        marginTop: 10,
+        marginTop: 20,
+        padding: 10,
+        borderRadius: 30,
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
     },
     player1ChatBoxButton: {
         transform: [{ rotate: '180deg' }],
     },
-    player2ChatBoxButton: {
-        // Remove the rotation for player 2's button
-    },
-    // Add this new style
     chatBoxInner: {
         flexDirection: 'column',
         alignItems: 'center',
+    },
+    tutorialStickContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 10,
+        backgroundColor: 'rgba(26, 26, 26, 0.7)',
+        borderRadius: 10,
+        padding: 10,
+    },
+    stickIconsContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -150 }, { translateY: -50 }],
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000002,
+    },
+    stickIcon: {
+        width: 80,
+        height: 80,
+        marginHorizontal: 10,
+    },
+    stickCount: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginTop: 5,
     },
 });
 
