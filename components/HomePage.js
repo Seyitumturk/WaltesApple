@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Video, Audio } from 'expo-av';
 
-const HomePage = ({ onStartGame }) => {
+const HomePage = ({ onStartGame, totalPoints }) => {
   const [sound, setSound] = useState();
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -43,6 +43,7 @@ const HomePage = ({ onStartGame }) => {
       >
         <Text style={styles.musicButtonText}>{isPlaying ? 'Music Off' : 'Music On'}</Text>
       </TouchableOpacity>
+      <Text style={styles.pointsText}>Total Points: {totalPoints}</Text>
     </View>
   );
 };
@@ -89,6 +90,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     fontFamily: 'Chalkduster',
+  },
+  pointsText: {
+    fontSize: 18,
+    color: 'white',
+    marginBottom: 20,
   },
 });
 

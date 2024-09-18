@@ -257,7 +257,11 @@ export default function WaltesBoard({
 
   const bowlHighlightAnim = useRef(new Animated.Value(0)).current;
   const diceOpacityAnims = useRef(dice.map(() => new Animated.Value(0))).current;
-  const stickIconsAnim = useRef(new Animated.Value(0)).current;
+  const stickIconsAnim = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0)
+  ]).current;
 
   useEffect(() => {
     if (showTutorial) {
@@ -286,11 +290,14 @@ export default function WaltesBoard({
               }).start();
             });
           } else if (tutorialStep === 3) {
-            Animated.timing(stickIconsAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }).start();
+            stickIconsAnim.forEach((anim, index) => {
+              Animated.timing(anim, {
+                toValue: 1,
+                duration: 300,
+                delay: index * 500,
+                useNativeDriver: true,
+              }).start();
+            });
           }
         }
       }, 50);
@@ -307,7 +314,7 @@ export default function WaltesBoard({
         diceOpacityAnims.forEach(anim => anim.setValue(0));
       } else if (tutorialStep === 2) {
         diceOpacityAnims.forEach(anim => anim.setValue(0));
-        stickIconsAnim.setValue(0);
+        stickIconsAnim.forEach(anim => anim.setValue(0));
       }
     } else {
       setShowTutorial(false);
@@ -445,7 +452,7 @@ export default function WaltesBoard({
           style={showTutorial ? styles.blurredArea : {}}
           showTutorial={showTutorial}
           setShowTutorial={setShowTutorial}
-          generalPileHighlightAnim={stickIconsAnim}
+          generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
         />
 
@@ -467,30 +474,85 @@ export default function WaltesBoard({
           style={showTutorial ? styles.blurredArea : {}}
           showTutorial={showTutorial}
           setShowTutorial={setShowTutorial}
-          generalPileHighlightAnim={stickIconsAnim}
+          generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
         />
       </ImageBackground>
 
       {showTutorial && tutorialStep === 3 && (
-        <Animated.View
-          style={[
-            styles.stickIconsContainer,
-            {
-              opacity: stickIconsAnim,
-              transform: [{
-                scale: stickIconsAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.5, 1],
-                }),
-              }],
-            },
-          ]}
-        >
-          <Image source={plainStickIcon} style={styles.stickIcon} />
-          <Image source={markedStickIcon} style={styles.stickIcon} />
-          <Image source={plainStickIcon} style={styles.stickIcon} />
-        </Animated.View>
+        <>
+          <Animated.View
+            style={[
+              styles.stickIconsContainer,
+              {
+                position: 'absolute',
+                top: '35%',
+                left: '50%',
+                transform: [{ translateX: -150 }, { translateY: -50 }, { rotate: '180deg' }],
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: 300,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                borderRadius: 10,
+                padding: 20,
+                zIndex: 1000002,
+              },
+            ]}
+          >
+            <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
+              <Image source={plainStickIcon} style={styles.stickIcon} />
+              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Plain</Text>
+              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>51</Text>
+            </Animated.View>
+            <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
+              <Image source={markedStickIcon} style={styles.stickIcon} />
+              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Notched</Text>
+              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>3</Text>
+            </Animated.View>
+            <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
+              <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
+              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>King Pin</Text>
+              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>1</Text>
+            </Animated.View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.stickIconsContainer,
+              {
+                position: 'absolute',
+                bottom: '35%',
+                left: '50%',
+                transform: [{ translateX: -150 }, { translateY: 50 }],
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: 300,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                borderRadius: 10,
+                padding: 20,
+                zIndex: 1000002,
+              },
+            ]}
+          >
+            <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
+              <Image source={plainStickIcon} style={styles.stickIcon} />
+              <Text style={styles.stickCount}>Plain</Text>
+              <Text style={styles.stickTotal}>51</Text>
+            </Animated.View>
+            <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
+              <Image source={markedStickIcon} style={styles.stickIcon} />
+              <Text style={styles.stickCount}>Notched</Text>
+              <Text style={styles.stickTotal}>3</Text>
+            </Animated.View>
+            <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
+              <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
+              <Text style={styles.stickCount}>King Pin</Text>
+              <Text style={styles.stickTotal}>1</Text>
+            </Animated.View>
+          </Animated.View>
+        </>
       )}
 
       {showTutorial && (
@@ -500,14 +562,14 @@ export default function WaltesBoard({
             style={[
               styles.tutorialContent,
               styles.player2TutorialContent,
-              { height: personalPileHeight },
+              { height: personalPileHeight, transform: [{ rotate: '180deg' }] },
             ]}
           >
             <View style={styles.chatBox}>
               <View style={styles.chatBoxInner}>
-                <Text style={styles.chatBoxText}>{typedText}</Text>
+                <Text style={[styles.chatBoxText, { transform: [{ rotate: '180deg' }] }]}>{typedText}</Text>
                 <TouchableOpacity
-                  style={styles.chatBoxButton}
+                  style={[styles.chatBoxButton, { transform: [{ rotate: '180deg' }] }]}
                   onPress={handleNextTutorialStep}
                 >
                   <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />

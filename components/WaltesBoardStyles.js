@@ -390,9 +390,8 @@ const styles = StyleSheet.create({
     chatBox: {
         backgroundColor: 'rgba(26, 26, 26, 0.9)',
         borderRadius: 20,
-        padding: 20,
-        width: '80%',
-        alignItems: 'center',
+        padding: 15,
+        width: '90%',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -402,28 +401,29 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
+    chatBoxInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
     chatBoxText: {
-        fontSize: 18,
-        textAlign: 'center',
-        marginBottom: 20,
+        fontSize: 16,
+        flex: 1,
         color: 'white',
-        lineHeight: 24,
+        lineHeight: 22,
     },
     player1ChatBoxText: {
         transform: [{ rotate: '180deg' }],
     },
     chatBoxButton: {
-        marginTop: 20,
-        padding: 10,
-        borderRadius: 30,
+        padding: 8,
+        borderRadius: 20,
         backgroundColor: 'rgba(76, 175, 80, 0.2)',
+        marginLeft: 10,
     },
     player1ChatBoxButton: {
         transform: [{ rotate: '180deg' }],
-    },
-    chatBoxInner: {
-        flexDirection: 'column',
-        alignItems: 'center',
     },
     tutorialStickContainer: {
         flexDirection: 'row',
@@ -443,18 +443,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000002,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: 10,
+        padding: 20,
+        width: 300,
     },
     stickIcon: {
-        width: 80,
-        height: 80,
-        marginHorizontal: 10,
+        width: 60,
+        height: 75,
+        marginBottom: 5,
     },
     stickCount: {
         color: 'white',
-        fontSize: 24,
+        fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginTop: 5,
+    },
+    stickTotal: {
+        color: 'white',
+        fontSize: 12,
+        textAlign: 'center',
     },
 });
 
