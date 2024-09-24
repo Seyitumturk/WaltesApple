@@ -101,17 +101,27 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
             fontWeight: 'bold',
             color: 'white',
         },
+        iconWrapper: {
+            backgroundColor: 'rgba(255, 255, 255, 0.2)', // Gentle low-opacity background
+            borderRadius: 10, // Rounded corners
+            padding: 2, // Optional padding for spacing around the icon
+            alignItems: 'center', // Center the icon within the wrapper
+            justifyContent: 'center', // Ensure content is centered
+        },
     });
 
     return (
         <View style={styles.button}>
-            <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
+            <View style={styles.iconWrapper}>
+                <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
+            </View>
             <Animated.Text style={[styles.countText, animatedStyle]}>
                 {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue * count}` : animatedCount}
             </Animated.Text>
         </View>
     );
 };
+
 
 // PlayerArea Component
 const PlayerArea = ({
@@ -152,14 +162,16 @@ const PlayerArea = ({
 
     const generalPileStyle = [
         styles.generalPile,
+        // Remove or adjust this to keep opacity full
         tutorialStep === 3 && {
             opacity: generalPileHighlightAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0.2, 1.5],
+                outputRange: [1, 1],  // Keep the opacity at 1
             }),
             zIndex: 1000002,
         },
     ];
+
 
     useEffect(() => {
         if (replacementMessage) {
@@ -279,9 +291,9 @@ const PlayerArea = ({
                                         {tutorialStep === 'bowl' && "This is the bowl where you'll toss the dice."}
                                         {tutorialStep === 'dice' && "These are the dice you'll use to play. Tap to toss them!"}
                                     </Text>
-                                    <Animated.View 
+                                    <Animated.View
                                         style={[
-                                            styles.chatBoxButton, 
+                                            styles.chatBoxButton,
                                             player === 'player1' ? styles.player1ChatBoxButton : styles.player2ChatBoxButton,
                                             { transform: [{ scale: checkmarkScale }] }
                                         ]}

@@ -18,6 +18,7 @@ import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
 import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
 import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
+import { knowledgeNuggets } from './components/knowledgeNuggets';
 
 const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
   if (!visible) return null;
@@ -92,6 +93,8 @@ export default function App() {
     },
   });
   const [replacementMessage, setReplacementMessage] = useState(''); // <-- New State
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [unlockedNuggets, setUnlockedNuggets] = useState([]);
 
   const triggerAlertForExchange = (currentPlayer) => {
     const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
@@ -190,6 +193,7 @@ export default function App() {
   const onDiceRolled = (dice) => {
     setIsDiceRolling(false);
     const score = calculateScore(dice);
+    updatePoints(score);
 
     // Don't switch turns if the player scores
     if (score === 0) {
@@ -206,6 +210,31 @@ export default function App() {
     }
     hasClickedRef.current = false;  // Resetting hasClicked here
     return score;
+  };
+
+  const updatePoints = (score) => {
+    const newTotalPoints = totalPoints + score;
+    setTotalPoints(newTotalPoints);
+
+    // Check for newly unlocked nuggets
+    const newUnlockedNuggets = knowledgeNuggets.filter(
+      nugget => nugget.pointsToUnlock <= newTotalPoints && !unlockedNuggets.includes(nugget.id)
+    );
+
+    if (newUnlockedNuggets.length > 0) {
+      setUnlockedNuggets([...unlockedNuggets, ...newUnlockedNuggets.map(nugget => nugget.id)]);
+      // Show an alert or some notification about newly unlocked nuggets
+      showCustomAlert(`You've unlocked ${newUnlockedNuggets.length} new knowledge nugget(s)!`, [
+        {
+          text: 'View',
+          onPress: () => setCurrentPage('nuggets')
+        },
+        {
+          text: 'Continue Playing',
+          onPress: () => setAlertVisible(false)
+        }
+      ]);
+    }
   };
 
   // This function handles the notched stick replacement automatically
@@ -551,7 +580,7 @@ export default function App() {
       )}
 
 
-      {currentPage === 'home' && <HomePage onStartGame={startGame} />}
+      {currentPage === 'home' && <HomePage onStartGame={startGame} totalPoints={totalPoints} />}
       {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
       {currentPage === 'game' && (
         <>
@@ -627,6 +656,13 @@ export default function App() {
             </Animated.Text>
           )}
         </>
+      )}
+      {currentPage === 'nuggets' && (
+        <KnowledgeNuggets 
+          unlockedNuggets={unlockedNuggets} 
+          totalPoints={totalPoints}
+          onBack={() => setCurrentPage('game')}
+        />
       )}
     </View>
   );

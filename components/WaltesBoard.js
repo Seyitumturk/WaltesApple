@@ -210,12 +210,16 @@ export default function WaltesBoard({
   setTimeout(() => {
     setIsDiceRolling(false);
   }, 2000);
-
   const randomPosition = () => {
-    const x = Math.random() * 120 - 60;
-    const y = Math.random() * 120 - 60;
+    const spreadFactor = 320; // Increase the spread factor for a larger area
+
+    // Random X and Y within a broader range around the center
+    const x = (Math.random() * spreadFactor) - (spreadFactor / 2); // Random between -spreadFactor/2 and spreadFactor/2
+    const y = (Math.random() * spreadFactor) - (spreadFactor / 2); // Random between -spreadFactor/2 and spreadFactor/2
+
     return { x, y };
   };
+
 
   const diceRotation = () => {
     return Math.floor(Math.random() * 180);
@@ -349,73 +353,6 @@ export default function WaltesBoard({
       </View>
 
       <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }}>
-        <Animated.View
-          style={[
-            styles.bowlImage,
-            {
-              transform: [
-                {
-                  rotate: shakeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '40deg'],
-                  }),
-                },
-              ],
-              zIndex: showTutorial ? 1000001 : 1,
-              opacity: showTutorial ?
-                (tutorialStep === 3 ? 0 :
-                  bowlHighlightAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.2, 1.5],
-                  })
-                ) : 1,
-            },
-          ]}
-        >
-          <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-            <View style={styles.diceContainer}>
-              {dice.map((die, index) => {
-                const position = randomPosition();
-                const rotation = diceRotation();
-                return (
-                  <Animated.View
-                    key={index}
-                    style={{
-                      opacity: showTutorial ?
-                        (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                      transform: [{
-                        scale: diceOpacityAnims[index].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.5, 1.2],
-                        })
-                      }],
-                    }}
-                  >
-                    <Animated.Image
-                      resizeMode="contain"
-                      source={die === 1 ? markedDice : unmarkedDice}
-                      style={[
-                        styles.dice,
-                        {
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: [
-                            { translateX: position.x },
-                            { translateY: position.y },
-                            { rotate: `${rotation}deg` },
-                            { scaleX: 0.7 },
-                            { scaleY: 0.7 },
-                          ],
-                        },
-                      ]}
-                    />
-                  </Animated.View>
-                );
-              })}
-            </View>
-          </ImageBackground>
-        </Animated.View>
 
         <Animated.Image
           source={require('../assets/animated-plain-stick-icon.png')}
@@ -455,7 +392,72 @@ export default function WaltesBoard({
           generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
         />
+        <View style={styles.bowlContainer}>
+          <Animated.View
+            style={[
+              styles.bowlImage,
+              {
+                transform: [
+                  {
+                    rotate: shakeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '40deg'],
+                    }),
+                  },
+                ],
+                zIndex: showTutorial ? 1000001 : 1,
+                opacity: showTutorial ? bowlHighlightAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.2, 1.5],
+                }) : 1,
+              },
+            ]}
+          >
+            <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
+              <View style={styles.diceContainer}>
+                {dice.map((die, index) => {
+                  const position = randomPosition(); // Get a new random position for each dice
+                  const rotation = diceRotation();
+                  return (
+                    <Animated.View
+                      key={index}
+                      style={{
+                        opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                        transform: [{
+                          scale: diceOpacityAnims[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.5, 1.5],
+                          })
+                        }],
+                      }}
+                    >
+                      <Animated.Image
+                        resizeMode="contain"
+                        source={die === 1 ? markedDice : unmarkedDice}
+                        style={[
+                          styles.dice,
+                          {
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: [
+                              { translateX: position.x },
+                              { translateY: position.y },
+                              { rotate: `${rotation}deg` },
 
+                              { scaleX: 1.3 }, // Increase scaleX to make the dice larger
+                              { scaleY: 1.3 },
+                            ],
+                          },
+                        ]}
+                      />
+                    </Animated.View>
+                  );
+                })}
+              </View>
+            </ImageBackground>
+          </Animated.View>
+        </View>
         <PlayerArea
           player="player2"
           sticks={sticks}

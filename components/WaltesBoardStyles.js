@@ -7,7 +7,9 @@ const diceContainerSize = 150;
 const styles = StyleSheet.create({
     bowlImage: {
         width: '100%',
-        height: '100%',
+        height: undefined,
+        aspectRatio: 1, // Ensure the bowl maintains its aspect ratio
+
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
@@ -29,7 +31,7 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     personalPileTitle: {
-        backgroundColor: "#FDA10E",
+        backgroundColor: '#F7B329',
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
@@ -50,6 +52,11 @@ const styles = StyleSheet.create({
         width: 20,
         flexDirection: 'column',
         zIndex: 10000,
+    }, bowlContainer: {
+        flex: 1, // Take available space between PlayerAreas
+        justifyContent: 'center', // Vertically center the bowl
+        alignItems: 'center', // Horizontally center the bowl
+        paddingHorizontal: 20, // Add padding to avoid overlapping
     },
     askButton: {
         backgroundColor: '#FDA10E',
@@ -70,7 +77,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'center',
         width: '100%',
-        backgroundColor: '#D68402',
+        backgroundColor: "#FDA10E",
         marginBottom: -50,
         paddingBottom: 50,
     },
@@ -142,7 +149,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         width: '100%',
-        backgroundColor: '#F7B329',
+        backgroundColor: "#FDA10E",
+
     },
     tossOverlay: {
         position: 'absolute',
@@ -214,12 +222,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'orange',
     },
     player1Area: {
-        paddingBottom: 200,
-        top: 0,
+        paddingBottom: 190,  // Adjust this value to move it up, reduced from 200
+        top: 10,
         alignItems: 'center',
         justifyContent: 'flex-start',
     },
     player2Area: {
+
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'flex-end',
@@ -244,6 +253,8 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: '#D68402',
         alignItems: 'center',
+        opacity: 1, // Ensure full opacity
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
     },
     debtButtonsContainer: {
         position: 'absolute',
