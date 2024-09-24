@@ -154,26 +154,28 @@ const styles = StyleSheet.create({
     },
     tossOverlay: {
         position: 'absolute',
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
+        left: '50%',   // Center horizontally
+        top: '50%',    // Center vertically
+        transform: [{ translateX: -50 }, { translateY: -50 }],  // Offset to perfectly center it
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
-        borderTopLeftRadius: 300,
-        borderTopRightRadius: 300,
-        opacity: 0.7,
+        width: 100,    // Smaller width (adjust as necessary)
+        height: 120,   // Smaller height (adjust as necessary)
+        borderRadius: 60,  // Make it circular/oval like a fingerprint
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent black background
+        paddingVertical: 10,  // Enough padding to fit the text
+        paddingHorizontal: 15,
     },
     tossText: {
-        fontSize: 24,
+        fontSize: 18,  // Adjust font size to fit in the container
         fontWeight: 'bold',
         color: '#FFFFFF',
         textAlign: 'center',
         opacity: 1,
         textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
+        textShadowRadius: 2,
         zIndex: 99999999,
     },
     replacementContainer: {
@@ -392,11 +394,13 @@ const styles = StyleSheet.create({
         zIndex: 1000002,
     },
     player1TutorialContent: {
-        bottom: '2%',
-        transform: [{ rotate: '180deg' }],
+        bottom: '10%',  // Move Player 1's tutorial content closer to the center from the bottom
+        marginTop: 0,  // Remove any margin that pushes it too far up
     },
     player2TutorialContent: {
-        top: '2%',
+        top: '10%',  // Move Player 2's tutorial content closer to the center from the top
+        transform: [{ rotate: '180deg' }],
+
     },
     chatBox: {
         backgroundColor: 'rgba(26, 26, 26, 0.9)',

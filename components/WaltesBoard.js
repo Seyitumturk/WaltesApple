@@ -210,15 +210,21 @@ export default function WaltesBoard({
   setTimeout(() => {
     setIsDiceRolling(false);
   }, 2000);
-  const randomPosition = () => {
-    const spreadFactor = 320; // Increase the spread factor for a larger area
+  const randomPositionInBowl = (bowlRadius) => {
+    // Generate a random angle between 0 and 360 degrees
+    const angle = Math.random() * 2 * Math.PI;
 
-    // Random X and Y within a broader range around the center
-    const x = (Math.random() * spreadFactor) - (spreadFactor / 2); // Random between -spreadFactor/2 and spreadFactor/2
-    const y = (Math.random() * spreadFactor) - (spreadFactor / 2); // Random between -spreadFactor/2 and spreadFactor/2
+    // Generate a random distance from the center, but keep it within the bowl's radius
+    const distanceFromCenter = Math.random() * (bowlRadius - 40); // Subtract some padding to prevent the dice from touching the bowl's edge
+
+    // Calculate the X and Y positions relative to the center of the bowl
+    const x = distanceFromCenter * Math.cos(angle);
+    const y = distanceFromCenter * Math.sin(angle);
 
     return { x, y };
   };
+
+
 
 
   const diceRotation = () => {
@@ -416,44 +422,37 @@ export default function WaltesBoard({
             <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
               <View style={styles.diceContainer}>
                 {dice.map((die, index) => {
-                  const position = randomPosition(); // Get a new random position for each dice
-                  const rotation = diceRotation();
+                  const bowlRadius = 130;  // Adjust this based on your bowl's actual radius (half the diameter)
+                  const position = randomPositionInBowl(bowlRadius);  // Get the random position within the bowl
+                  const rotation = diceRotation();  // Get a random rotation for each dice
+
                   return (
                     <Animated.View
                       key={index}
                       style={{
+                        position: 'absolute',
                         opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                        transform: [{
-                          scale: diceOpacityAnims[index].interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.5, 1.5],
-                          })
-                        }],
+                        top: '50%',  // Start at the center of the bowl
+                        left: '50%',  // Start at the center of the bowl
+                        transform: [
+                          { translateX: position.x },  // Move the dice within the bowl horizontally
+                          { translateY: position.y },  // Move the dice within the bowl vertically
+                          { rotate: `${rotation}deg` },  // Apply random rotation
+                        ],
                       }}
                     >
                       <Animated.Image
                         resizeMode="contain"
                         source={die === 1 ? markedDice : unmarkedDice}
-                        style={[
-                          styles.dice,
-                          {
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: [
-                              { translateX: position.x },
-                              { translateY: position.y },
-                              { rotate: `${rotation}deg` },
-
-                              { scaleX: 1.3 }, // Increase scaleX to make the dice larger
-                              { scaleY: 1.3 },
-                            ],
-                          },
-                        ]}
+                        style={{
+                          width: 35,  // Set the dice size as per your preference
+                          height: 35,
+                        }}
                       />
                     </Animated.View>
                   );
                 })}
+
               </View>
             </ImageBackground>
           </Animated.View>
@@ -559,19 +558,19 @@ export default function WaltesBoard({
 
       {showTutorial && (
         <>
-          <View style={styles.tutorialOverlay} pointerEvents="none" />
+          {/* Player 2's Tutorial Box (Top) - Rotated 180 degrees */}
           <View
             style={[
-              styles.tutorialContent,
-              styles.player2TutorialContent,
-              { height: personalPileHeight, transform: [{ rotate: '180deg' }] },
+              styles.tutorialContent,  // Base styles for the tutorial content
+              styles.player2TutorialContent,  // Specific styles for Player 2
+              { transform: [{ rotate: '180deg' }] }  // Rotate only Player 2's content
             ]}
           >
             <View style={styles.chatBox}>
               <View style={styles.chatBoxInner}>
-                <Text style={[styles.chatBoxText, { transform: [{ rotate: '180deg' }] }]}>{typedText}</Text>
+                <Text style={styles.chatBoxText}>{typedText}</Text>
                 <TouchableOpacity
-                  style={[styles.chatBoxButton, { transform: [{ rotate: '180deg' }] }]}
+                  style={styles.chatBoxButton}
                   onPress={handleNextTutorialStep}
                 >
                   <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
@@ -579,29 +578,31 @@ export default function WaltesBoard({
               </View>
             </View>
           </View>
+
+          {/* Player 1's Tutorial Box (Bottom) - No Rotation */}
           <View
             style={[
-              styles.tutorialContent,
-              styles.player1TutorialContent,
-              { height: personalPileHeight },
+              styles.tutorialContent,  // Base styles for the tutorial content
+              styles.player1TutorialContent  // Specific styles for Player 1, no rotation
             ]}
           >
             <View style={styles.chatBox}>
               <View style={styles.chatBoxInner}>
+                <Text style={styles.chatBoxText}>{typedText}</Text>
                 <TouchableOpacity
-                  style={[styles.chatBoxButton, styles.player1ChatBoxButton]}
+                  style={styles.chatBoxButton}
                   onPress={handleNextTutorialStep}
                 >
                   <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
                 </TouchableOpacity>
-                <Text style={[styles.chatBoxText, styles.player1ChatBoxText]}>
-                  {typedText}
-                </Text>
               </View>
             </View>
           </View>
         </>
       )}
+
+
+
     </View>
   );
 }
