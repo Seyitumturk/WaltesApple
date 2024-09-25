@@ -16,7 +16,6 @@ import {
 import BackgroundVideo from './components/BackgroundVideo';
 import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
-import TutorialSwiper from './components/TutorialSwiper'; // Import the TutorialSwiper component
 import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
 import { knowledgeNuggets } from './components/knowledgeNuggets';
 
@@ -62,7 +61,6 @@ export default function App() {
   const [alertButtons, setAlertButtons] = useState([]);
   const [scoringPlayer, setScoringPlayer] = useState(null);
   const [debt, setDebt] = useState({ player1: 0, player2: 0 });
-  const [showTutorial, setShowTutorial] = useState(false);
 
   // State to keep track of once the general pile is exhausted, to calculate the certain winning conditions.
   const [successiveThrows, setSuccessiveThrows] = useState({ player1: 0, player2: 0 });
@@ -175,7 +173,7 @@ export default function App() {
   }, [sticks.general.kingPin]);
 
   const startGame = () => {
-    setCurrentPage('tutorial'); // Start with the tutorial
+    setCurrentPage('game'); // Start with the tutorial
   };
 
   const onTutorialFinished = () => {
@@ -565,23 +563,10 @@ export default function App() {
       />
       <BackgroundVideo />
 
-      {/* Help Button */}
-      <TouchableOpacity style={styles.helpButton} onPress={() => setShowTutorial(true)}>
-        <Text style={styles.helpButtonText}>?</Text>
-      </TouchableOpacity>
 
-      {showTutorial && (
-        <View style={styles.fullScreenOverlay}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setShowTutorial(false)}>
-            <Text style={styles.closeButtonText}>X</Text>
-          </TouchableOpacity>
-          <TutorialSwiper onFinished={() => setShowTutorial(false)} />
-        </View>
-      )}
 
 
       {currentPage === 'home' && <HomePage onStartGame={startGame} totalPoints={totalPoints} />}
-      {currentPage === 'tutorial' && <TutorialSwiper onFinished={onTutorialFinished} />}
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
@@ -613,7 +598,6 @@ export default function App() {
             debt={debt}
             handleAskDebtPayment={handleDebtPayment}
             replacementMessage={replacementMessage}
-            tutorialMode={showTutorial}
           />
 
           {showReplacementGif && (
@@ -658,8 +642,8 @@ export default function App() {
         </>
       )}
       {currentPage === 'nuggets' && (
-        <KnowledgeNuggets 
-          unlockedNuggets={unlockedNuggets} 
+        <KnowledgeNuggets
+          unlockedNuggets={unlockedNuggets}
           totalPoints={totalPoints}
           onBack={() => setCurrentPage('game')}
         />
@@ -698,19 +682,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
-  helpButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1000,
-    backgroundColor: '#FFD700',
-    borderRadius: 25,
-    padding: 10,
-  },
-  helpButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
+
   scoreText: {
     fontSize: 64,
     fontWeight: 'bold',

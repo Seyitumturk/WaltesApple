@@ -1,4 +1,3 @@
-// PlayerArea.js
 import React, { useRef, useState, useEffect } from 'react';
 import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -88,39 +87,21 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
         kingPin: kingPinIcon,
     };
 
-    const styles = StyleSheet.create({
-        icon: {
-            width: 60, // adjust the size as needed
-            height: 75, // adjust the size as needed
-        },
-        button: {
-            marginHorizontal: 10, // Added margin
-        },
-        countText: {
-            fontSize: 16,
-            fontWeight: 'bold',
-            color: 'white',
-        },
-        iconWrapper: {
-            backgroundColor: 'rgba(255, 255, 255, 0.2)', // Gentle low-opacity background
-            borderRadius: 10, // Rounded corners
-            padding: 2, // Optional padding for spacing around the icon
-            alignItems: 'center', // Center the icon within the wrapper
-            justifyContent: 'center', // Ensure content is centered
-        },
-    });
-
     return (
         <View style={styles.button}>
             <View style={styles.iconWrapper}>
-                <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
+                {/* Align icon and count next to each other */}
+                <View style={styles.iconAndCountWrapper}>
+                    <Image source={icons[type]} style={styles.icon} resizeMode="contain" />
+                    <Animated.Text style={[styles.countText, animatedStyle, { marginLeft: 8 }]}>
+                        {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue * count}` : animatedCount}
+                    </Animated.Text>
+                </View>
             </View>
-            <Animated.Text style={[styles.countText, animatedStyle]}>
-                {type === 'notched' && showNotchedValue ? `${animatedCount}/${notchedValue * count}` : animatedCount}
-            </Animated.Text>
         </View>
     );
 };
+
 
 
 // PlayerArea Component
@@ -172,6 +153,16 @@ const PlayerArea = ({
         },
     ];
 
+    // Styling for the title text with fading background on the right
+    const titleStyle = {
+        paddingHorizontal: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)', // Transparent background
+        borderTopRightRadius: 20, // Rounded corner on the right
+        borderBottomRightRadius: 20,
+        alignSelf: 'flex-start', // Align title to the left
+        paddingLeft: 15, // Padding for the text inside
+        overflow: 'hidden',
+    };
 
     useEffect(() => {
         if (replacementMessage) {
@@ -314,7 +305,7 @@ const PlayerArea = ({
         <View style={[styles.playerArea, playerStyle, style]}>
             <View style={[styles.stickContainer, stickContainerStyle]}>
                 <Animated.View style={generalPileStyle}>
-                    <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
+                    <Animated.Text style={[styles.generalPileTitle, titleStyle, { opacity: fadeAnim }]}>
                         {title}
                     </Animated.Text>
                     <View style={styles.generalPileContainer}>
@@ -394,7 +385,7 @@ const PlayerArea = ({
                         onPersonalPileLayout(height); // Pass the height up
                     }}
                 >
-                    <Text style={styles.personalPileTitle}>Personal Pile</Text>
+                    <Text style={[styles.personalPileTitle, titleStyle]}>Personal Pile</Text>
 
                     <View style={styles.personalPileContainer}>
                         <CircularButton type="plain" count={sticks[player].plain} />

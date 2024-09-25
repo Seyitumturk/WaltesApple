@@ -27,16 +27,51 @@ const styles = StyleSheet.create({
         backgroundColor: "#BF8A1F",
         fontSize: 16,
         fontWeight: 'bold',
-        textAlign: 'center',
+        textAlign: 'left',
         color: 'white',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,  // Round all corners
+        alignSelf: 'flex-start',  // Prevent full width
     },
     personalPileTitle: {
         backgroundColor: '#F7B329',
         fontSize: 16,
         fontWeight: 'bold',
-        textAlign: 'center',
+        textAlign: 'left',
         color: 'white',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,  // Round all corners
+        alignSelf: 'flex-start',  // Prevent full width
     },
+
+    iconAndCountWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center', // Ensures icon and count are aligned vertically
+    },
+
+    button: {
+        marginHorizontal: 10, // Added margin
+        flexDirection: 'row', // To align icon and count in a row
+        alignItems: 'center', // Vertically center the count next to the icon
+    },
+
+    iconWrapper: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)', // Gentle low-opacity background
+        borderRadius: 10, // Rounded corners
+        padding: 2, // Optional padding for spacing around the icon
+        alignItems: 'center', // Center the icon within the wrapper
+        justifyContent: 'center', // Ensure content is centered
+        flexDirection: 'row', // Arrange icon and count in a row
+    },
+    countText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+        marginLeft: 8, // Add space between icon and text
+    },
+
     background: {
         flex: 1,
         width: '100%',
@@ -450,35 +485,79 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     stickIconsContainer: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: [{ translateX: -150 }, { translateY: -50 }],
-        flexDirection: 'row',
+        flexDirection: 'row',  // Align icons and digits horizontally
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 1000002,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        marginVertical: 10,
+        backgroundColor: 'rgba(26, 26, 26, 0.7)',
         borderRadius: 10,
-        padding: 20,
-        width: 300,
+        padding: 10,
     },
+
     stickIcon: {
-        width: 60,
-        height: 75,
-        marginBottom: 5,
+        width: 60,   // Adjust the size as needed
+        height: 75,  // Adjust the size as needed
+        marginRight: 10,  // Adds space between the icon and the count
     },
+
+    stickCountContainer: {
+        flexDirection: 'row',   // Ensures the count and icon are on the same line
+        alignItems: 'center',   // Aligns the items vertically in the center
+        marginLeft: 5,  // Slight spacing between the icon and text
+    },
+
     stickCount: {
         color: 'white',
         fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
     },
+
     stickTotal: {
         color: 'white',
         fontSize: 12,
         textAlign: 'center',
+        marginLeft: 8,  // Space between count and icon
+    }, titleWrapper: {
+        alignSelf: 'flex-start', // Align the title to the left
+        marginLeft: 10, // Add a little space from the edge
     },
+    titleBackground: {
+        paddingVertical: 2, // Adjust padding for the title
+        paddingHorizontal: 10, // Space around the text
+        borderRadius: 5, // Rounded corners
+    },
+    titleText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+        textAlign: 'left',
+    },
+    generalPileContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '100%',
+        alignItems: 'center',
+        opacity: 1, // Ensure full opacity
+    },
+    personalPile: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '100%',
+        alignItems: 'center',
+    },
+    personalPileContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+    },
+
 });
+
+
+
+
+
+
 
 export default styles;
