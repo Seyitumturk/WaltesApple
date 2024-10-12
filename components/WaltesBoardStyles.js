@@ -8,8 +8,7 @@ const styles = StyleSheet.create({
     bowlImage: {
         width: '100%',
         height: undefined,
-        aspectRatio: 1, // Ensure the bowl maintains its aspect ratio
-
+        aspectRatio: 1,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
@@ -23,55 +22,6 @@ const styles = StyleSheet.create({
         color: 'white',
         marginBottom: 10,
     },
-    generalPileTitle: {
-        backgroundColor: "#BF8A1F",
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'left',
-        color: 'white',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 15,  // Round all corners
-        alignSelf: 'flex-start',  // Prevent full width
-    },
-    personalPileTitle: {
-        backgroundColor: '#F7B329',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'left',
-        color: 'white',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 15,  // Round all corners
-        alignSelf: 'flex-start',  // Prevent full width
-    },
-
-    iconAndCountWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center', // Ensures icon and count are aligned vertically
-    },
-
-    button: {
-        marginHorizontal: 10, // Added margin
-        flexDirection: 'row', // To align icon and count in a row
-        alignItems: 'center', // Vertically center the count next to the icon
-    },
-
-    iconWrapper: {
-        backgroundColor: 'rgba(255, 255, 255, 0.2)', // Gentle low-opacity background
-        borderRadius: 10, // Rounded corners
-        padding: 2, // Optional padding for spacing around the icon
-        alignItems: 'center', // Center the icon within the wrapper
-        justifyContent: 'center', // Ensure content is centered
-        flexDirection: 'row', // Arrange icon and count in a row
-    },
-    countText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
-        marginLeft: 8, // Add space between icon and text
-    },
-
     background: {
         flex: 1,
         width: '100%',
@@ -87,11 +37,12 @@ const styles = StyleSheet.create({
         width: 20,
         flexDirection: 'column',
         zIndex: 10000,
-    }, bowlContainer: {
-        flex: 1, // Take available space between PlayerAreas
-        justifyContent: 'center', // Vertically center the bowl
-        alignItems: 'center', // Horizontally center the bowl
-        paddingHorizontal: 20, // Add padding to avoid overlapping
+    },
+    bowlContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
     },
     askButton: {
         backgroundColor: '#FDA10E',
@@ -106,15 +57,6 @@ const styles = StyleSheet.create({
         color: 'black',
         fontWeight: 'bold',
         textAlign: 'center',
-    },
-    personalPile: {
-        position: 'relative',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        width: '100%',
-        backgroundColor: "#FDA10E",
-        marginBottom: -50,
-        paddingBottom: 50,
     },
     backgroundImage: {
         opacity: 0.5,
@@ -145,7 +87,7 @@ const styles = StyleSheet.create({
         right: 0,
         top: '50%',
         alignItems: 'center',
-        zIndex: 10000000000000000,
+        zIndex: 1000000000000000,
     },
     debtRequestButton: {
         backgroundColor: '#49350D',
@@ -154,7 +96,7 @@ const styles = StyleSheet.create({
         width: '80%',
         alignItems: 'center',
         marginVertical: 5,
-        zIndex: 100000000033330000000,
+        zIndex: 1000000000333300000,
     },
     debtRequestButtonText: {
         color: '#FDA10E',
@@ -178,40 +120,7 @@ const styles = StyleSheet.create({
         right: 0,
         flexDirection: 'row',
         height: 20,
-        zIndex: 999999999999999999999999999999999999999999999999999999999999,
-    },
-    personalPileContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        width: '100%',
-        backgroundColor: "#FDA10E",
-
-    },
-    tossOverlay: {
-        position: 'absolute',
-        left: '50%',   // Center horizontally
-        top: '50%',    // Center vertically
-        transform: [{ translateX: -50 }, { translateY: -50 }],  // Offset to perfectly center it
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 9999,
-        width: 100,    // Smaller width (adjust as necessary)
-        height: 120,   // Smaller height (adjust as necessary)
-        borderRadius: 60,  // Make it circular/oval like a fingerprint
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent black background
-        paddingVertical: 10,  // Enough padding to fit the text
-        paddingHorizontal: 15,
-    },
-    tossText: {
-        fontSize: 18,  // Adjust font size to fit in the container
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        textAlign: 'center',
-        opacity: 1,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
-        zIndex: 99999999,
+        zIndex: 9999999999999999999999999999999999999999999999999999,
     },
     replacementContainer: {
         alignItems: 'center',
@@ -236,62 +145,14 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginHorizontal: 5,
     },
-    icon: {
-        width: 40,
-        height: 60,
-        marginHorizontal: 5,
-    },
     swapIcon: {
         marginHorizontal: 10,
-    },
-    playerArea: {
-        position: 'absolute',
-        width: '100%',
-        height: '50%',
-        justifyContent: 'flex-end',
-        zIndex: 100000000033330000000,
-        paddingBottom: 0,
     },
     container: {
         flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
         backgroundColor: 'orange',
-    },
-    player1Area: {
-        paddingBottom: 190,  // Adjust this value to move it up, reduced from 200
-        top: 10,
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-    },
-    player2Area: {
-
-        bottom: 0,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-    },
-    stickContainer: {
-        width: '100%',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingBottom: 30,
-        paddingTop: 30,
-    },
-    generalPile: {
-        flexDirection: 'column',
-        justifyContent: 'center',
-        width: '100%',
-        backgroundColor: '#F7B329',
-    },
-    generalPileContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        width: '100%',
-        backgroundColor: '#D68402',
-        alignItems: 'center',
-        opacity: 1, // Ensure full opacity
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
     },
     debtButtonsContainer: {
         position: 'absolute',
@@ -303,11 +164,6 @@ const styles = StyleSheet.create({
         zIndex: 10000,
         pointerEvents: 'auto',
     },
-    countText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
-    },
     animatedStick: {
         position: 'absolute',
         width: 60,
@@ -315,17 +171,6 @@ const styles = StyleSheet.create({
         left: '50%',
         top: '50%',
         zIndex: 999999,
-    },
-    scoreTextInPile: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-        alignSelf: 'center',
-        marginTop: 10,
-        zIndex: 9999999999,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 3,
     },
     textContainer: {
         position: 'absolute',
@@ -344,7 +189,7 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: '#805c15',
         borderRadius: 5,
-        zIndex: 99999999999,
+        zIndex: 9999999999,
         width: '100%',
     },
     debtButton: {
@@ -429,13 +274,12 @@ const styles = StyleSheet.create({
         zIndex: 1000002,
     },
     player1TutorialContent: {
-        bottom: '10%',  // Move Player 1's tutorial content closer to the center from the bottom
-        marginTop: 0,  // Remove any margin that pushes it too far up
+        bottom: '10%',
+        marginTop: 0,
     },
     player2TutorialContent: {
-        top: '10%',  // Move Player 2's tutorial content closer to the center from the top
+        top: '10%',
         transform: [{ rotate: '180deg' }],
-
     },
     chatBox: {
         backgroundColor: 'rgba(26, 26, 26, 0.9)',
@@ -485,7 +329,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     stickIconsContainer: {
-        flexDirection: 'row',  // Align icons and digits horizontally
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 10,
@@ -493,39 +337,31 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 10,
     },
-
-    stickIcon: {
-        width: 60,   // Adjust the size as needed
-        height: 75,  // Adjust the size as needed
-        marginRight: 10,  // Adds space between the icon and the count
-    },
-
     stickCountContainer: {
-        flexDirection: 'row',   // Ensures the count and icon are on the same line
-        alignItems: 'center',   // Aligns the items vertically in the center
-        marginLeft: 5,  // Slight spacing between the icon and text
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 5,
     },
-
     stickCount: {
         color: 'white',
         fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
     },
-
     stickTotal: {
         color: 'white',
         fontSize: 12,
         textAlign: 'center',
-        marginLeft: 8,  // Space between count and icon
-    }, titleWrapper: {
-        alignSelf: 'flex-start', // Align the title to the left
-        marginLeft: 10, // Add a little space from the edge
+        marginLeft: 8,
+    },
+    titleWrapper: {
+        alignSelf: 'flex-start',
+        marginLeft: 10,
     },
     titleBackground: {
-        paddingVertical: 2, // Adjust padding for the title
-        paddingHorizontal: 10, // Space around the text
-        borderRadius: 5, // Rounded corners
+        paddingVertical: 2,
+        paddingHorizontal: 10,
+        borderRadius: 5,
     },
     titleText: {
         fontSize: 16,
@@ -533,31 +369,11 @@ const styles = StyleSheet.create({
         color: 'white',
         textAlign: 'left',
     },
-    generalPileContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        width: '100%',
-        alignItems: 'center',
-        opacity: 1, // Ensure full opacity
+    stickIcon: {
+        width: 60,
+        height: 75,
+        marginRight: 10,
     },
-    personalPile: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        width: '100%',
-        alignItems: 'center',
-    },
-    personalPileContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-    },
-
 });
-
-
-
-
-
-
 
 export default styles;

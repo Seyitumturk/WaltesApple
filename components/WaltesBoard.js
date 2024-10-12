@@ -179,6 +179,8 @@ export default function WaltesBoard({
     ]).start();
   };
 
+  const [currentScore, setCurrentScore] = useState(0);
+
   const rollDice = () => {
     console.log("Roll Dice is Called");
     Vibration.vibrate(500);
@@ -197,11 +199,16 @@ export default function WaltesBoard({
       let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
       setCurrentScoringPlayer(currentPlayer);
 
+      // Set the current score
+      setCurrentScore(score);
+      console.log("Setting current score to:", score);
+
       console.log("Setting scoreText to: ", text);
       animateScoreText();
     } else {
       setCurrentScoringPlayer(null);
       setScoreText('');
+      setCurrentScore(0);
     }
 
     setIsDiceRolling(false);
@@ -397,6 +404,7 @@ export default function WaltesBoard({
           setShowTutorial={setShowTutorial}
           generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
+          scoreAmount={currentScoringPlayer === 'player1' ? currentScore : 0}
         />
         <View style={styles.bowlContainer}>
           <Animated.View
@@ -477,6 +485,7 @@ export default function WaltesBoard({
           setShowTutorial={setShowTutorial}
           generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
+          scoreAmount={currentScoringPlayer === 'player2' ? currentScore : 0}
         />
       </ImageBackground>
 

@@ -1,11 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import styles from './WaltesBoardStyles';
+import styles from './PlayerAreaStyles';
 
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
 import kingPinIcon from '../assets/king-pin-icon.png';
+import confettiGif from '../assets/confetti.gif';
+
+// Import the new border image
+// import borderImage from '../assets/ivy_border.png'; // Commented out for now
 
 // Define the useCountAnimation hook here
 const useCountAnimation = (initialCount) => {
@@ -102,7 +106,77 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     );
 };
 
+// New component for animated stick
+const AnimatedStick = ({ type, startPosition, endPosition, delay, duration }) => {
+    const position = useRef(new Animated.ValueXY(startPosition)).current;
+    const opacity = useRef(new Animated.Value(1)).current;
+    const rotation = useRef(new Animated.Value(0)).current;
 
+    useEffect(() => {
+        const randomHorizontalOffset = Math.random() * 40 - 20; // Random value between -20 and 20
+
+        Animated.sequence([
+            Animated.delay(delay),
+            Animated.parallel([
+                Animated.timing(position, {
+                    toValue: {
+                        x: endPosition.x + randomHorizontalOffset,
+                        y: endPosition.y - 100
+                    },
+                    duration: duration * 0.6,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(rotation, {
+                    toValue: Math.random() * 360,
+                    duration: duration * 0.6,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.parallel([
+                Animated.timing(position, {
+                    toValue: endPosition,
+                    duration: duration * 0.4,
+                    easing: Easing.in(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(opacity, {
+                    toValue: 0,
+                    duration: duration * 0.4,
+                    useNativeDriver: true,
+                }),
+            ]),
+        ]).start();
+    }, []);
+
+    const icons = {
+        plain: plainStickIcon,
+        notched: notchedStickIcon,
+        kingPin: kingPinIcon,
+    };
+
+    return (
+        <Animated.Image
+            source={icons[type]}
+            style={[
+                styles.animatedStick,
+                {
+                    opacity,
+                    transform: [
+                        { translateX: position.x },
+                        { translateY: position.y },
+                        {
+                            rotate: rotation.interpolate({
+                                inputRange: [0, 360],
+                                outputRange: ['0deg', '360deg'],
+                            })
+                        },
+                    ],
+                },
+            ]}
+        />
+    );
+};
 
 // PlayerArea Component
 const PlayerArea = ({
@@ -123,7 +197,8 @@ const PlayerArea = ({
     onPersonalPileLayout,
     tutorialStep,
     onTutorialNext,
-    generalPileHighlightAnim
+    generalPileHighlightAnim,
+    scoreAmount,
 }) => {
     const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
     const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
@@ -301,10 +376,152 @@ const PlayerArea = ({
         }
     };
 
+    const [showConfetti, setShowConfetti] = useState(false);
+    const waltesTextAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (player === scoringPlayer) {
+            setShowConfetti(true);
+            Animated.sequence([
+                Animated.timing(waltesTextAnim, {
+                    toValue: 1,
+                    duration: 500,
+                    easing: Easing.bounce,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(waltesTextAnim, {
+                    toValue: 0,
+                    duration: 500,
+                    delay: 2000, // Keep the text visible for 2 seconds
+                    easing: Easing.ease,
+                    useNativeDriver: true,
+                })
+            ]).start();
+            setTimeout(() => setShowConfetti(false), 3000);
+        }
+    }, [player, scoringPlayer]);
+
+    const [tossText, setTossText] = useState('CLICK');
+    const tossTextIndex = useRef(0);
+    const tossTexts = ['CLICK', 'TO', 'TOSS'];
+
+    useEffect(() => {
+        if (playerTurn === (player === 'player1' ? 0 : 1)) {
+            const interval = setInterval(() => {
+                tossTextIndex.current = (tossTextIndex.current + 1) % tossTexts.length;
+                setTossText(tossTexts[tossTextIndex.current]);
+            }, 1000); // Change text every second
+
+            return () => clearInterval(interval);
+        }
+    }, [playerTurn, player]);
+
+    const [animatingSticks, setAnimatingSticks] = useState([]);
+    const generalPileRef = useRef(null);
+    const personalPileRef = useRef(null);
+    const playerAreaRef = useRef(null);
+
+    useEffect(() => {
+        if (player === scoringPlayer && scoreAmount > 0) {
+            playerAreaRef.current.measure((fx, fy, width, height, px, py) => {
+                generalPileRef.current.measure((fx2, fy2, width2, height2, px2, py2) => {
+                    personalPileRef.current.measure((fx3, fy3, width3, height3, px3, py3) => {
+                        const startPosition = {
+                            x: px2 - px + width2 / 2 - 30,
+                            y: py2 - py + height2 / 2 - 30
+                        };
+                        const endPosition = {
+                            x: px3 - px + width3 / 2 - 30,
+                            y: py3 - py + height3 / 2 - 30
+                        };
+
+                        let newAnimatingSticks = [];
+                        if (scoreAmount === 1) {
+                            newAnimatingSticks.push({
+                                id: Date.now(),
+                                type: 'notched',
+                                startPosition,
+                                endPosition,
+                                delay: 0,
+                                duration: 1000,
+                            });
+                        } else {
+                            for (let i = 0; i < 3; i++) {
+                                newAnimatingSticks.push({
+                                    id: Date.now() + i,
+                                    type: 'plain',
+                                    startPosition: {
+                                        x: startPosition.x + (Math.random() * 60 - 30),
+                                        y: startPosition.y
+                                    },
+                                    endPosition: {
+                                        x: endPosition.x + (Math.random() * 60 - 30),
+                                        y: endPosition.y
+                                    },
+                                    delay: i * 100,
+                                    duration: 1000 + Math.random() * 500,
+                                });
+                            }
+                        }
+
+                        setAnimatingSticks(newAnimatingSticks);
+                    });
+                });
+            });
+        }
+    }, [player, scoringPlayer, scoreAmount]);
+
+    const handleAskButtonClick = () => {
+        console.log(`Ask button clicked for ${player}`);
+        handleAskDebtPayment(player);
+    };
+
     return (
-        <View style={[styles.playerArea, playerStyle, style]}>
+        <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
+            {/* Add the border image */}
+            {/* Commented out for now
+            <Image 
+                source={borderImage} 
+                style={[
+                    styles.borderImage,
+                    player === 'player1' ? styles.borderImagePlayer1 : styles.borderImagePlayer2
+                ]}
+                resizeMode="stretch"
+            />
+            */}
+
+            {player === scoringPlayer && (
+                <Animated.View style={[
+                    styles.waltesTextContainer,
+                    {
+                        opacity: waltesTextAnim,
+                        transform: [
+                            {
+                                scale: waltesTextAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0.5, 1.2]
+                                })
+                            },
+                            {
+                                translateY: waltesTextAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [50, 0]
+                                })
+                            }
+                        ]
+                    }
+                ]}>
+                    <Text style={styles.waltesText}>Waltes!</Text>
+                </Animated.View>
+            )}
+            {showConfetti && (
+                <Image
+                    source={confettiGif}
+                    style={styles.confettiOverlay}
+                />
+            )}
             <View style={[styles.stickContainer, stickContainerStyle]}>
-                <Animated.View style={generalPileStyle}>
+                <Animated.View style={generalPileStyle} ref={generalPileRef}>
                     <Animated.Text style={[styles.generalPileTitle, titleStyle, { opacity: fadeAnim }]}>
                         {title}
                     </Animated.Text>
@@ -368,7 +585,10 @@ const PlayerArea = ({
                                 </>
                             ) : (
                                 <View style={styles.debtContainer}>
-                                    <TouchableOpacity style={styles.askButton} onPress={() => handleAskDebtPayment(player)}>
+                                    <TouchableOpacity
+                                        style={styles.askButton}
+                                        onPress={handleAskButtonClick}
+                                    >
                                         <Text style={styles.askButtonText}>Ask</Text>
                                     </TouchableOpacity>
                                     <Text style={styles.debtText}>Debt: {debt[player]}</Text>
@@ -384,6 +604,7 @@ const PlayerArea = ({
                         const { height } = event.nativeEvent.layout;
                         onPersonalPileLayout(height); // Pass the height up
                     }}
+                    ref={personalPileRef}
                 >
                     <Text style={[styles.personalPileTitle, titleStyle]}>Personal Pile</Text>
 
@@ -398,46 +619,45 @@ const PlayerArea = ({
                         <CircularButton type="kingPin" count={sticks[player].kingPin} />
 
                         {playerTurn === (player === 'player1' ? 0 : 1) && (
-                            <Animated.View style={[styles.tossOverlay, { backgroundColor: personalPileBackgroundColor }]}>
-                                <Animated.Text
+                            <Animated.View style={[styles.tossOverlay]}>
+                                <Animated.View
                                     style={[
-                                        styles.tossText,
+                                        styles.tossTextContainer,
                                         {
                                             transform: [{ scale: tossTextAnim }],
-                                            opacity: 1,
-                                            fontWeight: 'bold',
+                                            borderColor: personalPileBackgroundColor,
                                         },
                                     ]}
                                 >
-                                    toss
-                                </Animated.Text>
-                            </Animated.View>
-                        )}
-
-                        {player === scoringPlayer && (
-                            <>
-                                <Animated.View
-                                    style={{
-                                        backgroundColor: 'rgba(0,0,0,0.6)',
-                                        borderRadius: 20,
-                                        paddingVertical: 5,
-                                        paddingHorizontal: 10,
-                                        opacity: opacityAnim,
-                                        position: 'absolute',
-                                        alignSelf: 'center',
-                                        top: '50%',
-                                        transform: [{ translateY: -10 }],
-                                    }}
-                                >
-                                    <Text style={styles.scoreTextInPile}>
-                                        Waltes!
-                                    </Text>
+                                    <Animated.Text
+                                        style={[
+                                            styles.tossText,
+                                            {
+                                                opacity: 1,
+                                                fontWeight: 'bold',
+                                                color: personalPileBackgroundColor,
+                                                textShadowColor: personalPileBackgroundColor,
+                                            },
+                                        ]}
+                                    >
+                                        {tossText}
+                                    </Animated.Text>
                                 </Animated.View>
-                            </>
+                            </Animated.View>
                         )}
                     </View>
                 </TouchableOpacity>
             </View>
+            {animatingSticks.map((stick) => (
+                <AnimatedStick
+                    key={stick.id}
+                    type={stick.type}
+                    startPosition={stick.startPosition}
+                    endPosition={stick.endPosition}
+                    delay={stick.delay}
+                    duration={stick.duration}
+                />
+            ))}
             {renderTutorialOverlay()}
         </View>
     );
