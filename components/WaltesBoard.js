@@ -269,7 +269,9 @@ export default function WaltesBoard({
   const tutorialTexts = [
     "This is the Waltes bowl. Dice are tossed in here to determine the score.",
     "The bowl contains six dice. Three are marked on one side, and three are unmarked.",
-    "Players draw sticks from the general pile when they score points.",
+    "Plain sticks are worth 1 point each. They are the most common type of stick in the game.",
+    "Notched sticks are worth 5 points each. They are less common but more valuable than plain sticks.",
+    "The King Pin is a special stick worth 5 points. There is only one King Pin in the game, making it very valuable.",
   ];
 
   const bowlHighlightAnim = useRef(new Animated.Value(0)).current;
@@ -321,22 +323,21 @@ export default function WaltesBoard({
         });
       }
 
+      // Reveal stick icons one at a time for steps 3, 4, and 5
+      if (tutorialStep >= 3 && tutorialStep <= 5) {
+        Animated.timing(stickIconsAnim[tutorialStep - 3], {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+
       const typingInterval = setInterval(() => {
         if (currentIndex < textToType.length) {
           setTypedText(prevText => prevText + textToType[currentIndex]);
           currentIndex++;
         } else {
           clearInterval(typingInterval);
-          if (tutorialStep === 3) {
-            stickIconsAnim.forEach((anim, index) => {
-              Animated.timing(anim, {
-                toValue: 1,
-                duration: 300,
-                delay: index * 500,
-                useNativeDriver: true,
-              }).start();
-            });
-          }
         }
       }, 50);
 
@@ -348,12 +349,6 @@ export default function WaltesBoard({
     if (tutorialStep < tutorialTexts.length) {
       setTutorialStep(prevStep => prevStep + 1);
       setTypedText('');
-      if (tutorialStep === 1) {
-        diceOpacityAnims.forEach(anim => anim.setValue(0));
-      } else if (tutorialStep === 2) {
-        diceOpacityAnims.forEach(anim => anim.setValue(0));
-        stickIconsAnim.forEach(anim => anim.setValue(0));
-      }
     } else {
       setShowTutorial(false);
     }
@@ -503,7 +498,7 @@ export default function WaltesBoard({
         />
       </ImageBackground>
 
-      {showTutorial && tutorialStep === 3 && (
+      {showTutorial && tutorialStep >= 3 && tutorialStep <= 5 && (
         <>
           <Animated.View
             style={[
@@ -513,7 +508,7 @@ export default function WaltesBoard({
                 top: '35%',
                 left: '50%',
                 transform: [{ translateX: -150 }, { translateY: -50 }, { rotate: '180deg' }],
-                flexDirection: 'row',
+                flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
                 width: 300,
@@ -524,23 +519,29 @@ export default function WaltesBoard({
               },
             ]}
           >
-            <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
-              <Image source={plainStickIcon} style={styles.stickIcon} />
-              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Plain</Text>
-              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>51</Text>
-            </Animated.View>
-            <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
-              <Image source={markedStickIcon} style={styles.stickIcon} />
-              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Notched</Text>
-              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>3</Text>
-            </Animated.View>
-            <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
-              <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
-              <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>King Pin</Text>
-              <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>1</Text>
-            </Animated.View>
+            <Text style={[styles.generalPileTitle, { transform: [{ rotate: '180deg' }], marginBottom: 10 }]}>
+              General Pile
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+              <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
+                <Image source={plainStickIcon} style={styles.stickIcon} />
+                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Plain</Text>
+                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>51</Text>
+              </Animated.View>
+              <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
+                <Image source={markedStickIcon} style={styles.stickIcon} />
+                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Notched</Text>
+                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>3</Text>
+              </Animated.View>
+              <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
+                <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
+                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>King Pin</Text>
+                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>1</Text>
+              </Animated.View>
+            </View>
           </Animated.View>
 
+          {/* Repeat the same structure for Player 1's view, but without rotation */}
           <Animated.View
             style={[
               styles.stickIconsContainer,
@@ -549,7 +550,7 @@ export default function WaltesBoard({
                 bottom: '35%',
                 left: '50%',
                 transform: [{ translateX: -150 }, { translateY: 50 }],
-                flexDirection: 'row',
+                flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
                 width: 300,
@@ -560,21 +561,24 @@ export default function WaltesBoard({
               },
             ]}
           >
-            <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
-              <Image source={plainStickIcon} style={styles.stickIcon} />
-              <Text style={styles.stickCount}>Plain</Text>
-              <Text style={styles.stickTotal}>51</Text>
-            </Animated.View>
-            <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
-              <Image source={markedStickIcon} style={styles.stickIcon} />
-              <Text style={styles.stickCount}>Notched</Text>
-              <Text style={styles.stickTotal}>3</Text>
-            </Animated.View>
-            <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
-              <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
-              <Text style={styles.stickCount}>King Pin</Text>
-              <Text style={styles.stickTotal}>1</Text>
-            </Animated.View>
+            <Text style={[styles.generalPileTitle, { marginBottom: 10 }]}>General Pile</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+              <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
+                <Image source={plainStickIcon} style={styles.stickIcon} />
+                <Text style={styles.stickCount}>Plain</Text>
+                <Text style={styles.stickTotal}>51</Text>
+              </Animated.View>
+              <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
+                <Image source={markedStickIcon} style={styles.stickIcon} />
+                <Text style={styles.stickCount}>Notched</Text>
+                <Text style={styles.stickTotal}>3</Text>
+              </Animated.View>
+              <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
+                <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
+                <Text style={styles.stickCount}>King Pin</Text>
+                <Text style={styles.stickTotal}>1</Text>
+              </Animated.View>
+            </View>
           </Animated.View>
         </>
       )}
@@ -584,9 +588,9 @@ export default function WaltesBoard({
           {/* Player 2's Tutorial Box (Top) - Rotated 180 degrees */}
           <View
             style={[
-              styles.tutorialContent,  // Base styles for the tutorial content
-              styles.player2TutorialContent,  // Specific styles for Player 2
-              { transform: [{ rotate: '180deg' }] }  // Rotate only Player 2's content
+              styles.tutorialContent,
+              styles.player2TutorialContent,
+              { transform: [{ rotate: '180deg' }] }
             ]}
           >
             <View style={styles.chatBox}>
@@ -605,8 +609,8 @@ export default function WaltesBoard({
           {/* Player 1's Tutorial Box (Bottom) - No Rotation */}
           <View
             style={[
-              styles.tutorialContent,  // Base styles for the tutorial content
-              styles.player1TutorialContent  // Specific styles for Player 1, no rotation
+              styles.tutorialContent,
+              styles.player1TutorialContent
             ]}
           >
             <View style={styles.chatBox}>
@@ -623,8 +627,6 @@ export default function WaltesBoard({
           </View>
         </>
       )}
-
-
 
     </View>
   );
