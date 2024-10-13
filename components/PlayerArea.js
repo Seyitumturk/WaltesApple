@@ -196,9 +196,10 @@ const PlayerArea = ({
     style,
     onPersonalPileLayout,
     tutorialStep,
-    onTutorialNext,
-    generalPileHighlightAnim,
-    scoreAmount,
+    onTutorialPrevious,
+    showTutorial,
+    scoreAmount, // Add this prop
+    generalPileHighlightAnim, // Add this prop if it's not already included
 }) => {
     const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
     const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};

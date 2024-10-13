@@ -34,6 +34,7 @@ export default function WaltesBoard({
   setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage
 }) {
   const [personalPileHeight, setPersonalPileHeight] = useState(0);
+  const typingInterval = useRef(null);
 
   const handlePersonalPileLayout = (height) => {
     setPersonalPileHeight(height);
@@ -274,6 +275,51 @@ export default function WaltesBoard({
   }, [askButtonClicked]);
 
   const [tutorialStep, setTutorialStep] = useState(1);
+  const totalTutorialSteps = 5; // Adjust this based on your total number of tutorial steps
+
+  const handleTutorialNext = () => {
+    if (tutorialStep < totalTutorialSteps) {
+      setTutorialStep(tutorialStep + 1);
+    }
+  };
+
+  const handleTutorialPrevious = () => {
+    if (tutorialStep > 1) {
+      setTutorialStep(prevStep => prevStep - 1);
+      setTypedText('');
+      
+      // Reset animations based on the previous step
+      if (tutorialStep === 2) {
+        // Reset bowl highlight
+        Animated.timing(bowlHighlightAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      } else if (tutorialStep === 3) {
+        // Reset dice opacity
+        diceOpacityAnims.forEach((anim) => {
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        });
+      } else if (tutorialStep > 3 && tutorialStep <= 6) {
+        // Reset stick icon animations
+        Animated.timing(stickIconsAnim[tutorialStep - 4], {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    }
+  };
+
+  const handleTutorialSkip = () => {
+    setShowTutorial(false);
+  };
+
   const [typedText, setTypedText] = useState('');
   const tutorialTexts = [
     "This is the Waltes bowl. Dice are tossed in here to determine the score.",
@@ -309,6 +355,13 @@ export default function WaltesBoard({
       const textToType = tutorialTexts[tutorialStep - 1];
       let currentIndex = 0;
 
+      // Clear any existing interval
+      if (typingInterval.current) {
+        clearInterval(typingInterval.current);
+      }
+
+      setTypedText('');
+
       // Reveal bowl image smoothly for step 1
       if (tutorialStep === 1) {
         Animated.timing(bowlHighlightAnim, {
@@ -341,16 +394,20 @@ export default function WaltesBoard({
         }).start();
       }
 
-      const typingInterval = setInterval(() => {
+      typingInterval.current = setInterval(() => {
         if (currentIndex < textToType.length) {
           setTypedText(prevText => prevText + textToType[currentIndex]);
           currentIndex++;
         } else {
-          clearInterval(typingInterval);
+          clearInterval(typingInterval.current);
         }
       }, 50);
 
-      return () => clearInterval(typingInterval);
+      return () => {
+        if (typingInterval.current) {
+          clearInterval(typingInterval.current);
+        }
+      };
     }
   }, [tutorialStep, showTutorial]);
 
@@ -430,6 +487,8 @@ export default function WaltesBoard({
           generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
           scoreAmount={currentScoringPlayer === 'player1' ? currentScore : 0}
+          totalTutorialSteps={totalTutorialSteps}
+          onTutorialPrevious={handleTutorialPrevious}
         />
         <View style={styles.bowlContainer}>
           <Animated.View
@@ -504,6 +563,8 @@ export default function WaltesBoard({
           generalPileHighlightAnim={stickIconsAnim[0]}
           tutorialStep={tutorialStep}
           scoreAmount={currentScoringPlayer === 'player2' ? currentScore : 0}
+          totalTutorialSteps={totalTutorialSteps}
+          onTutorialPrevious={handleTutorialPrevious}
         />
       </ImageBackground>
 
@@ -605,12 +666,21 @@ export default function WaltesBoard({
             <View style={styles.chatBox}>
               <View style={styles.chatBoxInner}>
                 <Text style={styles.chatBoxText}>{typedText}</Text>
-                <TouchableOpacity
-                  style={styles.chatBoxButton}
-                  onPress={handleNextTutorialStep}
-                >
-                  <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
-                </TouchableOpacity>
+                <View style={styles.tutorialButtonsContainer}>
+                  <TouchableOpacity
+                    style={styles.chatBoxButton}
+                    onPress={handleTutorialPrevious}
+                    disabled={tutorialStep === 1}
+                  >
+                    <MaterialIcons name="arrow-back" size={50} color={tutorialStep === 1 ? "#A9A9A9" : "#4CAF50"} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.chatBoxButton}
+                    onPress={handleNextTutorialStep}
+                  >
+                    <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
@@ -625,12 +695,21 @@ export default function WaltesBoard({
             <View style={styles.chatBox}>
               <View style={styles.chatBoxInner}>
                 <Text style={styles.chatBoxText}>{typedText}</Text>
-                <TouchableOpacity
-                  style={styles.chatBoxButton}
-                  onPress={handleNextTutorialStep}
-                >
-                  <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
-                </TouchableOpacity>
+                <View style={styles.tutorialButtonsContainer}>
+                  <TouchableOpacity
+                    style={styles.chatBoxButton}
+                    onPress={handleTutorialPrevious}
+                    disabled={tutorialStep === 1}
+                  >
+                    <MaterialIcons name="arrow-back" size={50} color={tutorialStep === 1 ? "#A9A9A9" : "#4CAF50"} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.chatBoxButton}
+                    onPress={handleNextTutorialStep}
+                  >
+                    <MaterialIcons name="arrow-forward" size={50} color="#4CAF50" />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>

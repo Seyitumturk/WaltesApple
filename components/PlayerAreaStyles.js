@@ -242,6 +242,28 @@ const styles = StyleSheet.create({
         zIndex: 1000003,
     },
     // Add any other styles used in PlayerArea component
+
+    // New styles for tutorial navigation
+    tutorialNavigation: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 1000005, // Increase this to ensure it's above the tutorial overlay
+    },
+    tutorialButton: {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    tutorialButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 5,
+    },
 });
 
 export default styles;
