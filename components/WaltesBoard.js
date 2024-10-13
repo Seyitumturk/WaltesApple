@@ -280,10 +280,46 @@ export default function WaltesBoard({
     new Animated.Value(0)
   ]).current;
 
+  const [dicePositions, setDicePositions] = useState([]);
+
+  useEffect(() => {
+    // Generate dice positions once
+    const newDicePositions = dice.map(() => {
+      const bowlRadius = 130;
+      const position = randomPositionInBowl(bowlRadius);
+      const rotation = diceRotation();
+      return { position, rotation };
+    });
+    setDicePositions(newDicePositions);
+  }, []); // Empty dependency array means this runs once on mount
+
   useEffect(() => {
     if (showTutorial) {
       const textToType = tutorialTexts[tutorialStep - 1];
       let currentIndex = 0;
+
+      // Reveal bowl image smoothly for step 1
+      if (tutorialStep === 1) {
+        Animated.timing(bowlHighlightAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+      }
+
+      // Reveal dice smoothly one by one for step 2
+      if (tutorialStep === 2) {
+        diceOpacityAnims.forEach((anim, index) => {
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 500,
+            delay: index * 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }).start();
+        });
+      }
 
       const typingInterval = setInterval(() => {
         if (currentIndex < textToType.length) {
@@ -291,22 +327,7 @@ export default function WaltesBoard({
           currentIndex++;
         } else {
           clearInterval(typingInterval);
-          if (tutorialStep === 1) {
-            Animated.timing(bowlHighlightAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }).start();
-          } else if (tutorialStep === 2) {
-            diceOpacityAnims.forEach((anim, index) => {
-              Animated.timing(anim, {
-                toValue: 1,
-                duration: 300,
-                delay: index * 150,
-                useNativeDriver: true,
-              }).start();
-            });
-          } else if (tutorialStep === 3) {
+          if (tutorialStep === 3) {
             stickIconsAnim.forEach((anim, index) => {
               Animated.timing(anim, {
                 toValue: 1,
@@ -422,45 +443,38 @@ export default function WaltesBoard({
                 zIndex: showTutorial ? 1000001 : 1,
                 opacity: showTutorial ? bowlHighlightAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0.2, 1.5],
+                  outputRange: [0.2, 1],
                 }) : 1,
               },
             ]}
           >
             <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
               <View style={styles.diceContainer}>
-                {dice.map((die, index) => {
-                  const bowlRadius = 130;  // Adjust this based on your bowl's actual radius (half the diameter)
-                  const position = randomPositionInBowl(bowlRadius);  // Get the random position within the bowl
-                  const rotation = diceRotation();  // Get a random rotation for each dice
-
-                  return (
-                    <Animated.View
-                      key={index}
+                {dicePositions.map((dicePos, index) => (
+                  <Animated.View
+                    key={index}
+                    style={{
+                      position: 'absolute',
+                      opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                      top: '50%',
+                      left: '50%',
+                      transform: [
+                        { translateX: dicePos.position.x },
+                        { translateY: dicePos.position.y },
+                        { rotate: `${dicePos.rotation}deg` },
+                      ],
+                    }}
+                  >
+                    <Animated.Image
+                      resizeMode="contain"
+                      source={index % 2 === 0 ? markedDice : unmarkedDice}
                       style={{
-                        position: 'absolute',
-                        opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                        top: '50%',  // Start at the center of the bowl
-                        left: '50%',  // Start at the center of the bowl
-                        transform: [
-                          { translateX: position.x },  // Move the dice within the bowl horizontally
-                          { translateY: position.y },  // Move the dice within the bowl vertically
-                          { rotate: `${rotation}deg` },  // Apply random rotation
-                        ],
+                        width: 35,
+                        height: 35,
                       }}
-                    >
-                      <Animated.Image
-                        resizeMode="contain"
-                        source={die === 1 ? markedDice : unmarkedDice}
-                        style={{
-                          width: 35,  // Set the dice size as per your preference
-                          height: 35,
-                        }}
-                      />
-                    </Animated.View>
-                  );
-                })}
-
+                    />
+                  </Animated.View>
+                ))}
               </View>
             </ImageBackground>
           </Animated.View>
