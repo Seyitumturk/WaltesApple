@@ -189,6 +189,15 @@ export default function WaltesBoard({
     const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
     setDice(newDice);
 
+    // Generate new random positions for all dice
+    const newDicePositions = dice.map(() => {
+      const bowlRadius = 130;
+      const position = randomPositionInBowl(bowlRadius);
+      const rotation = diceRotation();
+      return { position, rotation };
+    });
+    setDicePositions(newDicePositions);
+
     let score = onDiceRolled(newDice);
     console.log("Score: ", score);
 
@@ -462,7 +471,7 @@ export default function WaltesBoard({
                   >
                     <Animated.Image
                       resizeMode="contain"
-                      source={index % 2 === 0 ? markedDice : unmarkedDice}
+                      source={dice[index] === 1 ? markedDice : unmarkedDice}
                       style={{
                         width: 35,
                         height: 35,
