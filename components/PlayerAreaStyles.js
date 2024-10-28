@@ -227,6 +227,53 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: 5,
     },
+
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        zIndex: 1000000,
+    },
+
+    winningIconContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000001,
+    },
+
+    winningIcon: {
+        width: 120,
+        height: 120,
+    },
+
+    winningIconGlow: {
+        position: 'absolute',
+        width: 160,
+        height: 160,
+        borderRadius: 80,
+        backgroundColor: 'rgba(255, 215, 0, 0.3)',
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+
+    waltesText: {
+        fontSize: 40,
+        position: 'absolute',
+        alignSelf: 'center',
+        zIndex: 1000002,
+        fontWeight: 'bold',
+        color: '#FFD700',
+        textAlign: 'center',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 3,
+        fontFamily: 'Impact, Haettenschweiler, Franklin Gothic Bold, Charcoal, Helvetica Inserat, Bitstream Vera Sans Bold, Arial Black, sans serif',
+    },
 });
 
 export default styles;

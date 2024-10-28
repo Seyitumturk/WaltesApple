@@ -178,6 +178,102 @@ const AnimatedStick = ({ type, startPosition, endPosition, delay, duration }) =>
     );
 };
 
+// Add new animation for the winning icon
+const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const positionAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const icons = {
+    plain: plainStickIcon,
+    notched: notchedStickIcon,
+    kingPin: kingPinIcon,
+  };
+
+  useEffect(() => {
+    Animated.sequence([
+      // Scale up and move to center
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1.5,
+          duration: 800,
+          easing: Easing.elastic(1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(positionAnim, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Hold position
+      Animated.delay(1000),
+      // Return to personal pile
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(positionAnim, {
+          toValue: 2,
+          duration: 600,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(onAnimationComplete);
+  }, []);
+
+  const translateY = positionAnim.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [
+      player === 'player1' ? 200 : -200, // Start position
+      0, // Center position
+      player === 'player1' ? -200 : 200, // End position (personal pile)
+    ],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.winningIconContainer,
+        {
+          transform: [
+            { scale: scaleAnim },
+            { translateY },
+          ],
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.winningIconGlow,
+          {
+            opacity: glowAnim,
+          },
+        ]}
+      />
+      <Image
+        source={icons[iconType]}
+        style={styles.winningIcon}
+        resizeMode="contain"
+      />
+    </Animated.View>
+  );
+};
+
 // PlayerArea Component
 const PlayerArea = ({
     player,
@@ -535,6 +631,16 @@ const PlayerArea = ({
         ? "Click to Toss"
         : "Personal Pile";
 
+    const [showWinningAnimation, setShowWinningAnimation] = useState(false);
+    const [winningIconType, setWinningIconType] = useState(null);
+
+    useEffect(() => {
+        if (player === scoringPlayer && scoreAmount > 0) {
+            setWinningIconType(scoreAmount === 5 ? 'notched' : 'plain');
+            setShowWinningAnimation(true);
+        }
+    }, [player, scoringPlayer, scoreAmount]);
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
             {/* Add the border image */}
@@ -549,36 +655,23 @@ const PlayerArea = ({
             />
             */}
 
-            {player === scoringPlayer && (
-                <Animated.View style={[
-                    styles.waltesTextContainer,
-                    {
+            {showWinningAnimation && (
+                <>
+                    <View style={styles.darkOverlay} />
+                    <WinningIconAnimation
+                        iconType={winningIconType}
+                        player={player}
+                        onAnimationComplete={() => setShowWinningAnimation(false)}
+                    />
+                    <Animated.Text style={[styles.waltesText, {
                         opacity: waltesTextAnim,
-                        transform: [
-                            {
-                                scale: waltesTextAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.5, 1.2]
-                                })
-                            },
-                            {
-                                translateY: waltesTextAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [50, 0]
-                                })
-                            }
-                        ]
-                    }
-                ]}>
-                    <Text style={styles.waltesText}>Waltes!</Text>
-                </Animated.View>
+                        transform: [{ scale: waltesTextAnim }],
+                    }]}>
+                        Waltes!
+                    </Animated.Text>
+                </>
             )}
-            {showConfetti && (
-                <Image
-                    source={confettiGif}
-                    style={styles.confettiOverlay}
-                />
-            )}
+
             <View style={[styles.stickContainer, stickContainerStyle]}>
                 <Animated.View style={generalPileStyle} ref={generalPileRef}>
                     <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
