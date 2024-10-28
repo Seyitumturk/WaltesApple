@@ -532,8 +532,8 @@ const PlayerArea = ({
     };
 
     const personalPileTitle = playerTurn === (player === 'player1' ? 0 : 1) 
-      ? "Toss to Click"
-      : "Personal Pile";
+        ? "Click to Toss"
+        : "Personal Pile";
 
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>

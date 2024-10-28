@@ -2,14 +2,28 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Update the bowl size calculation
+// Update the calculations at the top
 const getBowlSize = () => {
     const smallerDimension = Math.min(screenWidth, screenHeight);
-    // Increase bowl size to 85% since we're removing the container
-    return smallerDimension * 0.85;
+    // Very slightly increase size
+    const maxSafeHeight = screenHeight * 0.44; // Increased from 0.43
+    const maxSafeWidth = screenWidth * 0.87;   // Increased from 0.85
+    
+    // Use the smaller of the two to ensure no overlap
+    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.87);
 };
 
 const bowlSize = getBowlSize();
+
+// Calculate vertical position that ensures no overlap
+const getVerticalOffset = () => {
+    const playerAreaHeight = screenHeight * 0.27;
+    const availableMiddleSpace = screenHeight - (playerAreaHeight * 2);
+    // Increase the upward offset slightly
+    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025); // Increased from 0.02
+};
+
+const verticalOffset = getVerticalOffset();
 
 const styles = StyleSheet.create({
     bowlImage: {
@@ -20,8 +34,8 @@ const styles = StyleSheet.create({
         height: bowlSize,
         transform: [
             { translateX: -bowlSize / 2 },
-            { translateY: -bowlSize / 2 },
-            { scale: 0.83 }
+            { translateY: -bowlSize / 2 + verticalOffset },
+            { scale: 0.87 }  // Increased from 0.85
         ],
         justifyContent: 'center',
         alignItems: 'center',
@@ -67,16 +81,16 @@ const styles = StyleSheet.create({
     diceContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        width: bowlSize * 0.65,
-        height: bowlSize * 0.65,
+        width: bowlSize * 0.7,
+        height: bowlSize * 0.7,
         position: 'absolute',
         top: '50%',
         left: '50%',
         alignItems: 'center',
         justifyContent: 'center',
         transform: [
-            { translateX: -(bowlSize * 0.65) / 2 },
-            { translateY: -(bowlSize * 0.65) / 2 },
+            { translateX: -(bowlSize * 0.7) / 2 },
+            { translateY: -(bowlSize * 0.7) / 2 },
         ],
         zIndex: 3,
     },
@@ -394,17 +408,17 @@ const styles = StyleSheet.create({
     playerArea: {
         position: 'absolute',
         width: '100%',
-        height: `${(100 - (bowlSize / screenHeight * 100)) / 2.05}%`,
+        height: '27%', // Fixed height for player areas
         justifyContent: 'flex-end',
         zIndex: 2,
     },
     player1Area: {
         bottom: 0,
-        paddingBottom: 1, // Minimal padding
+        paddingBottom: 0,
     },
     player2Area: {
         top: 0,
-        paddingTop: 1, // Minimal padding
+        paddingTop: 0,
     },
 });
 

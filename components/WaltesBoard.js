@@ -231,6 +231,7 @@ export default function WaltesBoard({
     // Generate a random angle between 0 and 360 degrees
     const angle = Math.random() * 2 * Math.PI;
 
+
     // Generate a random distance from the center, but keep it within the bowl's radius
     const distanceFromCenter = Math.random() * (bowlRadius - 40); // Subtract some padding to prevent the dice from touching the bowl's edge
 
