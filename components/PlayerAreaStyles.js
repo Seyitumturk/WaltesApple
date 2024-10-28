@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '100%',
         backgroundColor: '#F7B329',
+        borderRadius: 15, // Add this to round the outer container
     },
     generalPileContainer: {
         flexDirection: 'row',
@@ -43,10 +44,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         opacity: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        paddingVertical: 10, // Add vertical padding
+        paddingVertical: 10,
+        borderRadius: 15, // Add this to round the container
     },
     generalPileTitle: {
-        backgroundColor: "#BF8A1F",
+        backgroundColor: "transparent",
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'left',
@@ -55,6 +57,7 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         borderRadius: 15,
         alignSelf: 'flex-start',
+        marginLeft: 10,
     },
     personalPile: {
         position: 'relative',
@@ -66,13 +69,13 @@ const styles = StyleSheet.create({
     },
     personalPileContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative',  // Add this to allow absolute positioning of children
-        paddingVertical: 10, // Add vertical padding
+        position: 'relative',
+        paddingVertical: 10,
     },
     personalPileTitle: {
-        backgroundColor: '#F7B329',
+        backgroundColor: 'transparent', // Remove background color
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'left',
@@ -81,6 +84,8 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         borderRadius: 15,
         alignSelf: 'flex-start',
+        marginLeft: 10,
+        // Remove any shadow properties if they exist
     },
     button: {
         marginHorizontal: 10,
@@ -109,48 +114,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
         marginLeft: 8,
-    },
-    tossOverlay: {
-        position: 'absolute',
-        right: 10,
-        top: '50%',
-        transform: [{ translateY: -20 }],
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
-    },
-    tossTextContainer: {
-        padding: 10,
-        borderRadius: 15,
-        borderWidth: 2,
-        borderColor: '#fff',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        shadowColor: '#fff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 10,
-        elevation: 5,
-        width: 100, // Set a fixed width to accommodate the longest word
-        alignItems: 'center', // Center the text horizontally
-    },
-    tossText: {
-        fontSize: 24,
-        color: '#fff',
-        textShadowColor: 'rgba(255, 255, 255, 0.8)',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 10,
-        textAlign: 'center', // Center the text
-    },
-    scoreTextInPile: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-        alignSelf: 'center',
-        marginTop: 10,
-        zIndex: 9999999999,
-        textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 3,
     },
     swapIcon: {
         marginHorizontal: 10,

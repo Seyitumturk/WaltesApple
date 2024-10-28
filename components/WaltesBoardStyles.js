@@ -29,15 +29,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    scoreTrackerContainer: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 20,
-        flexDirection: 'column',
-        zIndex: 10000,
-    },
     bowlContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -329,13 +320,14 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     stickIconsContainer: {
-        flexDirection: 'row',
+        flexDirection: 'column',  // Changed from row to column to properly layout title and icons
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 10,
         backgroundColor: 'rgba(26, 26, 26, 0.7)',
         borderRadius: 10,
-        padding: 10,
+        padding: 20,
+        zIndex: 1000002,
     },
     stickCountContainer: {
         flexDirection: 'row',
@@ -373,6 +365,18 @@ const styles = StyleSheet.create({
         width: 60,
         height: 75,
         marginRight: 10,
+    },
+    generalPileTitle: {
+        backgroundColor: "#BF8A1F",  // Keep the background color
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'left',
+        color: 'white',  // Ensure text color is white
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        alignSelf: 'flex-start',
+        marginBottom: 10,
     },
 });
 

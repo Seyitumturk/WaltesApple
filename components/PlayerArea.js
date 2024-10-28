@@ -240,6 +240,58 @@ const PlayerArea = ({
         overflow: 'hidden',
     };
 
+    // Separate animations for scale (native) and background color (JS)
+    const titleBounceAnim = useRef(new Animated.Value(1)).current;
+    const titleColorAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (playerTurn === (player === 'player1' ? 0 : 1)) {
+            // Native driver animation (scale)
+            const bounceAnimation = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(titleBounceAnim, {
+                        toValue: 1.2,
+                        duration: 600,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(titleBounceAnim, {
+                        toValue: 1,
+                        duration: 600,
+                        easing: Easing.in(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                ])
+            );
+
+            // JS driver animation (background color)
+            const colorAnimation = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(titleColorAnim, {
+                        toValue: 1,
+                        duration: 600,
+                        useNativeDriver: false,
+                    }),
+                    Animated.timing(titleColorAnim, {
+                        toValue: 0,
+                        duration: 600,
+                        useNativeDriver: false,
+                    }),
+                ])
+            );
+
+            bounceAnimation.start();
+            colorAnimation.start();
+
+            return () => {
+                bounceAnimation.stop();
+                colorAnimation.stop();
+                titleBounceAnim.setValue(1);
+                titleColorAnim.setValue(0);
+            };
+        }
+    }, [playerTurn, player]);
+
     useEffect(() => {
         if (replacementMessage) {
             // Reset animations before starting
@@ -477,6 +529,10 @@ const PlayerArea = ({
         handleAskDebtPayment(player);
     };
 
+    const personalPileTitle = playerTurn === (player === 'player1' ? 0 : 1) 
+      ? "Toss to Click"
+      : "Personal Pile";
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
             {/* Add the border image */}
@@ -603,11 +659,43 @@ const PlayerArea = ({
                     onPress={() => onPileClick(player)}
                     onLayout={(event) => {
                         const { height } = event.nativeEvent.layout;
-                        onPersonalPileLayout(height); // Pass the height up
+                        onPersonalPileLayout(height);
                     }}
                     ref={personalPileRef}
                 >
-                    <Text style={[styles.personalPileTitle, titleStyle]}>Personal Pile</Text>
+                    {/* Wrap the text in two Animated.View components */}
+                    <Animated.View
+                        style={{
+                            transform: [{ scale: titleBounceAnim }],
+                            zIndex: 1000005,
+                            // Add margin when it's "Toss to Click"
+                            marginLeft: playerTurn === (player === 'player1' ? 0 : 1) ? 25 : 0,  // Extra space for animation
+                        }}
+                    >
+                        <Animated.View
+                            style={{
+                                backgroundColor: titleColorAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ['#F7B329', player === 'player1' ? '#F76929' : '#29B7F7']
+                                }),
+                                borderRadius: 15,
+                                // Adjust width to accommodate the text
+                                minWidth: playerTurn === (player === 'player1' ? 0 : 1) ? 120 : 'auto',
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    fontSize: playerTurn === (player === 'player1' ? 0 : 1) ? 18 : 16,
+                                    paddingHorizontal: 15,
+                                    paddingVertical: 8,
+                                }}
+                            >
+                                {personalPileTitle}
+                            </Text>
+                        </Animated.View>
+                    </Animated.View>
 
                     <View style={styles.personalPileContainer}>
                         <CircularButton type="plain" count={sticks[player].plain} />
@@ -618,34 +706,6 @@ const PlayerArea = ({
                             showNotchedValue={isGeneralPileExhausted}
                         />
                         <CircularButton type="kingPin" count={sticks[player].kingPin} />
-
-                        {playerTurn === (player === 'player1' ? 0 : 1) && (
-                            <Animated.View style={[styles.tossOverlay]}>
-                                <Animated.View
-                                    style={[
-                                        styles.tossTextContainer,
-                                        {
-                                            transform: [{ scale: tossTextAnim }],
-                                            borderColor: personalPileBackgroundColor,
-                                        },
-                                    ]}
-                                >
-                                    <Animated.Text
-                                        style={[
-                                            styles.tossText,
-                                            {
-                                                opacity: 1,
-                                                fontWeight: 'bold',
-                                                color: personalPileBackgroundColor,
-                                                textShadowColor: personalPileBackgroundColor,
-                                            },
-                                        ]}
-                                    >
-                                        {tossText}
-                                    </Animated.Text>
-                                </Animated.View>
-                            </Animated.View>
-                        )}
                     </View>
                 </TouchableOpacity>
             </View>

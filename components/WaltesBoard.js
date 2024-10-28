@@ -424,29 +424,6 @@ export default function WaltesBoard({
     <View style={styles.container}>
       <StatusBar hidden={true} />
 
-      <View style={styles.scoreTrackerContainer}>
-        <Animated.View
-          style={{
-            backgroundColor: '#F76929',
-            height: player1ScoreWidth.interpolate({
-              inputRange: [0, 100],
-              outputRange: ['0%', '100%'],
-            }),
-            width: 10,
-          }}
-        />
-        <Animated.View
-          style={{
-            backgroundColor: '#29B7F7',
-            height: player1ScoreWidth.interpolate({
-              inputRange: [0, 100],
-              outputRange: ['100%', '0%'],
-            }),
-            width: 10,
-          }}
-        />
-      </View>
-
       <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }}>
 
         <Animated.Image
@@ -570,6 +547,7 @@ export default function WaltesBoard({
 
       {showTutorial && tutorialStep >= 3 && tutorialStep <= 5 && (
         <>
+          {/* Player 2's view (top) */}
           <Animated.View
             style={[
               styles.stickIconsContainer,
@@ -589,29 +567,26 @@ export default function WaltesBoard({
               },
             ]}
           >
-            <Text style={[styles.generalPileTitle, { transform: [{ rotate: '180deg' }], marginBottom: 10 }]}>
-              General Pile
-            </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
               <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
                 <Image source={plainStickIcon} style={styles.stickIcon} />
-                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Plain</Text>
-                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>51</Text>
+                <Text style={styles.stickCount}>Plain</Text>
+                <Text style={styles.stickTotal}>51</Text>
               </Animated.View>
               <Animated.View style={{ opacity: stickIconsAnim[1], alignItems: 'center', flex: 1 }}>
                 <Image source={markedStickIcon} style={styles.stickIcon} />
-                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>Notched</Text>
-                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>3</Text>
+                <Text style={styles.stickCount}>Notched</Text>
+                <Text style={styles.stickTotal}>3</Text>
               </Animated.View>
               <Animated.View style={{ opacity: stickIconsAnim[2], alignItems: 'center', flex: 1 }}>
                 <Image source={require('../assets/king-pin-icon.png')} style={styles.stickIcon} />
-                <Text style={[styles.stickCount, { transform: [{ rotate: '180deg' }] }]}>King Pin</Text>
-                <Text style={[styles.stickTotal, { transform: [{ rotate: '180deg' }] }]}>1</Text>
+                <Text style={styles.stickCount}>King Pin</Text>
+                <Text style={styles.stickTotal}>1</Text>
               </Animated.View>
             </View>
           </Animated.View>
 
-          {/* Repeat the same structure for Player 1's view, but without rotation */}
+          {/* Player 1's view (bottom) */}
           <Animated.View
             style={[
               styles.stickIconsContainer,
@@ -631,7 +606,6 @@ export default function WaltesBoard({
               },
             ]}
           >
-            <Text style={[styles.generalPileTitle, { marginBottom: 10 }]}>General Pile</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
               <Animated.View style={{ opacity: stickIconsAnim[0], alignItems: 'center', flex: 1 }}>
                 <Image source={plainStickIcon} style={styles.stickIcon} />
