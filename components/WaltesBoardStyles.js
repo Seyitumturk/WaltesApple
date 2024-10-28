@@ -2,18 +2,30 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const diceContainerSize = 150;
+// Update the bowl size calculation
+const getBowlSize = () => {
+    const smallerDimension = Math.min(screenWidth, screenHeight);
+    // Increase bowl size to 85% since we're removing the container
+    return smallerDimension * 0.85;
+};
+
+const bowlSize = getBowlSize();
 
 const styles = StyleSheet.create({
     bowlImage: {
-        width: '100%',
-        height: undefined,
-        aspectRatio: 1,
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: bowlSize,
+        height: bowlSize,
+        transform: [
+            { translateX: -bowlSize / 2 },
+            { translateY: -bowlSize / 2 },
+            { scale: 0.83 }
+        ],
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'absolute',
-        transform: [{ scale: 0.83 }],
-        zIndex: 1,
+        zIndex: 2,
     },
     playerTitle: {
         fontSize: 18,
@@ -28,12 +40,12 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#F76929', // Your brand orange
     },
-    bowlContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
+    backgroundOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(253, 161, 14, 0.2)', // Warm overlay
+        zIndex: 1,
     },
     askButton: {
         backgroundColor: '#FDA10E',
@@ -55,17 +67,18 @@ const styles = StyleSheet.create({
     diceContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        width: diceContainerSize,
-        height: diceContainerSize,
+        width: bowlSize * 0.65,
+        height: bowlSize * 0.65,
         position: 'absolute',
         top: '50%',
         left: '50%',
         alignItems: 'center',
         justifyContent: 'center',
         transform: [
-            { translateX: -(diceContainerSize / 2) },
-            { translateY: -(diceContainerSize / 2) },
+            { translateX: -(bowlSize * 0.65) / 2 },
+            { translateY: -(bowlSize * 0.65) / 2 },
         ],
+        zIndex: 3,
     },
     dice: {
         width: 50,
@@ -143,7 +156,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundColor: 'orange',
+        backgroundColor: '#D35400', // Deep orange base
     },
     debtButtonsContainer: {
         position: 'absolute',
@@ -377,6 +390,21 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         alignSelf: 'flex-start',
         marginBottom: 10,
+    },
+    playerArea: {
+        position: 'absolute',
+        width: '100%',
+        height: `${(100 - (bowlSize / screenHeight * 100)) / 2.05}%`,
+        justifyContent: 'flex-end',
+        zIndex: 2,
+    },
+    player1Area: {
+        bottom: 0,
+        paddingBottom: 1, // Minimal padding
+    },
+    player2Area: {
+        top: 0,
+        paddingTop: 1, // Minimal padding
     },
 });
 

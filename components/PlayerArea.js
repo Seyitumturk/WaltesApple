@@ -201,7 +201,9 @@ const PlayerArea = ({
     scoreAmount, // Add this prop
     generalPileHighlightAnim, // Add this prop if it's not already included
 }) => {
-    const playerStyle = player === 'player1' ? styles.player1Area : styles.player2Area;
+    const playerStyle = player === 'player1' 
+        ? [styles.playerArea, styles.player1Area] 
+        : [styles.playerArea, styles.player2Area];
     const stickContainerStyle = player === 'player1' ? { transform: [{ rotate: '180deg' }] } : {};
 
     const personalPileBackgroundColor = player === 'player1' ? '#F76929' : '#29B7F7';
@@ -579,7 +581,7 @@ const PlayerArea = ({
             )}
             <View style={[styles.stickContainer, stickContainerStyle]}>
                 <Animated.View style={generalPileStyle} ref={generalPileRef}>
-                    <Animated.Text style={[styles.generalPileTitle, titleStyle, { opacity: fadeAnim }]}>
+                    <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
                         {title}
                     </Animated.Text>
                     <View style={styles.generalPileContainer}>

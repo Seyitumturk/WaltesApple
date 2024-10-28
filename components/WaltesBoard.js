@@ -423,24 +423,28 @@ export default function WaltesBoard({
   return (
     <View style={styles.container}>
       <StatusBar hidden={true} />
-
-      <ImageBackground source={backgroundImage} style={styles.background} imageStyle={{ opacity: 0.1 }}>
-
+      
+      <ImageBackground 
+        source={backgroundImage} 
+        style={styles.background} 
+        imageStyle={{ 
+          opacity: 0.05,
+        }}
+      >
+        <View style={styles.backgroundOverlay} />
+        
         <Animated.Image
           source={require('../assets/animated-plain-stick-icon.png')}
-          style={[
-            styles.animatedStick,
-            {
-              transform: [
-                ...stickAnimPosition.getTranslateTransform(),
-                { rotate: playerTurn === 1 ? '0deg' : '180deg' },
-                { scale: fadeAnim },
-                { translateX: Animated.add(stickAnimPosition.x, -30) },
-                { translateY: Animated.add(stickAnimPosition.y, -30) }
-              ],
-              opacity: fadeAnim
-            }
-          ]}
+          style={[styles.animatedStick, {
+            transform: [
+              ...stickAnimPosition.getTranslateTransform(),
+              { rotate: playerTurn === 1 ? '0deg' : '180deg' },
+              { scale: fadeAnim },
+              { translateX: Animated.add(stickAnimPosition.x, -30) },
+              { translateY: Animated.add(stickAnimPosition.y, -30) }
+            ],
+            opacity: fadeAnim
+          }]}
         />
 
         <PlayerArea
@@ -467,58 +471,41 @@ export default function WaltesBoard({
           totalTutorialSteps={totalTutorialSteps}
           onTutorialPrevious={handleTutorialPrevious}
         />
-        <View style={styles.bowlContainer}>
-          <Animated.View
-            style={[
-              styles.bowlImage,
-              {
-                transform: [
-                  {
-                    rotate: shakeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', '40deg'],
-                    }),
-                  },
-                ],
-                zIndex: showTutorial ? 1000001 : 1,
-                opacity: showTutorial ? bowlHighlightAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.2, 1],
-                }) : 1,
-              },
-            ]}
-          >
-            <ImageBackground source={bowlImage} resizeMode="contain" style={styles.bowlImage}>
-              <View style={styles.diceContainer}>
-                {dicePositions.map((dicePos, index) => (
-                  <Animated.View
-                    key={index}
-                    style={{
-                      position: 'absolute',
-                      opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                      top: '50%',
-                      left: '50%',
-                      transform: [
-                        { translateX: dicePos.position.x },
-                        { translateY: dicePos.position.y },
-                        { rotate: `${dicePos.rotation}deg` },
-                      ],
-                    }}
-                  >
-                    <Animated.Image
-                      resizeMode="contain"
-                      source={dice[index] === 1 ? markedDice : unmarkedDice}
-                      style={{
-                        width: 35,
-                        height: 35,
-                      }}
-                    />
-                  </Animated.View>
-                ))}
-              </View>
-            </ImageBackground>
-          </Animated.View>
-        </View>
+
+        <ImageBackground 
+          source={bowlImage} 
+          resizeMode="contain" 
+          style={styles.bowlImage}
+        >
+          <View style={styles.diceContainer}>
+            {dicePositions.map((dicePos, index) => (
+              <Animated.View
+                key={index}
+                style={{
+                  position: 'absolute',
+                  opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                  top: '50%',
+                  left: '50%',
+                  transform: [
+                    { translateX: dicePos.position.x },
+                    { translateY: dicePos.position.y },
+                    { rotate: `${dicePos.rotation}deg` },
+                  ],
+                }}
+              >
+                <Animated.Image
+                  resizeMode="contain"
+                  source={dice[index] === 1 ? markedDice : unmarkedDice}
+                  style={{
+                    width: 35,
+                    height: 35,
+                  }}
+                />
+              </Animated.View>
+            ))}
+          </View>
+        </ImageBackground>
+
         <PlayerArea
           player="player2"
           sticks={sticks}
