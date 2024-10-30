@@ -29,6 +29,24 @@ import PlayerArea from './PlayerArea';
 const screenWidth = Dimensions.get('window').width;
 const { height: screenHeight } = Dimensions.get('window');
 
+const getBowlSize = () => {
+    const smallerDimension = Math.min(screenWidth, screenHeight);
+    const maxSafeHeight = screenHeight * 0.42;
+    const maxSafeWidth = screenWidth * 0.85;
+    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.85);
+};
+
+const bowlSize = getBowlSize();
+
+// Calculate vertical position that ensures no overlap
+const getVerticalOffset = () => {
+    const playerAreaHeight = screenHeight * 0.27;
+    const availableMiddleSpace = screenHeight - (playerAreaHeight * 2);
+    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025);
+};
+
+const verticalOffset = getVerticalOffset();
+
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
   setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage
@@ -182,15 +200,59 @@ export default function WaltesBoard({
 
   const [currentScore, setCurrentScore] = useState(0);
 
+  const bowlScaleAnim = useRef(new Animated.Value(1)).current;
+  const bowlLiftAnim = useRef(new Animated.Value(0)).current;
+
   const rollDice = () => {
     console.log("Roll Dice is Called");
     Vibration.vibrate(500);
 
     setIsDiceRolling(true);
+
+    Animated.sequence([
+        // Initial small lift with slight bounce
+        Animated.spring(bowlLiftAnim, {
+            toValue: -20,
+            duration: 150,
+            friction: 3, // Lower friction for more bounce
+            tension: 40,
+            useNativeDriver: true,
+        }),
+        // Main toss animation
+        Animated.parallel([
+            Animated.spring(bowlScaleAnim, {
+                toValue: 1.15,
+                friction: 3,
+                tension: 50,
+                useNativeDriver: true,
+            }),
+            Animated.spring(bowlLiftAnim, {
+                toValue: -70, // Increased lift height
+                friction: 4,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+        ]),
+        // Drop and bounce
+        Animated.parallel([
+            Animated.spring(bowlScaleAnim, {
+                toValue: 1,
+                friction: 3,
+                tension: 50,
+                useNativeDriver: true,
+            }),
+            Animated.spring(bowlLiftAnim, {
+                toValue: 0,
+                friction: 4, // Adjust for bounciness
+                tension: 45,
+                useNativeDriver: true,
+            }),
+        ]),
+    ]).start();
+
     const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
     setDice(newDice);
 
-    // Generate new random positions for all dice
     const newDicePositions = dice.map(() => {
       const bowlRadius = 130;
       const position = randomPositionInBowl(bowlRadius);
@@ -209,10 +271,8 @@ export default function WaltesBoard({
       let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
       setCurrentScoringPlayer(currentPlayer);
 
-      // Set the current score
       setCurrentScore(score);
       console.log("Setting current score to:", score);
-
       console.log("Setting scoreText to: ", text);
       animateScoreText();
     } else {
@@ -246,7 +306,7 @@ export default function WaltesBoard({
 
 
   const diceRotation = () => {
-    return Math.floor(Math.random() * 180);
+    return `${Math.floor(Math.random() * 180)}deg`;
   };
 
   useEffect(() => {
@@ -473,39 +533,62 @@ export default function WaltesBoard({
           onTutorialPrevious={handleTutorialPrevious}
         />
 
-        <ImageBackground 
-          source={bowlImage} 
-          resizeMode="contain" 
-          style={styles.bowlImage}
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: bowlSize,
+            height: bowlSize,
+            transform: [
+                { translateX: -bowlSize / 2 },
+                { translateY: -bowlSize / 2 + verticalOffset },
+                { translateY: bowlLiftAnim },
+                { scale: bowlScaleAnim }
+            ],
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
-          <View style={styles.diceContainer}>
-            {dicePositions.map((dicePos, index) => (
-              <Animated.View
-                key={index}
-                style={{
-                  position: 'absolute',
-                  opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                  top: '50%',
-                  left: '50%',
-                  transform: [
-                    { translateX: dicePos.position.x },
-                    { translateY: dicePos.position.y },
-                    { rotate: `${dicePos.rotation}deg` },
-                  ],
-                }}
-              >
-                <Animated.Image
-                  resizeMode="contain"
-                  source={dice[index] === 1 ? markedDice : unmarkedDice}
+          <ImageBackground 
+            source={bowlImage} 
+            resizeMode="contain" 
+            style={[
+              styles.bowlImage,
+              {
+                width: '100%',
+                height: '100%',
+              }
+            ]}
+          >
+            <View style={styles.diceContainer}>
+              {dicePositions.map((dicePos, index) => (
+                <Animated.View
+                  key={index}
                   style={{
-                    width: 35,
-                    height: 35,
+                    position: 'absolute',
+                    opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                    top: '50%',
+                    left: '50%',
+                    transform: [
+                      { translateX: dicePos.position.x },
+                      { translateY: dicePos.position.y },
+                    ],
                   }}
-                />
-              </Animated.View>
-            ))}
-          </View>
-        </ImageBackground>
+                >
+                  <Animated.Image
+                    resizeMode="contain"
+                    source={dice[index] === 1 ? markedDice : unmarkedDice}
+                    style={{
+                      width: 35,
+                      height: 35,
+                    }}
+                  />
+                </Animated.View>
+              ))}
+            </View>
+          </ImageBackground>
+        </Animated.View>
 
         <PlayerArea
           player="player2"

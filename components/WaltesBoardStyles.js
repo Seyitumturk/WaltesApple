@@ -27,18 +27,13 @@ const verticalOffset = getVerticalOffset();
 
 const styles = StyleSheet.create({
     bowlImage: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        width: bowlSize,
-        height: bowlSize,
-        transform: [
-            { translateX: -bowlSize / 2 },
-            { translateY: -bowlSize / 2 + verticalOffset },
-            { scale: 0.87 }  // Increased from 0.85
-        ],
+        width: '100%',
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
+        transform: [
+            { scale: 0.85 }
+        ],
         zIndex: 2,
     },
     playerTitle: {
