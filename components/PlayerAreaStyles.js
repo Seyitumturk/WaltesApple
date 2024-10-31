@@ -12,13 +12,14 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
     },
     player1Area: {
-        paddingBottom: 190,
-        top: -20,
+        paddingBottom: 150,
+        top: 15,
         alignItems: 'center',
         justifyContent: 'flex-start',
     },
     player2Area: {
         bottom: 0,
+        paddingTop: 15,
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
@@ -27,8 +28,8 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        paddingBottom: 30,
-        paddingTop: 30,
+        paddingBottom: 15,
+        paddingTop: 15,
     },
     generalPile: {
         flexDirection: 'column',
@@ -44,8 +45,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         opacity: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        paddingVertical: 10,
-        borderRadius: 15, // Add this to round the container
+        paddingVertical: 8,
+        borderRadius: 15,
     },
     generalPileTitle: {
         backgroundColor: "transparent",
@@ -64,15 +65,15 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'center',
         width: '100%',
-        marginBottom: -50,
-        paddingBottom: 50,
+        marginBottom: -30,
+        paddingBottom: 30,
     },
     personalPileContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
     personalPileTitle: {
         backgroundColor: 'transparent', // Remove background color
@@ -228,51 +229,34 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
 
-    darkOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    winningAnimationContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 1000000,
     },
 
-    winningIconContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000001,
-    },
-
-    winningIcon: {
-        width: 120,
-        height: 120,
-    },
-
-    winningIconGlow: {
-        position: 'absolute',
-        width: 160,
-        height: 160,
-        borderRadius: 80,
-        backgroundColor: 'rgba(255, 215, 0, 0.3)',
-        shadowColor: '#FFD700',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-
     waltesText: {
-        fontSize: 40,
         position: 'absolute',
-        alignSelf: 'center',
-        zIndex: 1000002,
+        bottom: -50,
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#FFD700',
         textAlign: 'center',
         textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: 2, height: 2 },
         textShadowRadius: 3,
-        fontFamily: 'Impact, Haettenschweiler, Franklin Gothic Bold, Charcoal, Helvetica Inserat, Bitstream Vera Sans Bold, Arial Black, sans serif',
+        width: 200,
+        left: -60,
+    },
+
+    waltesTextPlayer2: {
+        bottom: 50,
+        transform: [{ rotate: '180deg' }], // Fixed rotation for player 2
     },
 });
 

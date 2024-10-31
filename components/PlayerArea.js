@@ -178,7 +178,7 @@ const AnimatedStick = ({ type, startPosition, endPosition, delay, duration }) =>
     );
 };
 
-// Add new animation for the winning icon
+// Update the WinningIconAnimation component
 const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const positionAnim = useRef(new Animated.Value(0)).current;
@@ -239,38 +239,49 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
   const translateY = positionAnim.interpolate({
     inputRange: [0, 1, 2],
     outputRange: [
-      player === 'player1' ? 200 : -200, // Start position
-      0, // Center position
-      player === 'player1' ? -200 : 200, // End position (personal pile)
+      player === 'player1' ? 150 : -150,  // Reduced distance from center
+      0,                                  // Center position
+      player === 'player1' ? -150 : 150   // Reduced distance to personal pile
     ],
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.winningIconContainer,
-        {
-          transform: [
-            { scale: scaleAnim },
-            { translateY },
-          ],
-        },
-      ]}
-    >
-      <Animated.View
-        style={[
-          styles.winningIconGlow,
-          {
-            opacity: glowAnim,
-          },
-        ]}
-      />
-      <Image
-        source={icons[iconType]}
-        style={styles.winningIcon}
-        resizeMode="contain"
-      />
-    </Animated.View>
+    <View style={styles.winningAnimationContainer}>
+      <View style={[
+        styles.darkOverlay,
+        { transform: [{ translateY: player === 'player2' ? -100 : 100 }] }
+      ]}>
+        <Animated.View
+          style={[
+            styles.winningIconContainer,
+            {
+              transform: [
+                { scale: scaleAnim },
+                { translateY },
+                { rotate: player === 'player2' ? '180deg' : '0deg' }
+              ],
+              opacity: glowAnim,
+            },
+          ]}
+        >
+          <Animated.View style={styles.winningIconGlow} />
+          <Image
+            source={icons[iconType]}
+            style={styles.winningIcon}
+            resizeMode="contain"
+          />
+          <Animated.Text 
+            style={[
+              styles.waltesText,
+              player === 'player2' ? styles.waltesTextPlayer2 : null,
+              { transform: [{ rotate: player === 'player2' ? '180deg' : '180deg' }] }
+            ]}
+          >
+            Waltes!
+          </Animated.Text>
+        </Animated.View>
+      </View>
+    </View>
   );
 };
 
@@ -663,10 +674,17 @@ const PlayerArea = ({
                         player={player}
                         onAnimationComplete={() => setShowWinningAnimation(false)}
                     />
-                    <Animated.Text style={[styles.waltesText, {
-                        opacity: waltesTextAnim,
-                        transform: [{ scale: waltesTextAnim }],
-                    }]}>
+                    <Animated.Text style={[
+                        styles.waltesText,
+                        player === 'player2' && styles.waltesTextPlayer2,
+                        {
+                            opacity: waltesTextAnim,
+                            transform: [
+                                { scale: waltesTextAnim },
+                                ...(player === 'player2' ? [{ rotate: '180deg' }] : [])
+                            ],
+                        }
+                    ]}>
                         Waltes!
                     </Animated.Text>
                 </>

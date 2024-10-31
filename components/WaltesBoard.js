@@ -42,7 +42,7 @@ const bowlSize = getBowlSize();
 const getVerticalOffset = () => {
     const playerAreaHeight = screenHeight * 0.27;
     const availableMiddleSpace = screenHeight - (playerAreaHeight * 2);
-    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025);
+    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025); // Reduced from 0.035 to 0.025 for better centering
 };
 
 const verticalOffset = getVerticalOffset();
