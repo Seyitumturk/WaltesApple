@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
     },
     player1Area: {
         paddingBottom: 190,
-        top: 10,
+        top: -20,
         alignItems: 'center',
         justifyContent: 'flex-start',
     },

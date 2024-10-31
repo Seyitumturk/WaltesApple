@@ -203,86 +203,147 @@ export default function WaltesBoard({
   const bowlScaleAnim = useRef(new Animated.Value(1)).current;
   const bowlLiftAnim = useRef(new Animated.Value(0)).current;
 
+  const diceSpinAnims = useRef(dice.map(() => new Animated.Value(0))).current;
+  const diceScaleAnims = useRef(dice.map(() => new Animated.Value(0))).current;
+
   const rollDice = () => {
     console.log("Roll Dice is Called");
     Vibration.vibrate(500);
 
     setIsDiceRolling(true);
 
+    // Generate new dice values and positions first
+    const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
+    const newDicePositions = dice.map(() => {
+        const bowlRadius = 130;
+        const position = randomPositionInBowl(bowlRadius);
+        const rotation = diceRotation();
+        return { position, rotation };
+    });
+
+    // Reset and start dice spinning animations
+    diceSpinAnims.forEach((anim) => {
+        anim.setValue(0);
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 800,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            ])
+        ).start();
+    });
+
+    // Reset and start dice scale animations
+    diceScaleAnims.forEach((anim) => {
+        anim.setValue(0);
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 400,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(anim, {
+                    toValue: 0,
+                    duration: 400,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                })
+            ])
+        ).start();
+    });
+
+    // Create a smoother animation sequence
     Animated.sequence([
-        // Initial small lift with slight bounce
-        Animated.spring(bowlLiftAnim, {
-            toValue: -20,
-            duration: 150,
-            friction: 3, // Lower friction for more bounce
-            tension: 40,
+        // Initial preparation bounce - subtle compress
+        Animated.spring(bowlScaleAnim, {
+            toValue: 0.97,  // More subtle initial compression
+            tension: 120,
+            friction: 8,
             useNativeDriver: true,
         }),
         // Main toss animation
         Animated.parallel([
-            Animated.spring(bowlScaleAnim, {
-                toValue: 1.15,
-                friction: 3,
-                tension: 50,
+            // Scale up with compensating translation
+            Animated.timing(bowlScaleAnim, {
+                toValue: 1.1,  
+                duration: 250, // Slightly faster
+                easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
             }),
-            Animated.spring(bowlLiftAnim, {
-                toValue: -70, // Increased lift height
-                friction: 4,
-                tension: 40,
+            // Subtle lift - reduced even more to minimize overlap
+            Animated.timing(bowlLiftAnim, {
+                toValue: -10,  // Reduced lift height further
+                duration: 250,
+                easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
-            }),
+            })
         ]),
-        // Drop and bounce
+        // Impact and reveal dice
         Animated.parallel([
-            Animated.spring(bowlScaleAnim, {
-                toValue: 1,
-                friction: 3,
-                tension: 50,
-                useNativeDriver: true,
-            }),
+            // Scale impact
+            Animated.sequence([
+                Animated.timing(bowlScaleAnim, {
+                    toValue: 0.95,
+                    duration: 100,
+                    easing: Easing.in(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.spring(bowlScaleAnim, {
+                    toValue: 1,    
+                    tension: 60,
+                    friction: 7,
+                    useNativeDriver: true,
+                })
+            ]),
+            // Drop animation
             Animated.spring(bowlLiftAnim, {
                 toValue: 0,
-                friction: 4, // Adjust for bounciness
-                tension: 45,
+                tension: 60,
+                friction: 7,
                 useNativeDriver: true,
-            }),
-        ]),
+            })
+        ])
     ]).start();
 
-    const newDice = dice.map(() => Math.random() > 0.5 ? 1 : 0);
-    setDice(newDice);
+    // Update the dice reveal timeout
+    setTimeout(() => {
+        // Stop spinning animations
+        diceSpinAnims.forEach((anim) => anim.stopAnimation());
+        diceScaleAnims.forEach((anim) => anim.stopAnimation());
 
-    const newDicePositions = dice.map(() => {
-      const bowlRadius = 130;
-      const position = randomPositionInBowl(bowlRadius);
-      const rotation = diceRotation();
-      return { position, rotation };
-    });
-    setDicePositions(newDicePositions);
+        // Reveal final dice positions with a nice settling animation
+        setDice(newDice);
+        setDicePositions(newDicePositions);
+        
+        // Calculate and update score
+        let score = onDiceRolled(newDice);
+        console.log("Score: ", score);
 
-    let score = onDiceRolled(newDice);
-    console.log("Score: ", score);
+        if (score > 0) {
+            let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
+            setScoreText(text);
 
-    if (score > 0) {
-      let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
-      setScoreText(text);
+            let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
+            setCurrentScoringPlayer(currentPlayer);
 
-      let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
-      setCurrentScoringPlayer(currentPlayer);
+            setCurrentScore(score);
+            console.log("Setting current score to:", score);
+            console.log("Setting scoreText to: ", text);
+            animateScoreText();
+        } else {
+            setCurrentScoringPlayer(null);
+            setScoreText('');
+            setCurrentScore(0);
+        }
 
-      setCurrentScore(score);
-      console.log("Setting current score to:", score);
-      console.log("Setting scoreText to: ", text);
-      animateScoreText();
-    } else {
-      setCurrentScoringPlayer(null);
-      setScoreText('');
-      setCurrentScore(0);
-    }
-
-    setIsDiceRolling(false);
-  };
+        setIsDiceRolling(false);
+    }, 350); // Reveal dice during the impact animation
+};
 
   setTimeout(() => {
     setIsDiceRolling(false);
@@ -573,6 +634,18 @@ export default function WaltesBoard({
                     transform: [
                       { translateX: dicePos.position.x },
                       { translateY: dicePos.position.y },
+                      {
+                        rotate: diceSpinAnims[index].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '360deg']
+                        })
+                      },
+                      {
+                        scale: diceScaleAnims[index].interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [0.8, 1.2, 0.8]
+                        })
+                      }
                     ],
                   }}
                 >
