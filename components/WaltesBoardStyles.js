@@ -31,9 +31,7 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        transform: [
-            { scale: 0.85 }
-        ],
+        backgroundColor: 'rgba(51, 25, 0, 0.95)', // Dark brown background
         zIndex: 2,
     },
     playerTitle: {

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity, ImageBackground } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './PlayerAreaStyles';
 
@@ -106,83 +106,12 @@ const CircularButton = ({ type, count, notchedValue, showNotchedValue }) => {
     );
 };
 
-// New component for animated stick
-const AnimatedStick = ({ type, startPosition, endPosition, delay, duration }) => {
-    const position = useRef(new Animated.ValueXY(startPosition)).current;
-    const opacity = useRef(new Animated.Value(1)).current;
-    const rotation = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        const randomHorizontalOffset = Math.random() * 40 - 20; // Random value between -20 and 20
-
-        Animated.sequence([
-            Animated.delay(delay),
-            Animated.parallel([
-                Animated.timing(position, {
-                    toValue: {
-                        x: endPosition.x + randomHorizontalOffset,
-                        y: endPosition.y - 100
-                    },
-                    duration: duration * 0.6,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.timing(rotation, {
-                    toValue: Math.random() * 360,
-                    duration: duration * 0.6,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(position, {
-                    toValue: endPosition,
-                    duration: duration * 0.4,
-                    easing: Easing.in(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacity, {
-                    toValue: 0,
-                    duration: duration * 0.4,
-                    useNativeDriver: true,
-                }),
-            ]),
-        ]).start();
-    }, []);
-
-    const icons = {
-        plain: plainStickIcon,
-        notched: notchedStickIcon,
-        kingPin: kingPinIcon,
-    };
-
-    return (
-        <Animated.Image
-            source={icons[type]}
-            style={[
-                styles.animatedStick,
-                {
-                    opacity,
-                    transform: [
-                        { translateX: position.x },
-                        { translateY: position.y },
-                        {
-                            rotate: rotation.interpolate({
-                                inputRange: [0, 360],
-                                outputRange: ['0deg', '360deg'],
-                            })
-                        },
-                    ],
-                },
-            ]}
-        />
-    );
-};
-
 // Update the WinningIconAnimation component
 const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const positionAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const overlayOpacityAnim = useRef(new Animated.Value(0)).current;
 
   const icons = {
     plain: plainStickIcon,
@@ -192,44 +121,50 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
 
   useEffect(() => {
     Animated.sequence([
-      // Scale up and move to center
+      // Fade in overlay
+      Animated.timing(overlayOpacityAnim, {
+        toValue: 0.7,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      // Initial scale and position
       Animated.parallel([
         Animated.timing(scaleAnim, {
-          toValue: 1.5,
-          duration: 800,
-          easing: Easing.elastic(1),
+          toValue: 1.2,
+          duration: 500,
+          easing: Easing.out(Easing.back(1.5)),
           useNativeDriver: true,
         }),
         Animated.timing(positionAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 500,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
       ]),
-      // Hold position
-      Animated.delay(1000),
-      // Return to personal pile
+      // Hold
+      Animated.delay(800),
+      // Move to personal pile and fade out
       Animated.parallel([
         Animated.timing(scaleAnim, {
           toValue: 0.8,
-          duration: 600,
+          duration: 400,
           useNativeDriver: true,
         }),
         Animated.timing(positionAnim, {
           toValue: 2,
-          duration: 600,
+          duration: 400,
           easing: Easing.in(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(glowAnim, {
+        Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 300,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacityAnim, {
+          toValue: 0,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]),
@@ -239,48 +174,63 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
   const translateY = positionAnim.interpolate({
     inputRange: [0, 1, 2],
     outputRange: [
-      player === 'player1' ? 150 : -150,  // Reduced distance from center
-      0,                                  // Center position
-      player === 'player1' ? -150 : 150   // Reduced distance to personal pile
+      0,                                    // Start at center
+      player === 'player1' ? -50 : 50,      // Move slightly up/down
+      player === 'player1' ? -150 : 150,    // Move to personal pile
     ],
   });
 
+  const isPlayer2 = player === 'player2';
+
   return (
     <View style={styles.winningAnimationContainer}>
-      <View style={[
-        styles.darkOverlay,
-        { transform: [{ translateY: player === 'player2' ? -100 : 100 }] }
-      ]}>
-        <Animated.View
+      {/* Dark circular overlay with wooden texture */}
+      <Animated.View 
+        style={[
+          styles.darkCircleOverlay,
+          { opacity: overlayOpacityAnim }
+        ]} 
+      >
+        <ImageBackground
+          source={require('../assets/wooden-texture.png')}
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+          imageStyle={{
+            opacity: 0.7,
+            backgroundColor: 'rgba(51, 25, 0, 0.85)', // Dark brown background
+          }}
+        />
+      </Animated.View>
+      <Animated.View
+        style={[
+          styles.winningIconWrapper,
+          {
+            transform: [
+              { scale: scaleAnim },
+              { translateY },
+              { rotate: isPlayer2 ? '180deg' : '0deg' }
+            ],
+            opacity: opacityAnim,
+          },
+        ]}
+      >
+        <Image
+          source={icons[iconType]}
           style={[
-            styles.winningIconContainer,
-            {
-              transform: [
-                { scale: scaleAnim },
-                { translateY },
-                { rotate: player === 'player2' ? '180deg' : '0deg' }
-              ],
-              opacity: glowAnim,
-            },
+            styles.winningIcon,
+            isPlayer2 && { transform: [{ rotate: '180deg' }] }
           ]}
-        >
-          <Animated.View style={styles.winningIconGlow} />
-          <Image
-            source={icons[iconType]}
-            style={styles.winningIcon}
-            resizeMode="contain"
-          />
-          <Animated.Text 
-            style={[
-              styles.waltesText,
-              player === 'player2' ? styles.waltesTextPlayer2 : null,
-              { transform: [{ rotate: player === 'player2' ? '180deg' : '180deg' }] }
-            ]}
-          >
-            Waltes!
-          </Animated.Text>
-        </Animated.View>
-      </View>
+          resizeMode="contain"
+        />
+        <Text style={[
+          styles.waltesText,
+          isPlayer2 && { transform: [{ rotate: '180deg' }] }
+        ]}>
+          Waltes!
+        </Text>
+      </Animated.View>
     </View>
   );
 };
@@ -578,60 +528,9 @@ const PlayerArea = ({
         }
     }, [playerTurn, player]);
 
-    const [animatingSticks, setAnimatingSticks] = useState([]);
     const generalPileRef = useRef(null);
     const personalPileRef = useRef(null);
     const playerAreaRef = useRef(null);
-
-    useEffect(() => {
-        if (player === scoringPlayer && scoreAmount > 0) {
-            playerAreaRef.current.measure((fx, fy, width, height, px, py) => {
-                generalPileRef.current.measure((fx2, fy2, width2, height2, px2, py2) => {
-                    personalPileRef.current.measure((fx3, fy3, width3, height3, px3, py3) => {
-                        const startPosition = {
-                            x: px2 - px + width2 / 2 - 30,
-                            y: py2 - py + height2 / 2 - 30
-                        };
-                        const endPosition = {
-                            x: px3 - px + width3 / 2 - 30,
-                            y: py3 - py + height3 / 2 - 30
-                        };
-
-                        let newAnimatingSticks = [];
-                        if (scoreAmount === 1) {
-                            newAnimatingSticks.push({
-                                id: Date.now(),
-                                type: 'notched',
-                                startPosition,
-                                endPosition,
-                                delay: 0,
-                                duration: 1000,
-                            });
-                        } else {
-                            for (let i = 0; i < 3; i++) {
-                                newAnimatingSticks.push({
-                                    id: Date.now() + i,
-                                    type: 'plain',
-                                    startPosition: {
-                                        x: startPosition.x + (Math.random() * 60 - 30),
-                                        y: startPosition.y
-                                    },
-                                    endPosition: {
-                                        x: endPosition.x + (Math.random() * 60 - 30),
-                                        y: endPosition.y
-                                    },
-                                    delay: i * 100,
-                                    duration: 1000 + Math.random() * 500,
-                                });
-                            }
-                        }
-
-                        setAnimatingSticks(newAnimatingSticks);
-                    });
-                });
-            });
-        }
-    }, [player, scoringPlayer, scoreAmount]);
 
     const handleAskButtonClick = () => {
         console.log(`Ask button clicked for ${player}`);
@@ -822,16 +721,6 @@ const PlayerArea = ({
                     </View>
                 </TouchableOpacity>
             </View>
-            {animatingSticks.map((stick) => (
-                <AnimatedStick
-                    key={stick.id}
-                    type={stick.type}
-                    startPosition={stick.startPosition}
-                    endPosition={stick.endPosition}
-                    delay={stick.delay}
-                    duration={stick.duration}
-                />
-            ))}
             {renderTutorialOverlay()}
         </View>
     );

@@ -23,6 +23,7 @@ import unmarkedDice from '../assets/unmarked-dice.png';
 import backgroundImage from '../assets/bg.png';
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import markedStickIcon from '../assets/notched-stick-icon.png';
+import woodenTexture from '../assets/wooden-texture.png';
 
 import PlayerArea from './PlayerArea';
 
@@ -31,9 +32,9 @@ const { height: screenHeight } = Dimensions.get('window');
 
 const getBowlSize = () => {
     const smallerDimension = Math.min(screenWidth, screenHeight);
-    const maxSafeHeight = screenHeight * 0.42;
-    const maxSafeWidth = screenWidth * 0.85;
-    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.85);
+    const maxSafeHeight = screenHeight * 0.32;
+    const maxSafeWidth = screenWidth * 0.75;
+    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.75);
 };
 
 const bowlSize = getBowlSize();
@@ -41,8 +42,8 @@ const bowlSize = getBowlSize();
 // Calculate vertical position that ensures no overlap
 const getVerticalOffset = () => {
     const playerAreaHeight = screenHeight * 0.27;
-    const availableMiddleSpace = screenHeight - (playerAreaHeight * 2);
-    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025); // Reduced from 0.035 to 0.025 for better centering
+    const availableSpace = screenHeight - (playerAreaHeight * 2);
+    return ((availableSpace - bowlSize) / 2) - (screenHeight * 0.05);
 };
 
 const verticalOffset = getVerticalOffset();
@@ -257,57 +258,22 @@ export default function WaltesBoard({
         ).start();
     });
 
-    // Create a smoother animation sequence
+    // Create a shrink-only animation sequence
     Animated.sequence([
-        // Initial preparation bounce - subtle compress
+        // Quick shrink
         Animated.spring(bowlScaleAnim, {
-            toValue: 0.97,  // More subtle initial compression
+            toValue: 0.85,  // Shrink to 85%
             tension: 120,
             friction: 8,
             useNativeDriver: true,
         }),
-        // Main toss animation
-        Animated.parallel([
-            // Scale up with compensating translation
-            Animated.timing(bowlScaleAnim, {
-                toValue: 1.1,  
-                duration: 250, // Slightly faster
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            // Subtle lift - reduced even more to minimize overlap
-            Animated.timing(bowlLiftAnim, {
-                toValue: -10,  // Reduced lift height further
-                duration: 250,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            })
-        ]),
-        // Impact and reveal dice
-        Animated.parallel([
-            // Scale impact
-            Animated.sequence([
-                Animated.timing(bowlScaleAnim, {
-                    toValue: 0.95,
-                    duration: 100,
-                    easing: Easing.in(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(bowlScaleAnim, {
-                    toValue: 1,    
-                    tension: 60,
-                    friction: 7,
-                    useNativeDriver: true,
-                })
-            ]),
-            // Drop animation
-            Animated.spring(bowlLiftAnim, {
-                toValue: 0,
-                tension: 60,
-                friction: 7,
-                useNativeDriver: true,
-            })
-        ])
+        // Return to original size
+        Animated.spring(bowlScaleAnim, {
+            toValue: 1,     // Back to original size (no expansion)
+            tension: 80,
+            friction: 7,
+            useNativeDriver: true,
+        })
     ]).start();
 
     // Update the dice reveal timeout
@@ -316,7 +282,7 @@ export default function WaltesBoard({
         diceSpinAnims.forEach((anim) => anim.stopAnimation());
         diceScaleAnims.forEach((anim) => anim.stopAnimation());
 
-        // Reveal final dice positions with a nice settling animation
+        // Reveal final dice positions
         setDice(newDice);
         setDicePositions(newDicePositions);
         
@@ -342,7 +308,7 @@ export default function WaltesBoard({
         }
 
         setIsDiceRolling(false);
-    }, 350); // Reveal dice during the impact animation
+    }, 350);
 };
 
   setTimeout(() => {
@@ -609,57 +575,68 @@ export default function WaltesBoard({
             ],
             justifyContent: 'center',
             alignItems: 'center',
+            borderRadius: bowlSize / 2,
+            overflow: 'hidden',
           }}
         >
           <ImageBackground 
-            source={bowlImage} 
-            resizeMode="contain" 
-            style={[
-              styles.bowlImage,
-              {
+            source={woodenTexture}
+            style={{
+              width: '100%',
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <ImageBackground 
+              source={bowlImage} 
+              resizeMode="contain" 
+              style={{
                 width: '100%',
                 height: '100%',
-              }
-            ]}
-          >
-            <View style={styles.diceContainer}>
-              {dicePositions.map((dicePos, index) => (
-                <Animated.View
-                  key={index}
-                  style={{
-                    position: 'absolute',
-                    opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
-                    top: '50%',
-                    left: '50%',
-                    transform: [
-                      { translateX: dicePos.position.x },
-                      { translateY: dicePos.position.y },
-                      {
-                        rotate: diceSpinAnims[index].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '360deg']
-                        })
-                      },
-                      {
-                        scale: diceScaleAnims[index].interpolate({
-                          inputRange: [0, 0.5, 1],
-                          outputRange: [0.8, 1.2, 0.8]
-                        })
-                      }
-                    ],
-                  }}
-                >
-                  <Animated.Image
-                    resizeMode="contain"
-                    source={dice[index] === 1 ? markedDice : unmarkedDice}
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <View style={styles.diceContainer}>
+                {dicePositions.map((dicePos, index) => (
+                  <Animated.View
+                    key={index}
                     style={{
-                      width: 35,
-                      height: 35,
+                      position: 'absolute',
+                      opacity: showTutorial ? (tutorialStep === 1 ? 0 : diceOpacityAnims[index]) : 1,
+                      top: '50%',
+                      left: '50%',
+                      transform: [
+                        { translateX: dicePos.position.x },
+                        { translateY: dicePos.position.y },
+                        {
+                          rotate: diceSpinAnims[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg']
+                          })
+                        },
+                        {
+                          scale: diceScaleAnims[index].interpolate({
+                            inputRange: [0, 0.5, 1],
+                            outputRange: [0.8, 1.2, 0.8]
+                          })
+                        }
+                      ],
                     }}
-                  />
-                </Animated.View>
-              ))}
-            </View>
+                  >
+                    <Animated.Image
+                      resizeMode="contain"
+                      source={dice[index] === 1 ? markedDice : unmarkedDice}
+                      style={{
+                        width: 35,
+                        height: 35,
+                      }}
+                    />
+                  </Animated.View>
+                ))}
+              </View>
+            </ImageBackground>
           </ImageBackground>
         </Animated.View>
 

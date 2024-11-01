@@ -199,12 +199,6 @@ const styles = StyleSheet.create({
         textShadowRadius: 3,
         fontFamily: 'Impact, Haettenschweiler, Franklin Gothic Bold, Charcoal, Helvetica Inserat, Bitstream Vera Sans Bold, Arial Black, sans serif',
     },
-    animatedStick: {
-        position: 'absolute',
-        width: 60,
-        height: 60,
-        zIndex: 1000003,
-    },
     // Add any other styles used in PlayerArea component
 
     // New styles for tutorial navigation
@@ -237,26 +231,39 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000000,
+        zIndex: 1000002,
+        pointerEvents: 'none',
+    },
+
+    darkCircleOverlay: {
+        position: 'absolute',
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+        overflow: 'hidden', // This ensures the image stays within the circle
+    },
+
+    winningIconWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+    },
+
+    winningIcon: {
+        width: 80,
+        height: 100,
+        marginBottom: 10,
     },
 
     waltesText: {
-        position: 'absolute',
-        bottom: -50,
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#FFD700',
-        textAlign: 'center',
         textShadowColor: 'rgba(0, 0, 0, 0.75)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 3,
-        width: 200,
-        left: -60,
-    },
-
-    waltesTextPlayer2: {
-        bottom: 50,
-        transform: [{ rotate: '180deg' }], // Fixed rotation for player 2
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+        textAlign: 'center',
     },
 });
 
