@@ -180,7 +180,7 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
     ],
   });
 
-  const isPlayer2 = player === 'player2';
+  const isPlayer1 = player === 'player1';
 
   return (
     <View style={styles.winningAnimationContainer}>
@@ -196,10 +196,11 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
           style={{
             width: '100%',
             height: '100%',
+            transform: [{ rotate: isPlayer1 ? '180deg' : '0deg' }]  // FLIPPED THIS
           }}
           imageStyle={{
             opacity: 0.7,
-            backgroundColor: 'rgba(51, 25, 0, 0.85)', // Dark brown background
+            backgroundColor: 'rgba(51, 25, 0, 0.85)',
           }}
         />
       </Animated.View>
@@ -210,7 +211,7 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
             transform: [
               { scale: scaleAnim },
               { translateY },
-              { rotate: isPlayer2 ? '180deg' : '0deg' }
+              { rotate: isPlayer1 ? '180deg' : '0deg' }  // FLIPPED THIS
             ],
             opacity: opacityAnim,
           },
@@ -218,16 +219,10 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
       >
         <Image
           source={icons[iconType]}
-          style={[
-            styles.winningIcon,
-            isPlayer2 && { transform: [{ rotate: '180deg' }] }
-          ]}
+          style={styles.winningIcon}
           resizeMode="contain"
         />
-        <Text style={[
-          styles.waltesText,
-          isPlayer2 && { transform: [{ rotate: '180deg' }] }
-        ]}>
+        <Text style={styles.waltesText}>
           Waltes!
         </Text>
       </Animated.View>
@@ -573,19 +568,6 @@ const PlayerArea = ({
                         player={player}
                         onAnimationComplete={() => setShowWinningAnimation(false)}
                     />
-                    <Animated.Text style={[
-                        styles.waltesText,
-                        player === 'player2' && styles.waltesTextPlayer2,
-                        {
-                            opacity: waltesTextAnim,
-                            transform: [
-                                { scale: waltesTextAnim },
-                                ...(player === 'player2' ? [{ rotate: '180deg' }] : [])
-                            ],
-                        }
-                    ]}>
-                        Waltes!
-                    </Animated.Text>
                 </>
             )}
 
