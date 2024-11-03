@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Video, Audio } from 'expo-av';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-const HomePage = ({ onStartGame, totalPoints }) => {
+const HomePage = ({ onStartGame, totalPoints, onStartKnowledgeMap }) => {
   const [sound, setSound] = useState();
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -42,6 +43,13 @@ const HomePage = ({ onStartGame, totalPoints }) => {
         onPress={togglePlayback}
       >
         <Text style={styles.musicButtonText}>{isPlaying ? 'Music Off' : 'Music On'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.knowledgeMapButton}
+        onPress={() => onStartKnowledgeMap()}
+      >
+        <MaterialIcons name="map" size={24} color="white" />
+        <Text style={styles.buttonText}>Knowledge Map</Text>
       </TouchableOpacity>
       <Text style={styles.pointsText}>Total Points: {totalPoints}</Text>
     </View>
@@ -95,6 +103,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     marginBottom: 20,
+  },
+  knowledgeMapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7B329',
+    padding: 15,
+    borderRadius: 25,
+    marginTop: 10,
   },
 });
 

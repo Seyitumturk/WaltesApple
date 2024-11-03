@@ -265,6 +265,91 @@ const styles = StyleSheet.create({
         textShadowRadius: 2,
         textAlign: 'center',
     },
+
+    generalPileContent: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+    },
+    replacementText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        width: '100%',
+        paddingVertical: 5,
+        numberOfLines: 1,
+        ellipsizeMode: 'tail',
+    },
+    swapAnimationContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+        height: 60,
+    },
+    swapStickIcon: {
+        width: 40,
+        height: 60,
+        marginHorizontal: 15,
+    },
+    swapText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    animationContainer: {
+        width: '100%',
+        height: 76,
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    swapGroup: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    swapIconContainer: {
+        marginHorizontal: 20,
+    },
+    swapAnimationContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: 15,
+        padding: 15,
+        marginTop: 10,
+    },
+    swapStickIcon: {
+        width: 40,
+        height: 60,
+        marginHorizontal: 5,
+    },
+    swapText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    streakContainer: {
+        position: 'absolute',
+        right: 20,
+        top: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: 15,
+        padding: 8,
+        zIndex: 1000003,
+    },
+    streakText: {
+        marginLeft: 5,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });
 
 export default styles;

@@ -50,7 +50,7 @@ const verticalOffset = getVerticalOffset();
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage, streaks, showStreakAnimation
 }) {
   const [personalPileHeight, setPersonalPileHeight] = useState(0);
   const typingInterval = useRef(null);
@@ -291,11 +291,17 @@ export default function WaltesBoard({
         console.log("Score: ", score);
 
         if (score > 0) {
-            let text = score === superWaltesScore ? "Super Waltes" : "Waltes";
+            let text = score === 5 ? "Super Waltes" : "Waltes";
             setScoreText(text);
 
             let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';
             setCurrentScoringPlayer(currentPlayer);
+
+            // Check if this is a winning roll for King Pin
+            if (isGeneralPileExhausted && !debt[currentPlayer]) {
+                scaleAndMoveStick(); // Animate the stick movement
+                Vibration.vibrate([0, 500, 200, 500]); // Victory vibration pattern
+            }
 
             setCurrentScore(score);
             console.log("Setting current score to:", score);
@@ -513,10 +519,11 @@ export default function WaltesBoard({
       <StatusBar hidden={true} />
       
       <ImageBackground 
-        source={backgroundImage} 
+        source={woodenTexture} 
         style={styles.background} 
         imageStyle={{ 
-          opacity: 0.05,
+          opacity: 0.15,  // Very subtle texture
+          resizeMode: 'repeat'  // Makes the texture repeat
         }}
       >
         <View style={styles.backgroundOverlay} />
@@ -558,26 +565,22 @@ export default function WaltesBoard({
           scoreAmount={currentScoringPlayer === 'player1' ? currentScore : 0}
           totalTutorialSteps={totalTutorialSteps}
           onTutorialPrevious={handleTutorialPrevious}
+          streaks={streaks}
+          showStreakAnimation={showStreakAnimation}
         />
 
         <Animated.View
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: bowlSize,
-            height: bowlSize,
-            transform: [
-                { translateX: -bowlSize / 2 },
-                { translateY: -bowlSize / 2 + verticalOffset },
-                { translateY: bowlLiftAnim },
-                { scale: bowlScaleAnim }
-            ],
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: bowlSize / 2,
-            overflow: 'hidden',
-          }}
+          style={[
+            styles.bowlContainer,
+            {
+                transform: [
+                    { translateX: -bowlSize / 2 },
+                    { translateY: -bowlSize / 2 + verticalOffset },
+                    { translateY: bowlLiftAnim },
+                    { scale: bowlScaleAnim }
+                ],
+            }
+          ]}
         >
           <ImageBackground 
             source={woodenTexture}
@@ -596,6 +599,8 @@ export default function WaltesBoard({
                 height: '100%',
                 justifyContent: 'center',
                 alignItems: 'center',
+                zIndex: 10,
+                elevation: 10,
               }}
             >
               <View style={styles.diceContainer}>
@@ -663,6 +668,8 @@ export default function WaltesBoard({
           scoreAmount={currentScoringPlayer === 'player2' ? currentScore : 0}
           totalTutorialSteps={totalTutorialSteps}
           onTutorialPrevious={handleTutorialPrevious}
+          streaks={streaks}
+          showStreakAnimation={showStreakAnimation}
         />
       </ImageBackground>
 

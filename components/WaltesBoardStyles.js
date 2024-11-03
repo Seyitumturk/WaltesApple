@@ -5,12 +5,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Update the calculations at the top
 const getBowlSize = () => {
     const smallerDimension = Math.min(screenWidth, screenHeight);
-    // Very slightly increase size
-    const maxSafeHeight = screenHeight * 0.44; // Increased from 0.43
-    const maxSafeWidth = screenWidth * 0.87;   // Increased from 0.85
+    const maxSafeHeight = screenHeight * 0.32; // Changed back to original 0.32
+    const maxSafeWidth = screenWidth * 0.75;   // Changed back to original 0.75
     
-    // Use the smaller of the two to ensure no overlap
-    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.87);
+    return Math.min(maxSafeHeight * 2, maxSafeWidth, smallerDimension * 0.75);
 };
 
 const bowlSize = getBowlSize();
@@ -18,9 +16,8 @@ const bowlSize = getBowlSize();
 // Calculate vertical position that ensures no overlap
 const getVerticalOffset = () => {
     const playerAreaHeight = screenHeight * 0.27;
-    const availableMiddleSpace = screenHeight - (playerAreaHeight * 2);
-    // Increase the upward offset slightly
-    return ((availableMiddleSpace - bowlSize) / 2) - (screenHeight * 0.025); // Increased from 0.02
+    const availableSpace = screenHeight - (playerAreaHeight * 2);
+    return ((availableSpace - bowlSize) / 2) - (screenHeight * 0.05);
 };
 
 const verticalOffset = getVerticalOffset();
@@ -31,8 +28,16 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(51, 25, 0, 0.95)', // Dark brown background
-        zIndex: 2,
+        backgroundColor: '#8B4513',
+        zIndex: 10,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
     },
     playerTitle: {
         fontSize: 18,
@@ -47,12 +52,15 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F76929', // Your brand orange
+        backgroundColor: '#8B4513', // Base wooden color
+        zIndex: 1,
     },
     backgroundOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(253, 161, 14, 0.2)', // Warm overlay
-        zIndex: 1,
+        backgroundColor: 'rgba(139, 69, 19, 0.4)', // More transparent overlay
+        backgroundImage: require('../assets/wooden-texture.png'), // Using the wooden texture
+        opacity: 0.15, // Very subtle texture
+        zIndex: 2,
     },
     askButton: {
         backgroundColor: '#FDA10E',
@@ -85,7 +93,8 @@ const styles = StyleSheet.create({
             { translateX: -(bowlSize * 0.7) / 2 },
             { translateY: -(bowlSize * 0.7) / 2 },
         ],
-        zIndex: 3,
+        zIndex: 11,
+        elevation: 11,
     },
     dice: {
         width: 50,
@@ -163,7 +172,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundColor: '#D35400', // Deep orange base
+        backgroundColor: '#8B4513', // Changed from orange to wooden color
     },
     debtButtonsContainer: {
         position: 'absolute',
@@ -412,6 +421,23 @@ const styles = StyleSheet.create({
     player2Area: {
         top: 0,
         paddingTop: 0,
+    },
+    bowlContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: bowlSize,
+        height: bowlSize,
+        transform: [
+            { translateX: -bowlSize / 2 },
+            { translateY: -bowlSize / 2 + verticalOffset }
+        ],
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: bowlSize / 2,
+        overflow: 'hidden',
+        zIndex: 10,
+        elevation: 10,
     },
 });
 

@@ -18,6 +18,7 @@ import WaltesBoard from './components/WaltesBoard';
 import HomePage from './components/HomePage';
 import stickReplacementGif from './assets/switch.gif'; // Adjust the path as necessary
 import { knowledgeNuggets } from './components/knowledgeNuggets';
+import KnowledgeMap from './components/KnowledgeMap';
 
 const CustomAlert = ({ visible, message, buttons, shouldRotate }) => {
   if (!visible) return null;
@@ -93,6 +94,14 @@ export default function App() {
   const [replacementMessage, setReplacementMessage] = useState(''); // <-- New State
   const [totalPoints, setTotalPoints] = useState(0);
   const [unlockedNuggets, setUnlockedNuggets] = useState([]);
+
+  const [prevPage, setPrevPage] = useState('home');
+
+  const [streaks, setStreaks] = useState({ player1: 0, player2: 0 });
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+
+  // Add this state for King Pin competition
+  const [isKingPinCompetition, setIsKingPinCompetition] = useState(false);
 
   const triggerAlertForExchange = (currentPlayer) => {
     const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
@@ -221,17 +230,20 @@ export default function App() {
 
     if (newUnlockedNuggets.length > 0) {
       setUnlockedNuggets([...unlockedNuggets, ...newUnlockedNuggets.map(nugget => nugget.id)]);
-      // Show an alert or some notification about newly unlocked nuggets
-      showCustomAlert(`You've unlocked ${newUnlockedNuggets.length} new knowledge nugget(s)!`, [
-        {
-          text: 'View',
-          onPress: () => setCurrentPage('nuggets')
-        },
-        {
-          text: 'Continue Playing',
-          onPress: () => setAlertVisible(false)
-        }
-      ]);
+      
+      showCustomAlert(
+        `You've unlocked ${newUnlockedNuggets.length} new knowledge nugget(s)!`,
+        [
+          {
+            text: 'View Map',
+            onPress: () => setCurrentPage('knowledge-map')
+          },
+          {
+            text: 'Continue Playing',
+            onPress: () => setAlertVisible(false)
+          }
+        ]
+      );
     }
   };
 
@@ -254,69 +266,43 @@ export default function App() {
     let newSticks = { ...sticks };
     let debtAmount = debt[askingPlayer];
 
-    // Use plain sticks first
-    if (newSticks[otherPlayer].plain >= debtAmount) {
-      newSticks[otherPlayer].plain -= debtAmount;
-      newSticks[askingPlayer].plain += debtAmount;
-      debtAmount = 0;
-    } else {
-      debtAmount -= newSticks[otherPlayer].plain;
-      newSticks[askingPlayer].plain += newSticks[otherPlayer].plain;
-      newSticks[otherPlayer].plain = 0;
+    console.log(`${askingPlayer} is asking ${otherPlayer} to pay ${debtAmount} sticks`);
+
+    // Check if other player has enough resources
+    const plainValue = newSticks[otherPlayer].plain;
+    const notchedValue = newSticks[otherPlayer].notched * 15;
+    const totalAvailable = plainValue + notchedValue;
+
+    if (totalAvailable < debtAmount) {
+        showGameOverAlert(`${askingPlayer.toUpperCase()} wins! ${otherPlayer.toUpperCase()} cannot pay the debt.`);
+        return;
     }
 
-    // Use notched sticks if there's still debt to settle
-    while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
-      newSticks[otherPlayer].notched -= 1;
-      newSticks[askingPlayer].notched += 1;
-
-      // Transfer 15 plain sticks equivalent for the notched stick
-      let plainSticksFromNotched = 15;
-
-      // Transfer plain sticks from other player to cover the notched stick transfer
-      if (newSticks[otherPlayer].plain >= plainSticksFromNotched) {
-        newSticks[otherPlayer].plain -= plainSticksFromNotched;
-        newSticks[askingPlayer].plain += plainSticksFromNotched;
-      } else {
-        newSticks[askingPlayer].plain += newSticks[otherPlayer].plain;
-        plainSticksFromNotched -= newSticks[otherPlayer].plain;
-        newSticks[otherPlayer].plain = 0;
-      }
-
-      // Adjust the debt amount based on the transfer
-      debtAmount -= 15;
-
-      // If the debtAmount becomes negative, it means there is excess plain sticks
-      if (debtAmount < 0) {
-        let excessPlainSticks = -debtAmount;
-        debtAmount = 0;
-
-        // Return excess plain sticks to the opponent
-        if (newSticks[askingPlayer].plain >= excessPlainSticks) {
-          newSticks[askingPlayer].plain -= excessPlainSticks;
-          newSticks[otherPlayer].plain += excessPlainSticks;
-        } else {
-          newSticks[otherPlayer].plain += newSticks[askingPlayer].plain;
-          newSticks[askingPlayer].plain = 0;
-        }
-      }
+    // Transfer plain sticks first
+    const plainTransfer = Math.min(debtAmount, newSticks[otherPlayer].plain);
+    if (plainTransfer > 0) {
+        newSticks[otherPlayer].plain -= plainTransfer;
+        newSticks[askingPlayer].plain += plainTransfer;
+        debtAmount -= plainTransfer;
     }
 
-    // Ensure plain sticks do not exceed the maximum count
-    if (newSticks[askingPlayer].plain > 51) {
-      newSticks[askingPlayer].plain = 51;
+    // If still needed, transfer notched sticks
+    while (debtAmount >= 15 && newSticks[otherPlayer].notched > 0) {
+        newSticks[otherPlayer].notched--;
+        newSticks[askingPlayer].notched++;
+        debtAmount -= 15;
     }
 
-    // Check if the other player is out of sticks
-    if (newSticks[otherPlayer].plain === 0 && newSticks[otherPlayer].notched === 0 && newSticks[otherPlayer].kingPin === 0) {
-      showGameOverAlert(`${askingPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
-      return;
-    }
-
+    // Update debt
     const newDebt = { ...debt };
-    newDebt[askingPlayer] = debtAmount > 0 ? debtAmount : 0;
+    newDebt[askingPlayer] = 0; // Clear the debt after payment
     setDebt(newDebt);
     setSticks(newSticks);
+
+    showCustomAlert(
+        `${otherPlayer.toUpperCase()} paid their debt to ${askingPlayer.toUpperCase()}`,
+        [{ text: 'OK', onPress: () => setAlertVisible(false) }]
+    );
   };
 
   const triggerReplacementAnimation = () => {
@@ -392,86 +378,92 @@ export default function App() {
       </View>
     );
   };
+
+  // Add this function to check if all notched sticks are distributed
+  const areAllNotchedSticksDistributed = () => {
+    return sticks.general.notched === 0 && 
+           (sticks.player1.notched + sticks.player2.notched === 3);
+  };
+
+  // Update calculateScore function with new King Pin logic
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
     let score = 0;
+    let isStreakScore = false;
 
     const currentPlayer = `player${playerTurn + 1}`;
     let newSticks = { ...sticks };
 
-    if (marked === 6 || unmarked === 6) {
-      setWaltesText('Super Waltes!');
-      score = 5;
+    // Check for perfect roll (all marked or all unmarked)
+    const isPerfectRoll = marked === 6 || unmarked === 6;
+
+    // First determine if it's a scoring throw
+    if (isPerfectRoll) {
+        setWaltesText('Super Waltes!');
+        score = 15;
+
+        // Check King Pin winning conditions
+        if (sticks[currentPlayer].notched > 0 && // Has at least one notched stick
+            areAllNotchedSticksDistributed() && // All notched sticks are out of general pile
+            sticks.general.kingPin === 1) // King Pin is still available
+        {
+            // Award King Pin to current player
+            newSticks[currentPlayer].kingPin = 1;
+            newSticks.general.kingPin = 0;
+            
+            showCustomAlert(
+                `${currentPlayer.toUpperCase()} wins the King Pin with a perfect roll!`,
+                [{ text: 'OK', onPress: () => setAlertVisible(false) }]
+            );
+        }
     } else if (marked === 5 || unmarked === 5) {
-      setWaltesText('Waltes!');
-      score = 1;
+        setWaltesText('Waltes!');
+        score = 3;
     } else {
-      setWaltesText('');
+        setWaltesText('');
     }
 
-    if (nextRollForKingPin && score > 0) {
-      newSticks[currentPlayer].kingPin++;
-      newSticks.general.kingPin--;
-      setNextRollForKingPin(false);
-
-      showCustomAlert(`Congrats, ${currentPlayer} got the King Pin!`, [
-        { text: 'OK', onPress: () => console.log('King Pin Acknowledged') }
-      ]);
-
-      if (newSticks.general.kingPin === 0) {
-        setIsGeneralPileExhausted(true);
-      }
-
-      setSticks(newSticks);
-      return score;
-    }
-
+    // Handle normal scoring
     if (score > 0) {
-      if (!isGeneralPileExhausted) {
-        let requiredPlainSticks = 3 * score;
-        let availablePlainSticks = Math.min(newSticks.general.plain, requiredPlainSticks);
-
-        if (newSticks[currentPlayer].notchedValue < 15) {
-          let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
-          let usedForCompletion = Math.min(availablePlainSticks, neededForCompletion);
-          newSticks[currentPlayer].notchedValue += usedForCompletion;
-          newSticks.general.plain -= usedForCompletion;
-          availablePlainSticks -= usedForCompletion;
+        if (!isGeneralPileExhausted) {
+            // Add score to player's plain sticks
+            if (newSticks.general.plain >= score) {
+                newSticks[currentPlayer].plain += score;
+                newSticks.general.plain -= score;
+                handleNotchedReplacement(currentPlayer);
+            } else {
+                // Not enough plain sticks in general pile
+                const remainingSticks = newSticks.general.plain;
+                newSticks[currentPlayer].plain += remainingSticks;
+                newSticks.general.plain = 0;
+                
+                // Enter debt mode if general pile is empty
+                if (newSticks.general.plain === 0 && 
+                    newSticks.general.notched === 0 && 
+                    newSticks.general.kingPin === 0) {
+                    setIsGeneralPileExhausted(true);
+                    const remainingScore = score - remainingSticks;
+                    const newDebt = { ...debt };
+                    newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + remainingScore;
+                    setDebt(newDebt);
+                    
+                    showCustomAlert(
+                        "General pile is exhausted! Game enters debt mode.",
+                        [{ text: 'OK', onPress: () => setAlertVisible(false) }]
+                    );
+                }
+            }
+        } else {
+            // Debt mode scoring
+            const newDebt = { ...debt };
+            newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + score;
+            setDebt(newDebt);
         }
 
-        newSticks[currentPlayer].plain += availablePlainSticks;
-        newSticks.general.plain -= availablePlainSticks;
-
-        handleNotchedReplacement(currentPlayer);
-
-        if (newSticks.general.plain === 0) {
-          checkKingPinCondition();
-        }
-
-        if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
-          newSticks[currentPlayer].plain -= 15;
-          newSticks[currentPlayer].notched++;
-          newSticks.general.notched--;
-          newSticks.general.plain += 15;
-
-          triggerReplacementAnimation();
-        }
-      } else {
-        const newDebt = { ...debt };
-        newDebt[currentPlayer] += score === 5 ? 15 : 3;
-        setDebt(newDebt);
-      }
+        setSticks(newSticks);
     }
 
-    setSticks(newSticks);
-    setScores((prevScores) => {
-      const newScores = [...prevScores];
-      newScores[playerTurn] += score;
-      return newScores;
-    });
-
-    setWaltesTimeout(setTimeout(() => setWaltesText(''), 1000));
     return score;
   };
 
@@ -553,6 +545,11 @@ export default function App() {
     }
   };
 
+  const handleStartKnowledgeMap = () => {
+    setPrevPage(currentPage);  // Store current page before switching
+    setCurrentPage('knowledge-map');
+  };
+
   return (
     <View style={styles.container}>
       <CustomAlert
@@ -566,7 +563,13 @@ export default function App() {
 
 
 
-      {currentPage === 'home' && <HomePage onStartGame={startGame} totalPoints={totalPoints} />}
+      {currentPage === 'home' && (
+        <HomePage 
+          onStartGame={startGame} 
+          totalPoints={totalPoints} 
+          onStartKnowledgeMap={handleStartKnowledgeMap}
+        />
+      )}
       {currentPage === 'game' && (
         <>
           <TouchableOpacity
@@ -598,6 +601,8 @@ export default function App() {
             debt={debt}
             handleAskDebtPayment={handleDebtPayment}
             replacementMessage={replacementMessage}
+            streaks={streaks}
+            showStreakAnimation={showStreakAnimation}
           />
 
           {showReplacementGif && (
@@ -646,6 +651,13 @@ export default function App() {
           unlockedNuggets={unlockedNuggets}
           totalPoints={totalPoints}
           onBack={() => setCurrentPage('game')}
+        />
+      )}
+      {currentPage === 'knowledge-map' && (
+        <KnowledgeMap
+          unlockedNuggets={unlockedNuggets}
+          totalPoints={totalPoints}
+          onClose={() => setCurrentPage(prevPage)} // Use prevPage state
         />
       )}
     </View>

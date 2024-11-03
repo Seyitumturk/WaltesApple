@@ -1,7 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import styles from './PlayerAreaStyles';
+
+// Add this line to get screen dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 import plainStickIcon from '../assets/plain-stick-icon.png';
 import notchedStickIcon from '../assets/notched-stick-icon.png';
@@ -252,7 +256,11 @@ const PlayerArea = ({
     showTutorial,
     scoreAmount, // Add this prop
     generalPileHighlightAnim, // Add this prop if it's not already included
+    streaks,
+    showStreakAnimation,
 }) => {
+    const otherPlayer = player === 'player1' ? 'player2' : 'player1';
+
     const playerStyle = player === 'player1' 
         ? [styles.playerArea, styles.player1Area] 
         : [styles.playerArea, styles.player2Area];
@@ -346,45 +354,70 @@ const PlayerArea = ({
         }
     }, [playerTurn, player]);
 
+    const slideAnim = useRef(new Animated.Value(0)).current;  // For general pile items
+    const textSlideAnim = useRef(new Animated.Value(-screenWidth)).current;  // For text
+    const swapIconsAnim = useRef(new Animated.Value(0)).current;  // For swapping animation
+
     useEffect(() => {
         if (replacementMessage) {
-            // Reset animations before starting
-            fadeAnim.setValue(1); // Start with full opacity
-            swapAnim.setValue(0);
-            initialTextOpacity.setValue(1); // Ensure text starts visible
-            setTitle(replacementMessage); // Set the title to the replacement message
+            // Reset positions
+            slideAnim.setValue(0);
+            textSlideAnim.setValue(-screenWidth);
+            swapIconsAnim.setValue(0);
 
-            // Sequential animations for the effect
             Animated.sequence([
-                // Display the initial text for 2.5 seconds
-                Animated.timing(initialTextOpacity, {
-                    toValue: 1,
-                    duration: 2500, // Extended duration
-                    useNativeDriver: true,
-                }),
-                Animated.timing(initialTextOpacity, {
-                    toValue: 0,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-                // Start the icon swap animation
-                Animated.timing(swapAnim, {
-                    toValue: 1, // Move icons
-                    duration: 3000, // Extended duration for smooth transition
+                // 1. Slide out current content to the right
+                Animated.timing(slideAnim, {
+                    toValue: screenWidth,
+                    duration: 1200,
                     easing: Easing.inOut(Easing.ease),
                     useNativeDriver: true,
                 }),
-                // Fade out the entire animation
-                Animated.timing(fadeAnim, {
-                    toValue: 0, // Fade out everything
-                    duration: 1000, // Smooth fade-out
+                // 2. Slide in and show the text
+                Animated.timing(textSlideAnim, {
+                    toValue: 0,
+                    duration: 1200,
+                    easing: Easing.inOut(Easing.ease),
                     useNativeDriver: true,
                 }),
-            ]).start(() => {
-                // Reset title to "General Pile" after the animation completes
-                setTitle("General Pile");
-                fadeAnim.setValue(1); // Restore full opacity for the title
-            });
+                // 3. Hold text for reading
+                Animated.delay(3000),
+                // 4. Slide out text and begin swap animation
+                Animated.parallel([
+                    Animated.timing(textSlideAnim, {
+                        toValue: screenWidth,
+                        duration: 1200,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                    // Start swap animation as text exits
+                    Animated.sequence([
+                        // Fade in swap animation
+                        Animated.timing(swapIconsAnim, {
+                            toValue: 1,
+                            duration: 800,
+                            easing: Easing.inOut(Easing.ease),
+                            useNativeDriver: true,
+                        }),
+                        // Hold the swap animation
+                        Animated.delay(3000),
+                        // Fade out swap animation
+                        Animated.timing(swapIconsAnim, {
+                            toValue: 0,
+                            duration: 800,
+                            easing: Easing.inOut(Easing.ease),
+                            useNativeDriver: true,
+                        }),
+                    ]),
+                ]),
+                // 5. Slide in original content from left
+                Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 1200,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ]).start();
         }
     }, [replacementMessage]);
 
@@ -546,19 +579,40 @@ const PlayerArea = ({
         }
     }, [player, scoringPlayer, scoreAmount]);
 
+    const renderStreakIndicator = () => {
+        const streak = streaks[player];
+        if (streak < 2) return null;
+
+        const isThreeStreak = streak === 3;
+        const color = isThreeStreak ? '#FFD700' : '#FF4500';
+        
+        return (
+            <Animated.View
+                style={[
+                    styles.streakContainer,
+                    {
+                        transform: [
+                            { scale: showStreakAnimation ? 1.2 : 1 },
+                            { rotate: player === 'player1' ? '180deg' : '0deg' }
+                        ]
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name={isThreeStreak ? "crown" : "fire"}
+                    size={24}
+                    color={color}
+                />
+                <Text style={[styles.streakText, { color }]}>
+                    {isThreeStreak ? 'Kisikuiskw!' : `${streak}x`}
+                </Text>
+            </Animated.View>
+        );
+    };
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
-            {/* Add the border image */}
-            {/* Commented out for now
-            <Image 
-                source={borderImage} 
-                style={[
-                    styles.borderImage,
-                    player === 'player1' ? styles.borderImagePlayer1 : styles.borderImagePlayer2
-                ]}
-                resizeMode="stretch"
-            />
-            */}
+            {renderStreakIndicator()}
 
             {showWinningAnimation && (
                 <>
@@ -578,55 +632,85 @@ const PlayerArea = ({
                     </Animated.Text>
                     <View style={styles.generalPileContainer}>
                         {replacementMessage ? (
-                            <Animated.View style={[styles.replacementContainer, { opacity: fadeAnim }]}>
-                                <View style={styles.replacementTextContainer}>
-                                    <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Animated.Text style={[styles.replacementText, {
-                                            transform: [{
-                                                translateX: swapAnim.interpolate({
-                                                    inputRange: [0, 1],
-                                                    outputRange: [-30, 0],
-                                                }),
-                                            }],
-                                        }]}>
-                                            15x
-                                        </Animated.Text>
-                                        <Animated.Image
-                                            source={require('../assets/plain-stick-icon.png')}
-                                            style={[styles.icon, {
-                                                transform: [{
-                                                    translateX: swapAnim.interpolate({
-                                                        inputRange: [0, 1],
-                                                        outputRange: [-30, 0],
-                                                    }),
-                                                }],
-                                            }]}
+                            <View style={styles.animationContainer}>
+                                {/* Original content */}
+                                <Animated.View 
+                                    style={[
+                                        styles.generalPileContent,
+                                        {
+                                            position: 'absolute',
+                                            width: '100%',
+                                            transform: [{ translateX: slideAnim }],
+                                        }
+                                    ]}
+                                >
+                                    <CircularButton type="plain" count={sticks.general.plain} />
+                                    <CircularButton type="notched" count={sticks.general.notched} />
+                                    <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                                </Animated.View>
+
+                                {/* Replacement text */}
+                                <Animated.View 
+                                    style={[
+                                        styles.replacementContainer,
+                                        {
+                                            position: 'absolute',
+                                            width: '100%',
+                                            transform: [{ translateX: textSlideAnim }],
+                                        }
+                                    ]}
+                                >
+                                    <Text style={styles.replacementText}>{replacementMessage}</Text>
+                                </Animated.View>
+
+                                {/* Swap animation */}
+                                <Animated.View 
+                                    style={[
+                                        styles.swapAnimationContainer,
+                                        {
+                                            position: 'absolute',
+                                            width: '100%',
+                                            opacity: swapIconsAnim,
+                                            transform: [{ scale: swapIconsAnim.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0.8, 1]
+                                            })}],
+                                        }
+                                    ]}
+                                >
+                                    <View style={styles.swapGroup}>
+                                        <Text style={styles.swapText}>15x</Text>
+                                        <Image
+                                            source={plainStickIcon}
+                                            style={styles.swapStickIcon}
                                         />
-                                        <Animated.View style={{
-                                            opacity: fadeAnim,
+                                    </View>
+                                    
+                                    <Animated.View style={[
+                                        styles.swapIconContainer,
+                                        {
                                             transform: [{
-                                                scale: swapAnim.interpolate({
+                                                rotate: swapIconsAnim.interpolate({
                                                     inputRange: [0, 1],
-                                                    outputRange: [1, 1.2],
-                                                }),
-                                            }],
-                                        }}>
-                                            <MaterialIcons name="swap-horiz" size={50} color="white" style={styles.swapIcon} />
-                                        </Animated.View>
-                                        <Animated.Image
-                                            source={require('../assets/notched-stick-icon.png')}
-                                            style={[styles.icon, {
-                                                transform: [{
-                                                    translateX: swapAnim.interpolate({
-                                                        inputRange: [0, 1],
-                                                        outputRange: [30, 0],
-                                                    }),
-                                                }],
-                                            }]}
+                                                    outputRange: ['0deg', '360deg']
+                                                })
+                                            }]
+                                        }
+                                    ]}>
+                                        <MaterialIcons 
+                                            name="swap-horiz" 
+                                            size={50}
+                                            color="white" 
+                                            style={styles.swapIcon}
                                         />
                                     </Animated.View>
-                                </View>
-                            </Animated.View>
+                                    
+                                    <Image
+                                        source={notchedStickIcon}
+                                        style={styles.swapStickIcon}
+                                    />
+                                </Animated.View>
+                            </View>
                         ) : (
                             (!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
                                 <>
@@ -636,13 +720,18 @@ const PlayerArea = ({
                                 </>
                             ) : (
                                 <View style={styles.debtContainer}>
-                                    <TouchableOpacity
-                                        style={styles.askButton}
-                                        onPress={handleAskButtonClick}
-                                    >
-                                        <Text style={styles.askButtonText}>Ask</Text>
-                                    </TouchableOpacity>
-                                    <Text style={styles.debtText}>Debt: {debt[player]}</Text>
+                                    {debt[player] > 0 && (
+                                        <TouchableOpacity
+                                            style={styles.askButton}
+                                            onPress={() => handleAskDebtPayment(player)}
+                                        >
+                                            <Text style={styles.askButtonText}>Ask for Payment</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    <Text style={styles.debtText}>
+                                        {debt[player] > 0 ? `Debt to collect: ${debt[player]}` : 
+                                         debt[otherPlayer] > 0 ? `Debt to pay: ${debt[otherPlayer]}` : 'No debt'}
+                                    </Text>
                                 </View>
                             )
                         )}
