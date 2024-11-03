@@ -3,6 +3,7 @@ import { Animated, Easing, Image, StyleSheet, View, Text, TouchableOpacity, Imag
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import styles from './PlayerAreaStyles';
+import FireLine from './FireLine';
 
 // Add this line to get screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -610,9 +611,19 @@ const PlayerArea = ({
         );
     };
 
+    const [showFireEffect, setShowFireEffect] = useState(false);
+
+    useEffect(() => {
+        if (scoreAmount === 15) { // 15 is Super Waltes score
+            setShowFireEffect(true);
+            setTimeout(() => setShowFireEffect(false), 3000);
+        }
+    }, [scoreAmount]);
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
             {renderStreakIndicator()}
+            {showFireEffect && <FireLine isVisible={true} player={player} />}
 
             {showWinningAnimation && (
                 <>

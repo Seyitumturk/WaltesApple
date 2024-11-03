@@ -291,7 +291,7 @@ export default function WaltesBoard({
         console.log("Score: ", score);
 
         if (score > 0) {
-            let text = score === 5 ? "Super Waltes" : "Waltes";
+            let text = score === 15 ? "SUPER WALTES!" : "Waltes!";
             setScoreText(text);
 
             let currentPlayer = playerTurn === 0 ? 'player1' : 'player2';

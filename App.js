@@ -181,8 +181,42 @@ export default function App() {
     }
   }, [sticks.general.kingPin]);
 
+  const resetGame = () => {
+    setPlayerTurn(0);
+    setScores([0, 0]);
+    setWaltesText('');
+    setShouldRoll(false);
+    setIsDiceRolling(false);
+    setIsGeneralPileExhausted(false);
+    setHasShownAlert(false);
+    setIsKingPinCompetition(false);
+    setDebt({ player1: 0, player2: 0 });
+    setStreaks({ player1: 0, player2: 0 });
+    setShowStreakAnimation(false);
+    setSticks({
+      general: {
+        plain: 51,
+        notched: 3,
+        kingPin: 1,
+      },
+      player1: {
+        plain: 0,
+        notched: 0,
+        kingPin: 0,
+        notchedValue: 15,
+      },
+      player2: {
+        plain: 0,
+        notched: 0,
+        kingPin: 0,
+        notchedValue: 15,
+      },
+    });
+  };
+
   const startGame = () => {
-    setCurrentPage('game'); // Start with the tutorial
+    resetGame();
+    setCurrentPage('game');
   };
 
   const onTutorialFinished = () => {
@@ -400,7 +434,7 @@ export default function App() {
 
     // First determine if it's a scoring throw
     if (isPerfectRoll) {
-        setWaltesText('Super Waltes!');
+        setWaltesText('SUPER WALTES!');
         score = 15;
 
         // Check King Pin winning conditions
@@ -414,7 +448,11 @@ export default function App() {
             
             showCustomAlert(
                 `${currentPlayer.toUpperCase()} wins the King Pin with a perfect roll!`,
-                [{ text: 'OK', onPress: () => setAlertVisible(false) }]
+                [{ text: 'OK', onPress: () => {
+                    setAlertVisible(false);
+                    // Only enter debt mode after King Pin is won
+                    setIsGeneralPileExhausted(true);
+                }}]
             );
         }
     } else if (marked === 5 || unmarked === 5) {
@@ -438,10 +476,8 @@ export default function App() {
                 newSticks[currentPlayer].plain += remainingSticks;
                 newSticks.general.plain = 0;
                 
-                // Enter debt mode if general pile is empty
-                if (newSticks.general.plain === 0 && 
-                    newSticks.general.notched === 0 && 
-                    newSticks.general.kingPin === 0) {
+                // Only enter debt mode if King Pin has been won
+                if (sticks.general.kingPin === 0) {
                     setIsGeneralPileExhausted(true);
                     const remainingScore = score - remainingSticks;
                     const newDebt = { ...debt };
@@ -455,7 +491,7 @@ export default function App() {
                 }
             }
         } else {
-            // Debt mode scoring
+            // Debt mode scoring (only if King Pin has been won)
             const newDebt = { ...debt };
             newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + score;
             setDebt(newDebt);
