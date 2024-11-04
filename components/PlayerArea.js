@@ -676,13 +676,15 @@ const PlayerArea = ({
             <View style={[styles.stickContainer, stickContainerStyle]}>
                 <Animated.View style={generalPileStyle} ref={generalPileRef}>
                     <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
-                        {isGeneralPileExhausted ? "Debt Mode" : "General Pile"}
+                        {isGeneralPileExhausted && sticks.general.plain === 0 && sticks.general.notched === 0 
+                            ? "Debt Mode" 
+                            : "General Pile"}
                     </Animated.Text>
                     <View style={[
                         styles.generalPileContainer,
-                        isGeneralPileExhausted && styles.debtModeContainer
+                        isGeneralPileExhausted && sticks.general.plain === 0 && sticks.general.notched === 0 && styles.debtModeContainer
                     ]}>
-                        {isGeneralPileExhausted ? (
+                        {isGeneralPileExhausted && sticks.general.plain === 0 && sticks.general.notched === 0 ? (
                             <View style={styles.debtModeContent}>
                                 <View style={styles.debtModeRow}>
                                     {sticks.general.kingPin === 1 && (
@@ -700,8 +702,11 @@ const PlayerArea = ({
                                             </TouchableOpacity>
                                         )}
                                         <Text style={styles.debtText}>
-                                            {debt[player] > 0 ? `Debt to collect: ${debt[player]}` : 
-                                             debt[otherPlayer] > 0 ? `Debt to pay: ${debt[otherPlayer]}` : 'No debt'}
+                                            {debt[player] > 0 
+                                                ? `Debt to collect: ${debt[player]}` 
+                                                : debt[otherPlayer] > 0 
+                                                ? `Debt to pay: ${debt[otherPlayer]}` 
+                                                : 'No debt'}
                                         </Text>
                                     </View>
                                 </View>
@@ -710,7 +715,9 @@ const PlayerArea = ({
                             <>
                                 <CircularButton type="plain" count={sticks.general.plain} />
                                 <CircularButton type="notched" count={sticks.general.notched} />
-                                <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                                {sticks.general.kingPin === 1 && (
+                                    <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                                )}
                             </>
                         )}
                     </View>

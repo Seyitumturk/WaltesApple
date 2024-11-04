@@ -310,7 +310,7 @@ export default function App() {
 
     console.log(`${askingPlayer} is asking ${otherPlayer} to pay ${debtAmount} sticks`);
 
-    // Check if other player has enough resources
+    // Calculate total available resources
     const plainValue = newSticks[otherPlayer].plain;
     const notchedValue = newSticks[otherPlayer].notched * 15;
     const totalAvailable = plainValue + notchedValue;
@@ -320,7 +320,7 @@ export default function App() {
         return;
     }
 
-    // Transfer plain sticks first
+    // First try to pay with plain sticks
     const plainTransfer = Math.min(debtAmount, newSticks[otherPlayer].plain);
     if (plainTransfer > 0) {
         newSticks[otherPlayer].plain -= plainTransfer;
@@ -328,11 +328,22 @@ export default function App() {
         debtAmount -= plainTransfer;
     }
 
-    // If still needed, transfer notched sticks
-    while (debtAmount >= 15 && newSticks[otherPlayer].notched > 0) {
+    // If there's still debt, use notched sticks
+    while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
+        // Convert one notched stick
         newSticks[otherPlayer].notched--;
-        newSticks[askingPlayer].notched++;
-        debtAmount -= 15;
+        
+        if (debtAmount >= 15) {
+            // If debt is 15 or more, transfer whole notched stick
+            newSticks[askingPlayer].notched++;
+            debtAmount -= 15;
+        } else {
+            // If debt is less than 15, transfer remaining as plain sticks
+            newSticks[askingPlayer].plain += debtAmount;
+            // The paying player gets back the excess value
+            newSticks[otherPlayer].plain += (15 - debtAmount);
+            debtAmount = 0;
+        }
     }
 
     // Update debt
@@ -450,7 +461,7 @@ export default function App() {
     }
   };
 
-  // Update calculateScore function with the correct King Pin and debt mode logic
+  // Update calculateScore function to handle King Pin win without entering debt mode
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
@@ -458,7 +469,6 @@ export default function App() {
     const currentPlayer = `player${playerTurn + 1}`;
     let newSticks = { ...sticks };
 
-    // Check for perfect roll (all marked or all unmarked)
     const isPerfectRoll = marked === 6 || unmarked === 6;
 
     if (isPerfectRoll) {
@@ -471,106 +481,106 @@ export default function App() {
                 (sticks.player1.notched + sticks.player2.notched === 3);
 
             if (allNotchedSticksDistributed || isGeneralPileExhausted) {
-                // Award King Pin to current player
+                // Handle King Pin win
                 newSticks[currentPlayer].kingPin = 1;
                 newSticks.general.kingPin = 0;
+
+                if (isGeneralPileExhausted) {
+                    // In debt mode, add the return value as debt
+                    const newDebt = { ...debt };
+                    newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + 15;
+                    setDebt(newDebt);
+                } else {
+                    // Normal mode - return sticks to general pile
+                    if (newSticks[currentPlayer].plain >= 15) {
+                        newSticks[currentPlayer].plain -= 15;
+                        newSticks.general.plain += 15;
+                    } else if (newSticks[currentPlayer].notched > 0) {
+                        newSticks[currentPlayer].notched -= 1;
+                        newSticks.general.notched += 1;
+                    }
+                }
                 
-                // Show King Pin victory notification
                 showCustomAlert(
-                    `🎊 CONGRATULATIONS! 👑\n\n${currentPlayer.toUpperCase()} has won the King Pin with a Super Waltes!`,
-                    [{ text: 'OK', onPress: () => {
-                        setAlertVisible(false);
-                        // Update game stage if needed
-                        if (gameStage === 'GATHERING_LADIES') {
-                            setGameStage('ESNOQNEMK');
-                            setStageMessage('Esnoqnemk Stage: Time to gather wood for the Old Man!');
-                            setShowStageNotification(true);
-                            setTimeout(() => setShowStageNotification(false), 3000);
-                        }
-                    }}]
+                    `🎊 CONGRATULATIONS! 👑\n\n${currentPlayer.toUpperCase()} has won the King Pin with a Super Waltes!${
+                        isGeneralPileExhausted ? '\n\n15 sticks added to your debt.' : '\n\n15 plain sticks (or 1 notched stick) returned to general pile.'
+                    }`,
+                    [{ text: 'OK', onPress: () => setAlertVisible(false) }]
                 );
+
+                // Continue with normal scoring after King Pin win if there are sticks available
+                if (newSticks.general.plain > 0 || newSticks.general.notched > 0) {
+                    if (newSticks.general.plain >= score) {
+                        newSticks[currentPlayer].plain += score;
+                        newSticks.general.plain -= score;
+                        handleNotchedReplacement(currentPlayer);
+                    }
+                }
+            } else {
+                // Normal scoring if King Pin conditions not met
+                if (newSticks.general.plain >= score) {
+                    newSticks[currentPlayer].plain += score;
+                    newSticks.general.plain -= score;
+                    handleNotchedReplacement(currentPlayer);
+                }
+            }
+        } else {
+            // Normal scoring if no King Pin involved
+            if (newSticks.general.plain >= score) {
+                newSticks[currentPlayer].plain += score;
+                newSticks.general.plain -= score;
+                handleNotchedReplacement(currentPlayer);
             }
         }
     } else if (marked === 5 || unmarked === 5) {
         setWaltesText('Waltes!');
         score = 3;
+        
+        // Normal scoring for regular Waltes
+        if (newSticks.general.plain >= score) {
+            newSticks[currentPlayer].plain += score;
+            newSticks.general.plain -= score;
+            handleNotchedReplacement(currentPlayer);
+        }
     } else {
         setWaltesText('');
     }
 
-    // Handle scoring
-    if (score > 0) {
-        if (!isGeneralPileExhausted) {
-            if (newSticks.general.plain >= score) {
-                newSticks[currentPlayer].plain += score;
-                newSticks.general.plain -= score;
-                handleNotchedReplacement(currentPlayer);
-            } else {
-                // Not enough plain sticks in general pile
-                const remainingSticks = newSticks.general.plain;
-                newSticks[currentPlayer].plain += remainingSticks;
-                newSticks.general.plain = 0;
+    // Handle remaining sticks and debt mode transition
+    if (score > 0 && !isGeneralPileExhausted) {
+        if (newSticks.general.plain < score) {
+            const remainingSticks = newSticks.general.plain;
+            newSticks[currentPlayer].plain += remainingSticks;
+            newSticks.general.plain = 0;
+            
+            // Check if entering debt mode
+            if (newSticks.general.plain === 0 && newSticks.general.notched === 0) {
+                setIsGeneralPileExhausted(true);
+                const remainingScore = score - remainingSticks;
+                const newDebt = { ...debt };
+                newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + remainingScore;
+                setDebt(newDebt);
                 
-                // Enter debt mode only when plain AND notched sticks are exhausted
-                if (newSticks.general.plain === 0 && newSticks.general.notched === 0) {
-                    setIsGeneralPileExhausted(true);
-                    const remainingScore = score - remainingSticks;
-                    const newDebt = { ...debt };
-                    newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + remainingScore;
-                    setDebt(newDebt);
-                    
-                    showCustomAlert(
-                        "Plain and notched sticks are exhausted! Game enters debt mode.",
-                        [{ text: 'OK', onPress: () => setAlertVisible(false) }]
-                    );
-                }
+                showCustomAlert(
+                    "💰 ENTERING DEBT MODE!\n\nAll plain and notched sticks are exhausted.\nPlayers can now collect debts from each other.",
+                    [{ text: 'OK', onPress: () => {
+                        setAlertVisible(false);
+                        setGameStage('DEBT');
+                        setStageMessage('Debt Stage: Time to collect your debts!');
+                        setShowStageNotification(true);
+                        setTimeout(() => setShowStageNotification(false), 3000);
+                    }}]
+                );
             }
-        } else {
-            // Debt mode scoring
-            const newDebt = { ...debt };
-            newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + score;
-            setDebt(newDebt);
         }
-
-        setSticks(newSticks);
+    } else if (score > 0 && isGeneralPileExhausted) {
+        // Debt mode scoring
+        const newDebt = { ...debt };
+        newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + score;
+        setDebt(newDebt);
     }
 
-    // Check for stage transitions after scoring
-    if (score > 0) {
-        // Check if all notched sticks are now distributed
-        if (gameStage === 'GATHERING_LADIES' && 
-            sticks.general.notched === 0 && 
-            (sticks.player1.notched + sticks.player2.notched === 3)) {
-            
-            setGameStage('ESNOQNEMK');
-            showCustomAlert(
-                "🎯 STAGE COMPLETE!\n\nAll Old Ladies (notched sticks) have been gathered.\nNow entering Esnoqnemk Stage!",
-                [{ text: 'OK', onPress: () => {
-                    setAlertVisible(false);
-                    setStageMessage('Esnoqnemk Stage: Gather wood for the Old Man!');
-                    setShowStageNotification(true);
-                    setTimeout(() => setShowStageNotification(false), 3000);
-                }}]
-            );
-        }
-        // Check if entering debt mode
-        else if (!isGeneralPileExhausted && 
-                 newSticks.general.plain === 0 && 
-                 newSticks.general.notched === 0) {
-            
-            setGameStage('DEBT');
-            showCustomAlert(
-                "💰 ENTERING DEBT MODE!\n\nAll plain and notched sticks are exhausted.\nPlayers can now collect debts from each other.",
-                [{ text: 'OK', onPress: () => {
-                    setAlertVisible(false);
-                    setStageMessage('Debt Stage: Time to collect your debts!');
-                    setShowStageNotification(true);
-                    setTimeout(() => setShowStageNotification(false), 3000);
-                }}]
-            );
-        }
-    }
-
+    setSticks(newSticks);
     return score;
   };
 
