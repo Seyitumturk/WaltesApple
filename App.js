@@ -103,6 +103,21 @@ export default function App() {
   // Add this state for King Pin competition
   const [isKingPinCompetition, setIsKingPinCompetition] = useState(false);
 
+  const [isKingPinAvailable, setIsKingPinAvailable] = useState(false);
+
+  // Add these stage-related states
+  const [gameStage, setGameStage] = useState('GATHERING_LADIES'); // 'GATHERING_LADIES', 'ESNOQNEMK', 'DEBT'
+  const [showStageNotification, setShowStageNotification] = useState(false);
+  const [stageMessage, setStageMessage] = useState('');
+  const [pendingKnowledgeNuggets, setPendingKnowledgeNuggets] = useState([]);
+
+  // Add these state variables near the top of App component with other states
+  const [winningIconType, setWinningIconType] = useState(null);
+  const [showWinningAnimation, setShowWinningAnimation] = useState(false);
+
+  // Add this state for King Pin notifications
+  const [showKingPinNotification, setShowKingPinNotification] = useState(false);
+
   const triggerAlertForExchange = (currentPlayer) => {
     const shouldRotate = currentPlayer === 'player1'; // Adjust according to your player logic
     setTimeout(() => {
@@ -212,6 +227,13 @@ export default function App() {
         notchedValue: 15,
       },
     });
+    setIsKingPinAvailable(false);
+    setGameStage('GATHERING_LADIES');
+    setShowStageNotification(false);
+    setStageMessage('');
+    setPendingKnowledgeNuggets([]);
+    setWinningIconType(null);
+    setShowWinningAnimation(false);
   };
 
   const startGame = () => {
@@ -257,27 +279,13 @@ export default function App() {
     const newTotalPoints = totalPoints + score;
     setTotalPoints(newTotalPoints);
 
-    // Check for newly unlocked nuggets
+    // Store newly unlocked nuggets for later
     const newUnlockedNuggets = knowledgeNuggets.filter(
-      nugget => nugget.pointsToUnlock <= newTotalPoints && !unlockedNuggets.includes(nugget.id)
+        nugget => nugget.pointsToUnlock <= newTotalPoints && !unlockedNuggets.includes(nugget.id)
     );
 
     if (newUnlockedNuggets.length > 0) {
-      setUnlockedNuggets([...unlockedNuggets, ...newUnlockedNuggets.map(nugget => nugget.id)]);
-      
-      showCustomAlert(
-        `You've unlocked ${newUnlockedNuggets.length} new knowledge nugget(s)!`,
-        [
-          {
-            text: 'View Map',
-            onPress: () => setCurrentPage('knowledge-map')
-          },
-          {
-            text: 'Continue Playing',
-            onPress: () => setAlertVisible(false)
-          }
-        ]
-      );
+        setPendingKnowledgeNuggets(prev => [...prev, ...newUnlockedNuggets.map(nugget => nugget.id)]);
     }
   };
 
@@ -419,41 +427,69 @@ export default function App() {
            (sticks.player1.notched + sticks.player2.notched === 3);
   };
 
-  // Update calculateScore function with new King Pin logic
+  // Add this function to check King Pin availability
+  const checkKingPinAvailability = () => {
+    // Check if all notched sticks are distributed
+    if (sticks.general.kingPin === 1 && 
+        sticks.general.notched === 0 && 
+        (sticks.player1.notched + sticks.player2.notched === 3) && 
+        !isKingPinAvailable) {
+        
+        setIsKingPinAvailable(true);
+        showCustomAlert(
+            "🎉 KING PIN CAN NOW BE WON! 👑\n\nScore a Super Waltes (all dice same face) to claim the King Pin!",
+            [{ 
+                text: 'OK',
+                onPress: () => {
+                    setAlertVisible(false);
+                    setShowKingPinNotification(true);
+                    setTimeout(() => setShowKingPinNotification(false), 3000);
+                }
+            }]
+        );
+    }
+  };
+
+  // Update calculateScore function with the correct King Pin and debt mode logic
   const calculateScore = (dice) => {
     const marked = dice.filter((die) => die === 1).length;
     const unmarked = 6 - marked;
     let score = 0;
-    let isStreakScore = false;
-
     const currentPlayer = `player${playerTurn + 1}`;
     let newSticks = { ...sticks };
 
     // Check for perfect roll (all marked or all unmarked)
     const isPerfectRoll = marked === 6 || unmarked === 6;
 
-    // First determine if it's a scoring throw
     if (isPerfectRoll) {
         setWaltesText('SUPER WALTES!');
         score = 15;
 
         // Check King Pin winning conditions
-        if (sticks[currentPlayer].notched > 0 && // Has at least one notched stick
-            areAllNotchedSticksDistributed() && // All notched sticks are out of general pile
-            sticks.general.kingPin === 1) // King Pin is still available
-        {
-            // Award King Pin to current player
-            newSticks[currentPlayer].kingPin = 1;
-            newSticks.general.kingPin = 0;
-            
-            showCustomAlert(
-                `${currentPlayer.toUpperCase()} wins the King Pin with a perfect roll!`,
-                [{ text: 'OK', onPress: () => {
-                    setAlertVisible(false);
-                    // Only enter debt mode after King Pin is won
-                    setIsGeneralPileExhausted(true);
-                }}]
-            );
+        if (sticks.general.kingPin === 1 && sticks[currentPlayer].notched > 0) {
+            const allNotchedSticksDistributed = sticks.general.notched === 0 &&
+                (sticks.player1.notched + sticks.player2.notched === 3);
+
+            if (allNotchedSticksDistributed || isGeneralPileExhausted) {
+                // Award King Pin to current player
+                newSticks[currentPlayer].kingPin = 1;
+                newSticks.general.kingPin = 0;
+                
+                // Show King Pin victory notification
+                showCustomAlert(
+                    `🎊 CONGRATULATIONS! 👑\n\n${currentPlayer.toUpperCase()} has won the King Pin with a Super Waltes!`,
+                    [{ text: 'OK', onPress: () => {
+                        setAlertVisible(false);
+                        // Update game stage if needed
+                        if (gameStage === 'GATHERING_LADIES') {
+                            setGameStage('ESNOQNEMK');
+                            setStageMessage('Esnoqnemk Stage: Time to gather wood for the Old Man!');
+                            setShowStageNotification(true);
+                            setTimeout(() => setShowStageNotification(false), 3000);
+                        }
+                    }}]
+                );
+            }
         }
     } else if (marked === 5 || unmarked === 5) {
         setWaltesText('Waltes!');
@@ -462,10 +498,9 @@ export default function App() {
         setWaltesText('');
     }
 
-    // Handle normal scoring
+    // Handle scoring
     if (score > 0) {
         if (!isGeneralPileExhausted) {
-            // Add score to player's plain sticks
             if (newSticks.general.plain >= score) {
                 newSticks[currentPlayer].plain += score;
                 newSticks.general.plain -= score;
@@ -476,8 +511,8 @@ export default function App() {
                 newSticks[currentPlayer].plain += remainingSticks;
                 newSticks.general.plain = 0;
                 
-                // Only enter debt mode if King Pin has been won
-                if (sticks.general.kingPin === 0) {
+                // Enter debt mode only when plain AND notched sticks are exhausted
+                if (newSticks.general.plain === 0 && newSticks.general.notched === 0) {
                     setIsGeneralPileExhausted(true);
                     const remainingScore = score - remainingSticks;
                     const newDebt = { ...debt };
@@ -485,13 +520,13 @@ export default function App() {
                     setDebt(newDebt);
                     
                     showCustomAlert(
-                        "General pile is exhausted! Game enters debt mode.",
+                        "Plain and notched sticks are exhausted! Game enters debt mode.",
                         [{ text: 'OK', onPress: () => setAlertVisible(false) }]
                     );
                 }
             }
         } else {
-            // Debt mode scoring (only if King Pin has been won)
+            // Debt mode scoring
             const newDebt = { ...debt };
             newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + score;
             setDebt(newDebt);
@@ -500,65 +535,96 @@ export default function App() {
         setSticks(newSticks);
     }
 
+    // Check for stage transitions after scoring
+    if (score > 0) {
+        // Check if all notched sticks are now distributed
+        if (gameStage === 'GATHERING_LADIES' && 
+            sticks.general.notched === 0 && 
+            (sticks.player1.notched + sticks.player2.notched === 3)) {
+            
+            setGameStage('ESNOQNEMK');
+            showCustomAlert(
+                "🎯 STAGE COMPLETE!\n\nAll Old Ladies (notched sticks) have been gathered.\nNow entering Esnoqnemk Stage!",
+                [{ text: 'OK', onPress: () => {
+                    setAlertVisible(false);
+                    setStageMessage('Esnoqnemk Stage: Gather wood for the Old Man!');
+                    setShowStageNotification(true);
+                    setTimeout(() => setShowStageNotification(false), 3000);
+                }}]
+            );
+        }
+        // Check if entering debt mode
+        else if (!isGeneralPileExhausted && 
+                 newSticks.general.plain === 0 && 
+                 newSticks.general.notched === 0) {
+            
+            setGameStage('DEBT');
+            showCustomAlert(
+                "💰 ENTERING DEBT MODE!\n\nAll plain and notched sticks are exhausted.\nPlayers can now collect debts from each other.",
+                [{ text: 'OK', onPress: () => {
+                    setAlertVisible(false);
+                    setStageMessage('Debt Stage: Time to collect your debts!');
+                    setShowStageNotification(true);
+                    setTimeout(() => setShowStageNotification(false), 3000);
+                }}]
+            );
+        }
+    }
+
     return score;
   };
 
+  // Add this function to check and update game stages
+  const checkAndUpdateGameStage = () => {
+    // Check if all notched sticks are distributed (transition to Esnoqnemk)
+    if (gameStage === 'GATHERING_LADIES' && areAllNotchedSticksDistributed()) {
+        setGameStage('ESNOQNEMK');
+        setStageMessage('Esnoqnemk Stage: Gather wood for the Old Man!');
+        setShowStageNotification(true);
+        setTimeout(() => setShowStageNotification(false), 3000);
+    }
+    // Check if King Pin is won (transition to Debt)
+    else if (gameStage === 'ESNOQNEMK' && sticks.general.kingPin === 0) {
+        setGameStage('DEBT');
+        setStageMessage('Debt Stage: Collect your debts!');
+        setShowStageNotification(true);
+        setTimeout(() => setShowStageNotification(false), 3000);
+    }
+  };
 
-
-
-
-
+  // Update showGameOverAlert to show knowledge nuggets at the end
   const showGameOverAlert = (message) => {
-    showCustomAlert(message, [
-      {
-        text: 'OK',
-        onPress: () => {
-          setCurrentPage('home');
-        },
-      },
-    ]);
+    if (pendingKnowledgeNuggets.length > 0) {
+        showCustomAlert(
+            `${message}\n\nYou've unlocked ${pendingKnowledgeNuggets.length} new knowledge nugget(s)!`,
+            [
+                {
+                    text: 'View Knowledge Map',
+                    onPress: () => {
+                        setUnlockedNuggets(prev => [...prev, ...pendingKnowledgeNuggets]);
+                        setPendingKnowledgeNuggets([]);
+                        setCurrentPage('knowledge-map');
+                    }
+                },
+                {
+                    text: 'Return to Home',
+                    onPress: () => {
+                        setUnlockedNuggets(prev => [...prev, ...pendingKnowledgeNuggets]);
+                        setPendingKnowledgeNuggets([]);
+                        setCurrentPage('home');
+                    }
+                }
+            ]
+        );
+    } else {
+        showCustomAlert(message, [
+            {
+                text: 'OK',
+                onPress: () => setCurrentPage('home'),
+            },
+        ]);
+    }
   };
-
-  // Debt mode stick handling
-  const handleDebtMode = (newSticks, currentPlayer, otherPlayer, debtSticks) => {
-    if (newSticks[otherPlayer].plain > 0) {
-      let transfer = Math.min(debtSticks, newSticks[otherPlayer].plain);
-      newSticks[otherPlayer].plain -= transfer;
-      debtSticks -= transfer;
-    }
-
-    while (debtSticks > 0 && newSticks[otherPlayer].notched > 0) {
-      let decrementValue = Math.min(debtSticks, newSticks[otherPlayer].notchedValue);
-      newSticks[otherPlayer].notchedValue -= decrementValue;
-      debtSticks -= decrementValue;
-
-      if (newSticks[otherPlayer].notchedValue === 0) {
-        newSticks[otherPlayer].notched -= 1;
-        if (newSticks[otherPlayer].notched > 0) {
-          newSticks[otherPlayer].notchedValue = 15;
-        }
-      }
-    }
-
-    if (debtSticks > 0) {
-      showGameOverAlert(`${currentPlayer} wins the game as ${otherPlayer} cannot pay the debt!`);
-      return;
-    }
-
-    let gainSticks = score === 5 ? 15 : 3;
-
-    if (newSticks[currentPlayer].notchedValue < 15) {
-      let neededForCompletion = 15 - newSticks[currentPlayer].notchedValue;
-      let usedForCompletion = Math.min(gainSticks, neededForCompletion);
-      newSticks[currentPlayer].notchedValue += usedForCompletion;
-      gainSticks -= usedForCompletion;
-    }
-
-    newSticks[currentPlayer].plain += gainSticks;
-
-    setSticks(newSticks);
-  };
-
 
   // Call this function when notched sticks or king pin are transferred
   const triggerReplacementGif = () => {
@@ -639,6 +705,12 @@ export default function App() {
             replacementMessage={replacementMessage}
             streaks={streaks}
             showStreakAnimation={showStreakAnimation}
+            gameStage={gameStage}
+            showStageNotification={showStageNotification}
+            stageMessage={stageMessage}
+            winningIconType={winningIconType}
+            showWinningAnimation={showWinningAnimation}
+            setShowWinningAnimation={setShowWinningAnimation}
           />
 
           {showReplacementGif && (

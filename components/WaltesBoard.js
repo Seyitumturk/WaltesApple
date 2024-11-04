@@ -13,6 +13,7 @@ import {
   StatusBar,
   TouchableOpacity
 } from 'react-native';
+import { Audio } from 'expo-av';
 
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './WaltesBoardStyles';
@@ -50,7 +51,7 @@ const verticalOffset = getVerticalOffset();
 
 export default function WaltesBoard({
   player1TotalScore, player2TotalScore, playerTurn, onDiceRolled, sticks, shouldRoll,
-  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage, streaks, showStreakAnimation
+  setShouldRoll, setIsDiceRolling, scoringPlayer, waltesText, isGeneralPileExhausted, isDiceRolling, debt, handleAskDebtPayment, replacementMessage, streaks, showStreakAnimation, showKingPinNotification
 }) {
   const [personalPileHeight, setPersonalPileHeight] = useState(0);
   const typingInterval = useRef(null);
@@ -207,9 +208,34 @@ export default function WaltesBoard({
   const diceSpinAnims = useRef(dice.map(() => new Animated.Value(0))).current;
   const diceScaleAnims = useRef(dice.map(() => new Animated.Value(0))).current;
 
+  const [sound, setSound] = useState();
+
+  // Load sound when component mounts
+  useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
+  // Function to play dice sound
+  async function playDiceSound() {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../assets/dice-roll.mp3')
+      );
+      setSound(sound);
+      await sound.playAsync();
+    } catch (error) {
+      console.log('Error playing sound:', error);
+    }
+  }
+
   const rollDice = () => {
     console.log("Roll Dice is Called");
     Vibration.vibrate(500);
+    playDiceSound(); // Add this line to play sound
 
     setIsDiceRolling(true);
 

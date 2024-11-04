@@ -259,6 +259,10 @@ const PlayerArea = ({
     generalPileHighlightAnim, // Add this prop if it's not already included
     streaks,
     showStreakAnimation,
+    gameStage,
+    showStageNotification,
+    stageMessage,
+    showKingPinNotification,
 }) => {
     const otherPlayer = player === 'player1' ? 'player2' : 'player1';
 
@@ -612,18 +616,51 @@ const PlayerArea = ({
     };
 
     const [showFireEffect, setShowFireEffect] = useState(false);
+    const [showSuperWaltesText, setShowSuperWaltesText] = useState(false);
 
     useEffect(() => {
         if (scoreAmount === 15) { // 15 is Super Waltes score
             setShowFireEffect(true);
-            setTimeout(() => setShowFireEffect(false), 3000);
+            setShowSuperWaltesText(true);
+            setTimeout(() => {
+                setShowFireEffect(false);
+                setShowSuperWaltesText(false);
+            }, 3000);
         }
     }, [scoreAmount]);
 
+    const renderStageNotification = () => {
+        if (!showStageNotification) return null;
+
+        return (
+            <Animated.View
+                style={[
+                    styles.stageNotification,
+                    { transform: [{ rotate: player === 'player1' ? '180deg' : '0deg' }] }
+                ]}
+            >
+                <Text style={styles.stageNotificationText}>{stageMessage}</Text>
+            </Animated.View>
+        );
+    };
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
+            {renderStageNotification()}
             {renderStreakIndicator()}
-            {showFireEffect && <FireLine isVisible={true} player={player} />}
+            {showFireEffect && (
+                <>
+                    <FireLine isVisible={true} player={player} />
+                    {showSuperWaltesText && (
+                        <Animated.Text style={[
+                            styles.superWaltesText,
+                            { transform: [{ rotate: player === 'player1' ? '180deg' : '0deg' }] }
+                        ]}>
+                            SUPER WALTES!
+                        </Animated.Text>
+                    )}
+                </>
+            )}
 
             {showWinningAnimation && (
                 <>
@@ -639,112 +676,42 @@ const PlayerArea = ({
             <View style={[styles.stickContainer, stickContainerStyle]}>
                 <Animated.View style={generalPileStyle} ref={generalPileRef}>
                     <Animated.Text style={[styles.generalPileTitle, { opacity: fadeAnim }]}>
-                        {title}
+                        {isGeneralPileExhausted ? "Debt Mode" : "General Pile"}
                     </Animated.Text>
-                    <View style={styles.generalPileContainer}>
-                        {replacementMessage ? (
-                            <View style={styles.animationContainer}>
-                                {/* Original content */}
-                                <Animated.View 
-                                    style={[
-                                        styles.generalPileContent,
-                                        {
-                                            position: 'absolute',
-                                            width: '100%',
-                                            transform: [{ translateX: slideAnim }],
-                                        }
-                                    ]}
-                                >
-                                    <CircularButton type="plain" count={sticks.general.plain} />
-                                    <CircularButton type="notched" count={sticks.general.notched} />
-                                    <CircularButton type="kingPin" count={sticks.general.kingPin} />
-                                </Animated.View>
-
-                                {/* Replacement text */}
-                                <Animated.View 
-                                    style={[
-                                        styles.replacementContainer,
-                                        {
-                                            position: 'absolute',
-                                            width: '100%',
-                                            transform: [{ translateX: textSlideAnim }],
-                                        }
-                                    ]}
-                                >
-                                    <Text style={styles.replacementText}>{replacementMessage}</Text>
-                                </Animated.View>
-
-                                {/* Swap animation */}
-                                <Animated.View 
-                                    style={[
-                                        styles.swapAnimationContainer,
-                                        {
-                                            position: 'absolute',
-                                            width: '100%',
-                                            opacity: swapIconsAnim,
-                                            transform: [{ scale: swapIconsAnim.interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [0.8, 1]
-                                            })}],
-                                        }
-                                    ]}
-                                >
-                                    <View style={styles.swapGroup}>
-                                        <Text style={styles.swapText}>15x</Text>
-                                        <Image
-                                            source={plainStickIcon}
-                                            style={styles.swapStickIcon}
-                                        />
+                    <View style={[
+                        styles.generalPileContainer,
+                        isGeneralPileExhausted && styles.debtModeContainer
+                    ]}>
+                        {isGeneralPileExhausted ? (
+                            <View style={styles.debtModeContent}>
+                                <View style={styles.debtModeRow}>
+                                    {sticks.general.kingPin === 1 && (
+                                        <View style={styles.kingPinSection}>
+                                            <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                                        </View>
+                                    )}
+                                    <View style={styles.debtInfoSection}>
+                                        {debt[player] > 0 && (
+                                            <TouchableOpacity
+                                                style={styles.askButton}
+                                                onPress={() => handleAskDebtPayment(player)}
+                                            >
+                                                <Text style={styles.askButtonText}>Ask for Payment</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        <Text style={styles.debtText}>
+                                            {debt[player] > 0 ? `Debt to collect: ${debt[player]}` : 
+                                             debt[otherPlayer] > 0 ? `Debt to pay: ${debt[otherPlayer]}` : 'No debt'}
+                                        </Text>
                                     </View>
-                                    
-                                    <Animated.View style={[
-                                        styles.swapIconContainer,
-                                        {
-                                            transform: [{
-                                                rotate: swapIconsAnim.interpolate({
-                                                    inputRange: [0, 1],
-                                                    outputRange: ['0deg', '360deg']
-                                                })
-                                            }]
-                                        }
-                                    ]}>
-                                        <MaterialIcons 
-                                            name="swap-horiz" 
-                                            size={50}
-                                            color="white" 
-                                            style={styles.swapIcon}
-                                        />
-                                    </Animated.View>
-                                    
-                                    <Image
-                                        source={notchedStickIcon}
-                                        style={styles.swapStickIcon}
-                                    />
-                                </Animated.View>
+                                </View>
                             </View>
                         ) : (
-                            (!isGeneralPileExhausted || sticks.general.kingPin > 0) ? (
-                                <>
-                                    <CircularButton type="plain" count={sticks.general.plain} />
-                                    <CircularButton type="notched" count={sticks.general.notched} />
-                                    <CircularButton type="kingPin" count={sticks.general.kingPin} />
-                                </>
-                            ) : (
-                                <View style={styles.debtContainer}>
-                                    {debt[player] > 0 && (
-                                        <TouchableOpacity
-                                            style={styles.askButton}
-                                            onPress={() => handleAskDebtPayment(player)}
-                                        >
-                                            <Text style={styles.askButtonText}>Ask for Payment</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                    <Text style={styles.debtText}>
-                                        {debt[player] > 0 ? `Debt to collect: ${debt[player]}` : 
-                                         debt[otherPlayer] > 0 ? `Debt to pay: ${debt[otherPlayer]}` : 'No debt'}
-                                    </Text>
-                                </View>
-                            )
+                            <>
+                                <CircularButton type="plain" count={sticks.general.plain} />
+                                <CircularButton type="notched" count={sticks.general.notched} />
+                                <CircularButton type="kingPin" count={sticks.general.kingPin} />
+                            </>
                         )}
                     </View>
                 </Animated.View>
@@ -804,6 +771,18 @@ const PlayerArea = ({
                 </TouchableOpacity>
             </View>
             {renderTutorialOverlay()}
+            {showKingPinNotification && (
+                <Animated.View
+                    style={[
+                        styles.kingPinNotification,
+                        { transform: [{ rotate: player === 'player1' ? '180deg' : '0deg' }] }
+                    ]}
+                >
+                    <Text style={styles.kingPinNotificationText}>
+                        King Pin can be won with Super Waltes!
+                    </Text>
+                </Animated.View>
+            )}
         </View>
     );
 };
