@@ -310,7 +310,7 @@ export default function App() {
 
     console.log(`${askingPlayer} is asking ${otherPlayer} to pay ${debtAmount} sticks`);
 
-    // Calculate total available resources
+    // Check if other player has enough resources
     const plainValue = newSticks[otherPlayer].plain;
     const notchedValue = newSticks[otherPlayer].notched * 15;
     const totalAvailable = plainValue + notchedValue;
@@ -320,7 +320,7 @@ export default function App() {
         return;
     }
 
-    // First try to pay with plain sticks
+    // Transfer plain sticks first
     const plainTransfer = Math.min(debtAmount, newSticks[otherPlayer].plain);
     if (plainTransfer > 0) {
         newSticks[otherPlayer].plain -= plainTransfer;
@@ -328,22 +328,11 @@ export default function App() {
         debtAmount -= plainTransfer;
     }
 
-    // If there's still debt, use notched sticks
-    while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
-        // Convert one notched stick
+    // If still needed, transfer notched sticks
+    while (debtAmount >= 15 && newSticks[otherPlayer].notched > 0) {
         newSticks[otherPlayer].notched--;
-        
-        if (debtAmount >= 15) {
-            // If debt is 15 or more, transfer whole notched stick
-            newSticks[askingPlayer].notched++;
-            debtAmount -= 15;
-        } else {
-            // If debt is less than 15, transfer remaining as plain sticks
-            newSticks[askingPlayer].plain += debtAmount;
-            // The paying player gets back the excess value
-            newSticks[otherPlayer].plain += (15 - debtAmount);
-            debtAmount = 0;
-        }
+        newSticks[askingPlayer].notched++;
+        debtAmount -= 15;
     }
 
     // Update debt

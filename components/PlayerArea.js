@@ -537,7 +537,7 @@ const PlayerArea = ({
                 Animated.timing(waltesTextAnim, {
                     toValue: 0,
                     duration: 500,
-                    delay: 2000, // Keep the text visible for 2 seconds
+                    delay: 2000,
                     easing: Easing.ease,
                     useNativeDriver: true,
                 })
@@ -789,6 +789,24 @@ const PlayerArea = ({
                         King Pin can be won with Super Waltes!
                     </Text>
                 </Animated.View>
+            )}
+            {showConfetti && (
+                <View style={styles.waltesTextContainer}>
+                    <Animated.Text
+                        style={[
+                            styles.waltesText,
+                            {
+                                opacity: waltesTextAnim,
+                                transform: [
+                                    { scale: waltesTextAnim },
+                                    { rotate: player === 'player1' ? '180deg' : '0deg' }
+                                ]
+                            }
+                        ]}
+                    >
+                        {scoreAmount === 15 ? 'SUPER WALTES!' : 'WALTES!'}
+                    </Animated.Text>
+                </View>
             )}
         </View>
     );

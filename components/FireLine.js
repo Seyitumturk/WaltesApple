@@ -32,7 +32,7 @@ const FireLine = ({ isVisible, player }) => {
   return (
     <View style={[
       styles.container,
-      { transform: [{ rotate: player === 'player1' ? '180deg' : '0deg' }] }
+      player === 'player1' ? styles.player1Container : styles.player2Container
     ]}>
       {Array(8).fill().map((_, i) => (
         <Animated.View
@@ -72,8 +72,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    top: -30,
     zIndex: 1000,
+  },
+  player1Container: {
+    bottom: '100%', // Position at the top of player1's area
+    transform: [{ rotate: '180deg' }],
+  },
+  player2Container: {
+    top: '100%', // Position at the bottom of player2's area
   },
   fireIcon: {
     shadowColor: '#FF4500',
