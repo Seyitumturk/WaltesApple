@@ -310,7 +310,7 @@ export default function App() {
 
     console.log(`${askingPlayer} is asking ${otherPlayer} to pay ${debtAmount} sticks`);
 
-    // Check if other player has enough resources
+    // Calculate total available resources
     const plainValue = newSticks[otherPlayer].plain;
     const notchedValue = newSticks[otherPlayer].notched * 15;
     const totalAvailable = plainValue + notchedValue;
@@ -320,7 +320,7 @@ export default function App() {
         return;
     }
 
-    // Transfer plain sticks first
+    // First try to pay with plain sticks
     const plainTransfer = Math.min(debtAmount, newSticks[otherPlayer].plain);
     if (plainTransfer > 0) {
         newSticks[otherPlayer].plain -= plainTransfer;
@@ -328,11 +328,22 @@ export default function App() {
         debtAmount -= plainTransfer;
     }
 
-    // If still needed, transfer notched sticks
-    while (debtAmount >= 15 && newSticks[otherPlayer].notched > 0) {
+    // If still need more, use notched sticks
+    while (debtAmount > 0 && newSticks[otherPlayer].notched > 0) {
+        // Convert one notched stick
         newSticks[otherPlayer].notched--;
-        newSticks[askingPlayer].notched++;
-        debtAmount -= 15;
+        
+        if (debtAmount >= 15) {
+            // If debt is 15 or more, transfer the whole notched stick
+            newSticks[askingPlayer].notched++;
+            debtAmount -= 15;
+        } else {
+            // If debt is less than 15, give change back in plain sticks
+            const change = 15 - debtAmount;
+            newSticks[otherPlayer].plain += change;
+            newSticks[askingPlayer].plain += debtAmount;
+            debtAmount = 0;
+        }
     }
 
     // Update debt
@@ -341,8 +352,10 @@ export default function App() {
     setDebt(newDebt);
     setSticks(newSticks);
 
+    // Show payment confirmation with details
+    const message = `${otherPlayer.toUpperCase()} paid their debt to ${askingPlayer.toUpperCase()}`;
     showCustomAlert(
-        `${otherPlayer.toUpperCase()} paid their debt to ${askingPlayer.toUpperCase()}`,
+        message,
         [{ text: 'OK', onPress: () => setAlertVisible(false) }]
     );
   };
