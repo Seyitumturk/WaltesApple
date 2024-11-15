@@ -4,7 +4,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const FireLine = ({ isVisible, player }) => {
+const FireLine = ({ isVisible, player, isTopPlayer }) => {
   const fireAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -32,7 +32,8 @@ const FireLine = ({ isVisible, player }) => {
   return (
     <View style={[
       styles.container,
-      player === 'player1' ? styles.player1Container : styles.player2Container
+      player === 'player1' ? styles.player1Container : styles.player2Container,
+      isTopPlayer && styles.topPlayerContainer
     ]}>
       {Array(8).fill().map((_, i) => (
         <Animated.View
@@ -87,6 +88,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 5,
     elevation: 5,
+  },
+  topPlayerContainer: {
+    transform: [{ rotate: '180deg' }],
   }
 });
 

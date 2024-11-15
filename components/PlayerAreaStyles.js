@@ -43,10 +43,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: '100%',
         alignItems: 'center',
-        opacity: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         paddingVertical: 8,
         borderRadius: 15,
+        height: 76, // Fixed height to prevent container from growing
+        overflow: 'hidden',
     },
     generalPileTitle: {
         backgroundColor: "transparent",
@@ -267,10 +268,11 @@ const styles = StyleSheet.create({
     },
 
     generalPileContent: {
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        width: '100%',
+        position: 'relative',
     },
     replacementText: {
         color: 'white',
@@ -283,22 +285,40 @@ const styles = StyleSheet.create({
         ellipsizeMode: 'tail',
     },
     swapAnimationContainer: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+    },
+    swapGradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 15,
+        overflow: 'hidden',
+        backgroundColor: 'rgba(255, 215, 0, 0.15)', // Subtle golden background
+    },
+    swapContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 8,
-        height: 60,
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark overlay
     },
     swapStickIcon: {
         width: 40,
         height: 60,
-        marginHorizontal: 15,
+        marginHorizontal: 5,
     },
     swapText: {
-        color: 'white',
-        fontSize: 16,
+        color: '#FFD700',
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 5,
+        marginHorizontal: 5,
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
     animationContainer: {
         width: '100%',

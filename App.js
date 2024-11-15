@@ -45,7 +45,7 @@ export default function App() {
   const [playerTurn, setPlayerTurn] = useState(0);
   const [scores, setScores] = useState([0, 0]);
   const [currentPage, setCurrentPage] = useState('home');
-  const [waltesText, setWaltesText] = useState('');
+  const [waltesText, setWaltesText] = useState({ text: '', isTopPlayer: false });
   const [waltesTimeout, setWaltesTimeout] = useState(null);
   const [shouldRoll, setShouldRoll] = useState(false);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
@@ -199,7 +199,7 @@ export default function App() {
   const resetGame = () => {
     setPlayerTurn(0);
     setScores([0, 0]);
-    setWaltesText('');
+    setWaltesText({ text: '', isTopPlayer: false });
     setShouldRoll(false);
     setIsDiceRolling(false);
     setIsGeneralPileExhausted(false);
@@ -474,8 +474,18 @@ export default function App() {
     const isPerfectRoll = marked === 6 || unmarked === 6;
 
     if (isPerfectRoll) {
-        setWaltesText('SUPER WALTES!');
+        // Set Waltes text with rotation information
+        setWaltesText({
+            text: 'SUPER WALTES!',
+            isTopPlayer: playerTurn === 0
+        });
         score = 15;
+
+        // Show streak animation for the current player
+        setShowStreakAnimation({
+            player: currentPlayer,
+            isTopPlayer: playerTurn === 0
+        });
 
         // Check King Pin winning conditions
         if (sticks.general.kingPin === 1 && sticks[currentPlayer].notched > 0) {
@@ -483,17 +493,15 @@ export default function App() {
                 (sticks.player1.notched + sticks.player2.notched === 3);
 
             if (allNotchedSticksDistributed || isGeneralPileExhausted) {
-                // Handle King Pin win
+                // Handle King Pin win with proper rotation for alert
                 newSticks[currentPlayer].kingPin = 1;
                 newSticks.general.kingPin = 0;
 
                 if (isGeneralPileExhausted) {
-                    // In debt mode, add the return value as debt
                     const newDebt = { ...debt };
                     newDebt[currentPlayer] = (newDebt[currentPlayer] || 0) + 15;
                     setDebt(newDebt);
                 } else {
-                    // Normal mode - return sticks to general pile
                     if (newSticks[currentPlayer].plain >= 15) {
                         newSticks[currentPlayer].plain -= 15;
                         newSticks.general.plain += 15;
@@ -503,39 +511,33 @@ export default function App() {
                     }
                 }
                 
+                // Show alert with proper rotation
                 showCustomAlert(
                     `🎊 CONGRATULATIONS! 👑\n\n${currentPlayer.toUpperCase()} has won the King Pin with a Super Waltes!${
                         isGeneralPileExhausted ? '\n\n15 sticks added to your debt.' : '\n\n15 plain sticks (or 1 notched stick) returned to general pile.'
                     }`,
-                    [{ text: 'OK', onPress: () => setAlertVisible(false) }]
+                    [{ text: 'OK', onPress: () => setAlertVisible(false) }],
+                    playerTurn === 0 // Pass rotation info
                 );
 
-                // Continue with normal scoring after King Pin win if there are sticks available
-                if (newSticks.general.plain > 0 || newSticks.general.notched > 0) {
-                    if (newSticks.general.plain >= score) {
-                        newSticks[currentPlayer].plain += score;
-                        newSticks.general.plain -= score;
-                        handleNotchedReplacement(currentPlayer);
-                    }
-                }
-            } else {
+                // Trigger winning animation
+                setShowWinningAnimation({
+                    player: currentPlayer,
+                    isTopPlayer: playerTurn === 0
+                });
+            }
+        }
                 // Normal scoring if King Pin conditions not met
                 if (newSticks.general.plain >= score) {
                     newSticks[currentPlayer].plain += score;
                     newSticks.general.plain -= score;
                     handleNotchedReplacement(currentPlayer);
-                }
-            }
-        } else {
-            // Normal scoring if no King Pin involved
-            if (newSticks.general.plain >= score) {
-                newSticks[currentPlayer].plain += score;
-                newSticks.general.plain -= score;
-                handleNotchedReplacement(currentPlayer);
-            }
         }
     } else if (marked === 5 || unmarked === 5) {
-        setWaltesText('Waltes!');
+        setWaltesText({
+            text: 'Waltes!',
+            isTopPlayer: playerTurn === 0
+        });
         score = 3;
         
         // Normal scoring for regular Waltes
@@ -761,7 +763,12 @@ export default function App() {
                 },
               ]}
             >
-              {waltesText}
+              {waltesText.text && (
+                <WaltesText 
+                    text={waltesText.text} 
+                    isTopPlayer={waltesText.isTopPlayer} 
+                />
+              )}
             </Animated.Text>
           )}
         </>
@@ -849,15 +856,14 @@ const styles = StyleSheet.create({
   scoreTextPlayer2: {
     alignSelf: 'center',
   },
-  waltesText: {
+  fireAnimation: {
     position: 'absolute',
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -50 }],
+    width: '100%',
+    height: '100%',
+    zIndex: 999,
+  },
+  fireAnimationTop: {
+    transform: [{ rotate: '180deg' }],
   },
   rotated: {
     transform: [{ rotate: '180deg' }],

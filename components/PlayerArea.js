@@ -4,6 +4,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import styles from './PlayerAreaStyles';
 import FireLine from './FireLine';
+import LinearGradient from 'react-native-linear-gradient';
 
 // Add this line to get screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -124,7 +125,26 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
     kingPin: kingPinIcon,
   };
 
+  // Add a pulse animation
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
+    // Start pulsing animation
+    Animated.loop(
+        Animated.sequence([
+            Animated.timing(pulseAnim, {
+                toValue: 1.1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+        ])
+    ).start();
+
     Animated.sequence([
       // Fade in overlay
       Animated.timing(overlayOpacityAnim, {
@@ -193,7 +213,10 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
       <Animated.View 
         style={[
           styles.darkCircleOverlay,
-          { opacity: overlayOpacityAnim }
+          { 
+            opacity: overlayOpacityAnim,
+            transform: [{ scale: pulseAnim }]
+          }
         ]} 
       >
         <ImageBackground
@@ -201,11 +224,12 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
           style={{
             width: '100%',
             height: '100%',
-            transform: [{ rotate: isPlayer1 ? '180deg' : '0deg' }]  // FLIPPED THIS
+            transform: [{ rotate: isPlayer1 ? '180deg' : '0deg' }]
           }}
           imageStyle={{
             opacity: 0.7,
             backgroundColor: 'rgba(51, 25, 0, 0.85)',
+            borderRadius: screenWidth * 0.4,
           }}
         />
       </Animated.View>
@@ -216,7 +240,7 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
             transform: [
               { scale: scaleAnim },
               { translateY },
-              { rotate: isPlayer1 ? '180deg' : '0deg' }  // FLIPPED THIS
+              { rotate: isPlayer1 ? '180deg' : '0deg' }
             ],
             opacity: opacityAnim,
           },
@@ -227,9 +251,6 @@ const WinningIconAnimation = ({ iconType, player, onAnimationComplete }) => {
           style={styles.winningIcon}
           resizeMode="contain"
         />
-        <Text style={styles.waltesText}>
-          Waltes!
-        </Text>
       </Animated.View>
     </View>
   );
@@ -644,13 +665,52 @@ const PlayerArea = ({
         );
     };
 
+    const handleNotchedReplacement = (currentPlayer) => {
+        let newSticks = { ...sticks };
+        if (newSticks[currentPlayer].plain >= 15 && newSticks.general.notched > 0) {
+            // Show the replacement animation/alert first
+            setShowReplacementGif(true);
+            setReplacementMessage('15 plain sticks are being swapped with 1 notched stick');
+
+            // Delay the actual replacement to allow animation to play
+            setTimeout(() => {
+                newSticks[currentPlayer].plain -= 15;
+                newSticks[currentPlayer].notched++;
+                newSticks.general.notched--;
+                newSticks.general.plain += 15;
+                setSticks(newSticks);
+                
+                // Hide the animation after swap
+                setTimeout(() => {
+                    setShowReplacementGif(false);
+                    setReplacementMessage('');
+                }, 3000);
+            }, 1000);
+
+            // Show the swap animation in general pile
+            Animated.sequence([
+                Animated.timing(swapIconsAnim, {
+                    toValue: 1,
+                    duration: 500,
+                    useNativeDriver: true,
+                }),
+                Animated.delay(2000),
+                Animated.timing(swapIconsAnim, {
+                    toValue: 0,
+                    duration: 500,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        }
+    };
+
     return (
         <View style={[styles.playerArea, playerStyle, style]} ref={playerAreaRef}>
             {renderStageNotification()}
             {renderStreakIndicator()}
             {showFireEffect && (
                 <>
-                    <FireLine isVisible={true} player={player} />
+                    <FireLine isVisible={true} player={player} isTopPlayer={player === 'player1'} />
                     {showSuperWaltesText && (
                         <Animated.Text style={[
                             styles.superWaltesText,
@@ -712,13 +772,49 @@ const PlayerArea = ({
                                 </View>
                             </View>
                         ) : (
-                            <>
+                            <Animated.View style={styles.generalPileContent}>
+                                {replacementMessage ? (
+                                    <Animated.View 
+                                        style={[
+                                            styles.swapAnimationContainer,
+                                            {
+                                                position: 'absolute',
+                                                width: '100%',
+                                                height: '100%',
+                                                backgroundColor: 'transparent',
+                                                opacity: swapIconsAnim // Add fade animation
+                                            }
+                                        ]}
+                                    >
+                                        <View style={styles.swapGradient}>
+                                            <View style={styles.swapContent}>
+                                        <Image source={plainStickIcon} style={styles.swapStickIcon} />
+                                        <Text style={styles.swapText}>x15</Text>
+                                                <MaterialIcons 
+                                                    name="swap-horiz" 
+                                                    size={24} 
+                                                    color="#FFD700" 
+                                                    style={styles.swapIcon} 
+                                                />
+                                        <Image source={notchedStickIcon} style={styles.swapStickIcon} />
+                                        <Text style={styles.swapText}>x1</Text>
+                                    </View>
+                                        </View>
+                                    </Animated.View>
+                                ) : null}
+                                <Animated.View 
+                                    style={{
+                                        flexDirection: 'row',
+                                        opacity: replacementMessage ? 0 : 1, // Fade out when showing swap animation
+                                    }}
+                                >
                                 <CircularButton type="plain" count={sticks.general.plain} />
                                 <CircularButton type="notched" count={sticks.general.notched} />
                                 {sticks.general.kingPin === 1 && (
                                     <CircularButton type="kingPin" count={sticks.general.kingPin} />
-                                )}
-                            </>
+                                        )}
+                                </Animated.View>
+                            </Animated.View>
                         )}
                     </View>
                 </Animated.View>
